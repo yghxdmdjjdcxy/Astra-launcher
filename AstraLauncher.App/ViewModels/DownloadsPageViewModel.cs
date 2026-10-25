@@ -19,6 +19,7 @@ public sealed class DownloadsPageViewModel : PageViewModel
     private VersionSummary? _selectedVersion;
     private string _statusMessage = "正在加载版本列表…";
     private bool _isBusy;
+    private bool _ignoreProgressCallbacks;
     private double _progressPercent;
     private string _progressText = string.Empty;
     private CancellationTokenSource? _installCancellation;
@@ -81,12 +82,14 @@ public sealed class DownloadsPageViewModel : PageViewModel
         using var cancellation = new CancellationTokenSource();
         _installCancellation = cancellation;
         IsBusy = true;
+        _ignoreProgressCallbacks = false;
         ProgressPercent = 0;
         ProgressText = "准备下载计划…";
         try
         {
             var progress = new Progress<VersionInstallProgress>(UpdateProgress);
             await _install.InstallAsync(version.Id, progress, cancellation.Token);
+            _ignoreProgressCallbacks = true;
             ProgressPercent = 100;
             StatusMessage = $"版本 {version.Id} 已下载并校验完成。";
         }
@@ -103,6 +106,9 @@ public sealed class DownloadsPageViewModel : PageViewModel
 
     private void UpdateProgress(VersionInstallProgress progress)
     {
+        // Late callbacks can arrive after the install task completed (Progress<T> marshals asynchronously);
+        // never let them overwrite the final 100% state.
+        if (!IsBusy || _ignoreProgressCallbacks) return;
         ProgressPercent = CalculatePercent(progress);
         string downloaded = FormatBytes(progress.DownloadedBytes);
         string total = progress.TotalBytes > 0 ? FormatBytes(progress.TotalBytes) : "未知";

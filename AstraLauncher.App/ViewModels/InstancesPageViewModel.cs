@@ -4,31 +4,52 @@ using System.Windows.Input;
 using AstraLauncher.App.Commands;
 using AstraLauncher.App.Services;
 using AstraLauncher.Core.Models;
+using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Instances;
 using AstraLauncher.Game.Java;
+using AstraLauncher.Game.Launch;
 using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.ViewModels;
 
 public sealed class InstancesPageViewModel : PageViewModel
 {
+    private const int MaximumLogLines = 500;
+
     private readonly IGameInstanceRepository _instances;
     private readonly IJavaRuntimeDetector _java;
     private readonly ILogger<InstancesPageViewModel> _logger;
     private readonly IDialogService _dialogs;
+    private readonly ISettingsService? _settings;
+    private readonly IGameLaunchService? _launchService;
+    private readonly RelayCommand _stopCommand;
     private GameInstance? _selectedInstance;
     private Guid? _selectedInstanceId;
     private string _name = "新实例";
     private string _versionId = "1.21.1";
     private string _importPath = "";
     private string _statusMessage = "正在加载实例…";
+    private bool _isLaunching;
+    private double _launchPercent;
+    private string _launchStage = string.Empty;
+    private IGameProcess? _runningProcess;
+    private CancellationTokenSource? _launchCancellation;
+    private SynchronizationContext? _uiContext;
 
-    public InstancesPageViewModel(IGameInstanceRepository instances, IJavaRuntimeDetector java, ILogger<InstancesPageViewModel> logger, IDialogService dialogs) : base("游戏实例")
+    public InstancesPageViewModel(
+        IGameInstanceRepository instances,
+        IJavaRuntimeDetector java,
+        ILogger<InstancesPageViewModel> logger,
+        IDialogService dialogs,
+        ISettingsService? settings = null,
+        IGameLaunchService? launchService = null) : base("游戏实例")
     {
         _instances = instances;
         _java = java;
         _logger = logger;
         _dialogs = dialogs;
+        _settings = settings;
+        _launchService = launchService;
         RefreshCommand = new AsyncRelayCommand(() => RunAsync("刷新实例列表", () => RefreshAsync(_selectedInstanceId)));
         CreateCommand = new AsyncRelayCommand(CreateAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync);
@@ -36,13 +57,20 @@ public sealed class InstancesPageViewModel : PageViewModel
         DuplicateCommand = new AsyncRelayCommand(DuplicateAsync);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         DetectJavaCommand = new AsyncRelayCommand(DetectJavaAsync);
+        LaunchCommand = new AsyncRelayCommand(LaunchAsync);
+        _stopCommand = new RelayCommand(_ => StopGame(), _ => IsLaunching);
+        StopCommand = _stopCommand;
     }
 
     public ObservableCollection<GameInstance> Instances { get; } = [];
+
     public ObservableCollection<JavaRuntimeInfo> JavaRuntimes { get; } = [];
 
     /// <summary>Version ids offered by the version picker; the field stays editable for offline/unknown versions.</summary>
     public ObservableCollection<string> AvailableVersions { get; } = [];
+
+    /// <summary>Lines written by the running game process (stdout/stderr), capped to 500 entries.</summary>
+    public ObservableCollection<string> GameLogs { get; } = [];
 
     public GameInstance? SelectedInstance
     {
@@ -57,6 +85,18 @@ public sealed class InstancesPageViewModel : PageViewModel
     public string VersionId { get => _versionId; set => SetProperty(ref _versionId, value); }
     public string ImportPath { get => _importPath; set => SetProperty(ref _importPath, value); }
     public string StatusMessage { get => _statusMessage; private set => SetProperty(ref _statusMessage, value); }
+    public string LaunchStage { get => _launchStage; private set => SetProperty(ref _launchStage, value); }
+
+    public bool IsLaunching
+    {
+        get => _isLaunching;
+        private set
+        {
+            if (SetProperty(ref _isLaunching, value)) _stopCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public double LaunchPercent { get => _launchPercent; private set => SetProperty(ref _launchPercent, value); }
 
     public ICommand RefreshCommand { get; }
     public ICommand CreateCommand { get; }
@@ -65,6 +105,8 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand DuplicateCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand DetectJavaCommand { get; }
+    public ICommand LaunchCommand { get; }
+    public ICommand StopCommand { get; }
 
     public Task InitializeAsync() => RunAsync("加载实例列表", () => RefreshAsync(_selectedInstanceId));
 
@@ -150,6 +192,106 @@ public sealed class InstancesPageViewModel : PageViewModel
         foreach (JavaRuntimeInfo value in values) JavaRuntimes.Add(value);
         StatusMessage = values.Count == 0 ? "未检测到 Java。" : $"检测到 {values.Count} 个 Java 运行时。";
     });
+
+    private async Task LaunchAsync()
+    {
+        if (IsLaunching) return;
+        GameInstance? selected = SelectedInstance;
+        if (selected is null)
+        {
+            StatusMessage = "请先选择要启动的实例。";
+            return;
+        }
+
+        if (_launchService is null || _settings is null)
+        {
+            StatusMessage = "启动服务不可用（缺少设置或启动服务）。";
+            return;
+        }
+
+        _uiContext = SynchronizationContext.Current;
+        using var cancellation = new CancellationTokenSource();
+        _launchCancellation = cancellation;
+        IsLaunching = true;
+        LaunchPercent = 0;
+        LaunchStage = "准备启动";
+        GameLogs.Clear();
+        AppendLog($"[launcher] 启动实例：{selected.Name}（版本 {selected.VersionId}）");
+        try
+        {
+            LauncherSettings settings = await _settings.GetAsync(cancellation.Token);
+            GameSession session = OfflineProfile.Create(settings.OfflinePlayerName ?? "Player");
+            var options = new GameLaunchOptions(settings.MemoryMiB, settings.JavaExecutablePath, settings.GameArguments, settings.JvmArguments);
+            var progress = new Progress<LaunchProgress>(OnLaunchProgress);
+            AppendLog($"[launcher] 离线玩家：{session.PlayerName}（{session.PlayerUuid}）");
+            IGameProcess process = await _launchService.LaunchAsync(selected, session, options, progress, cancellation.Token);
+            _runningProcess = process;
+            process.OutputReceived += OnGameOutput;
+            StatusMessage = $"游戏已启动（PID {process.Id}），正在等待退出…";
+            AppendLog($"[launcher] 游戏进程已启动，PID {process.Id}");
+            GameExitInfo exitInfo = await process.Exited;
+            AppendLog($"[launcher] 游戏进程已退出，退出码 {exitInfo.ExitCode}");
+            StatusMessage = $"游戏已退出（退出码 {exitInfo.ExitCode}）。";
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            StatusMessage = "已取消启动。";
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "启动实例失败：{Instance}", selected.Name);
+            StatusMessage = FriendlyError(exception);
+            _dialogs.ShowError(StatusMessage);
+        }
+        finally
+        {
+            if (_runningProcess is not null) _runningProcess.OutputReceived -= OnGameOutput;
+            _runningProcess = null;
+            _launchCancellation = null;
+            IsLaunching = false;
+            LaunchStage = string.Empty;
+        }
+    }
+
+    private void OnLaunchProgress(LaunchProgress progress)
+    {
+        LaunchStage = string.IsNullOrWhiteSpace(progress.Message) ? progress.Stage : $"{progress.Stage}：{progress.Message}";
+        StatusMessage = LaunchStage;
+        if (progress.Percent is double percent) LaunchPercent = Math.Clamp(percent, 0, 100);
+    }
+
+    private void OnGameOutput(object? sender, string line)
+    {
+        SynchronizationContext? context = _uiContext;
+        if (context is null)
+        {
+            return;
+        }
+
+        context.Post(_ => AppendLog(line), null);
+    }
+
+    private void AppendLog(string line)
+    {
+        // Newest first so the visible top of the list always shows the latest game output without scrolling.
+        GameLogs.Insert(0, line);
+        while (GameLogs.Count > MaximumLogLines) GameLogs.RemoveAt(GameLogs.Count - 1);
+    }
+
+    private void StopGame()
+    {
+        if (_runningProcess is null) return;
+        StatusMessage = "正在结束游戏进程…";
+        AppendLog("[launcher] 正在结束游戏进程…");
+        try
+        {
+            _runningProcess.Kill();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "结束游戏进程失败。");
+        }
+    }
 
     private async Task RunAsync(string operation, Func<Task> action)
     {

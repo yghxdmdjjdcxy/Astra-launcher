@@ -1,0 +1,9 @@
+﻿23:06:48 game hwnd=11471214 title='Minecraft 1.21.11'
+23:06:48 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-game-main-menu.png
+23:06:50 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-app-after-launch.png
+23:06:50 sent WM_CLOSE to game
+23:06:52 exit status: 游戏已退出（退出码 0）。
+23:06:57 closed app
+23:06:57 app log critical=0 error=0
+23:06:58 appdata MB=527.9
+23:06:58 FINISH E2E DONE

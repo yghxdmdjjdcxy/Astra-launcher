@@ -3,11 +3,27 @@ using System.Diagnostics;
 
 namespace AstraLauncher.Game.Launch;
 
+/// <summary>Abstraction over a started game process so launch orchestration can be tested without spawning Java.</summary>
+public interface IGameProcess
+{
+    int Id { get; }
+    Task<GameExitInfo> Exited { get; }
+    event EventHandler<string>? OutputReceived;
+    IReadOnlyList<string> RecentOutput { get; }
+    bool HasExited { get; }
+    void Kill();
+}
+
+public interface IGameProcessLauncher
+{
+    IGameProcess Start(GameLaunchCommand command);
+}
+
 /// <summary>
 /// A running Minecraft/Java process. Standard output and error are pumped continuously so the child
 /// process can never block on a full pipe; the last 2000 lines are kept for diagnostics.
 /// </summary>
-public sealed class GameProcess : IAsyncDisposable
+public sealed class GameProcess : IAsyncDisposable, IGameProcess
 {
     private const int MaxRecentLines = 2000;
 
@@ -155,7 +171,7 @@ public sealed class GameProcess : IAsyncDisposable
     }
 }
 
-public sealed class GameProcessLauncher
+public sealed class GameProcessLauncher : IGameProcessLauncher
 {
     public GameProcess Start(GameLaunchCommand command)
     {
@@ -173,4 +189,6 @@ public sealed class GameProcessLauncher
         if (!process.Start()) throw new GameLaunchValidationException("The game process could not be started.");
         return new GameProcess(process, DateTimeOffset.UtcNow);
     }
+
+    IGameProcess IGameProcessLauncher.Start(GameLaunchCommand command) => Start(command);
 }

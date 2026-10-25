@@ -43,6 +43,9 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets a value indicating whether snapshot versions are listed.</summary>
     public bool ShowSnapshots { get; set; }
 
+    /// <summary>Gets or sets the player name used for offline profiles.</summary>
+    public string? OfflinePlayerName { get; set; } = "Player";
+
     /// <summary>Gets or sets the instance selected when the launcher last closed.</summary>
     public Guid? LastSelectedInstanceId { get; set; }
 
@@ -63,6 +66,13 @@ public sealed class LauncherSettings
         JavaExecutablePath = NormalizeOptionalText(JavaExecutablePath);
         GameArguments = NormalizeOptionalText(GameArguments);
         JvmArguments = NormalizeOptionalText(JvmArguments);
+        OfflinePlayerName = NormalizePlayerName(OfflinePlayerName);
+    }
+
+    private static string NormalizePlayerName(string? playerName)
+    {
+        string value = string.IsNullOrWhiteSpace(playerName) ? "Player" : playerName.Trim();
+        return value.Length <= 16 ? value : value[..16];
     }
 
     private static string NormalizeMirrorBaseUrl(string? mirrorBaseUrl)

@@ -7,10 +7,11 @@
         <DataTemplate DataType="{x:Type vm:WelcomePageViewModel}"><StackPanel><TextBlock FontSize="28" Text="欢迎使用 Astra Launcher"/><TextBlock Margin="0,12,0,0" Text="基础架构已就绪。游戏版本、下载和认证将在后续已验证阶段提供。" TextWrapping="Wrap"/></StackPanel></DataTemplate>
         <DataTemplate DataType="{x:Type vm:InstancesPageViewModel}">
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <StackPanel><TextBlock FontSize="24" Text="游戏实例"/><TextBlock Margin="0,6,0,12" Text="创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。" TextWrapping="Wrap"/>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="150"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel><TextBlock FontSize="24" Text="游戏实例"/><TextBlock Margin="0,6,0,10" Text="创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。启动前会自动下载并校验所需游戏文件。" TextWrapping="Wrap"/>
                     <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="名称"/><TextBox Width="160" Margin="0,0,8,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="版本"/><ComboBox Width="150" Margin="0,0,8,8" IsEditable="True" ItemsSource="{Binding AvailableVersions}" Text="{Binding VersionId, UpdateSourceTrigger=PropertyChanged}" ToolTip="从版本列表选择，或直接输入版本号"/><Button Content="创建" Command="{Binding CreateCommand}" Margin="0,0,8,8"/><Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,8"/><Button Content="重命名" Command="{Binding RenameCommand}" Margin="0,0,8,8"/><Button Content="复制" Command="{Binding DuplicateCommand}" Margin="0,0,8,8"/><Button Content="删除" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/></WrapPanel>
-                    <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="导入路径"/><TextBox Width="360" Margin="0,0,8,8" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="要导入的现有游戏目录"/><Button Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="检测 Java" Command="{Binding DetectJavaCommand}"/></WrapPanel>
+                    <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="导入路径"/><TextBox Width="360" Margin="0,0,8,8" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="要导入的现有游戏目录"/><Button Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="检测 Java" Command="{Binding DetectJavaCommand}" Margin="0,0,8,8"/><Button Content="结束游戏" Command="{Binding StopCommand}"/></WrapPanel>
+                    <WrapPanel Margin="0,0,0,4"><Button Content="启动游戏" Command="{Binding LaunchCommand}" Margin="0,0,8,8" FontWeight="SemiBold"/><ProgressBar Width="240" Height="16" Minimum="0" Maximum="100" Value="{Binding LaunchPercent, Mode=OneWay}" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBlock VerticalAlignment="Center" Text="{Binding LaunchStage}" TextTrimming="CharacterEllipsis"/></WrapPanel>
                 </StackPanel>
                 <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <TextBlock Margin="0,8,8,4" FontWeight="SemiBold" Text="实例列表"/>
@@ -18,7 +19,12 @@
                     <ListBox Grid.Row="1" ItemsSource="{Binding Instances}" SelectedItem="{Binding SelectedInstance}" DisplayMemberPath="Name" Margin="0,0,8,8"/>
                     <ListBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding JavaRuntimes}" Margin="8" DisplayMemberPath="ExecutablePath"/>
                 </Grid>
-                <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+                <Grid Grid.Row="2" Margin="0,4,0,0">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <TextBlock FontWeight="SemiBold" Text="游戏日志"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding GameLogs}" FontFamily="Consolas" FontSize="11" Margin="0,4,0,0"/>
+                </Grid>
+                <TextBlock Grid.Row="3" Margin="0,6,0,0" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </Grid>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:DownloadsPageViewModel}">

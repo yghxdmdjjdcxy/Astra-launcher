@@ -1,0 +1,32 @@
+﻿23:04:02 app pid=138608
+23:04:07 created instance
+23:04:07 clicked launch
+23:06:07 dialog hwnd=0 after 120s
+23:06:07 apptext: 游戏实例
+23:06:07 apptext: 游戏实例
+23:06:07 apptext: 创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。启动前会自动下载并校验所需游戏文件。
+23:06:07 apptext: 检测 Java
+23:06:07 apptext: 结束游戏
+23:06:07 apptext: 启动游戏
+23:06:07 apptext: 启动游戏：游戏进程已启动（PID 141712）
+23:06:07 apptext: Java 运行时
+23:06:07 apptext: 游戏日志
+23:06:07 apptext: [launcher] 启动实例：DIAG-1.21.11（版本 1.21.11）
+23:06:07 apptext: [launcher] 游戏进程已启动，PID 141712
+23:06:07 apptext: 游戏已启动（PID 141712），正在等待退出…
+23:06:08 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\diag-app-no-dialog.png
+23:06:08 apptext-after: 游戏实例
+23:06:08 apptext-after: 下载
+23:06:08 apptext-after: 游戏实例
+23:06:08 apptext-after: 创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。启动前会自动下载并校验所需游戏文件。
+23:06:08 apptext-after: 检测 Java
+23:06:08 apptext-after: 结束游戏
+23:06:08 apptext-after: 启动游戏
+23:06:08 apptext-after: 启动游戏：游戏进程已启动（PID 141712）
+23:06:08 apptext-after: Java 运行时
+23:06:08 apptext-after: 游戏日志
+23:06:08 apptext-after: [launcher] 启动实例：DIAG-1.21.11（版本 1.21.11）
+23:06:08 apptext-after: [launcher] 游戏进程已启动，PID 141712
+23:06:08 apptext-after: 游戏已启动（PID 141712），正在等待退出…
+23:06:09 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\diag-app-after.png
+23:06:09 DIAG DONE

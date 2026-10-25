@@ -1,0 +1,88 @@
+﻿22:40:06 E2E START
+22:40:11 T01 app ready=True pid=134256
+22:40:12 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-01-welcome.png
+22:40:13 T02 downloads version list loaded=True
+22:40:13 T03 select 1.21.1 =True
+22:40:13 T04 install started (1.21.1, ~877 MiB)
+22:40:45 install progress t=32s status=39/4670 个文件 · 64.8 MiB/527.5 MiB · 下载游戏文件
+22:40:46 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-1min.png
+22:41:17 install progress t=63s status=102/4670 个文件 · 103.3 MiB/527.5 MiB · 下载游戏文件
+22:41:17 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-1min.png
+22:41:49 install progress t=95s status=146/4670 个文件 · 128.9 MiB/527.5 MiB · 下载游戏文件
+22:41:49 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-2min.png
+22:42:20 install progress t=127s status=185/4670 个文件 · 153.9 MiB/527.5 MiB · 下载游戏文件
+22:42:21 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-2min.png
+22:42:52 install progress t=159s status=223/4670 个文件 · 176.5 MiB/527.5 MiB · 下载游戏文件
+22:42:53 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-3min.png
+22:43:24 install progress t=191s status=304/4670 个文件 · 192.7 MiB/527.5 MiB · 下载游戏文件
+22:43:25 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-3min.png
+22:43:56 install progress t=223s status=419/4670 个文件 · 202.7 MiB/527.5 MiB · 下载游戏文件
+22:43:57 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-4min.png
+22:44:28 install progress t=255s status=580/4670 个文件 · 204.9 MiB/527.5 MiB · 下载游戏文件
+22:44:29 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-4min.png
+22:45:00 install progress t=286s status=726/4670 个文件 · 206.7 MiB/527.5 MiB · 下载游戏文件
+22:45:00 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-5min.png
+22:45:31 install progress t=318s status=862/4670 个文件 · 208.1 MiB/527.5 MiB · 下载游戏文件
+22:45:32 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-5min.png
+22:46:03 install progress t=350s status=988/4670 个文件 · 210.2 MiB/527.5 MiB · 下载游戏文件
+22:46:04 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-6min.png
+22:46:35 install progress t=381s status=1058/4670 个文件 · 212.4 MiB/527.5 MiB · 下载游戏文件
+22:46:35 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-6min.png
+22:47:07 install progress t=413s status=1162/4670 个文件 · 214.7 MiB/527.5 MiB · 下载游戏文件
+22:47:07 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-7min.png
+22:47:38 install progress t=445s status=1314/4670 个文件 · 215.9 MiB/527.5 MiB · 下载游戏文件
+22:47:39 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-7min.png
+22:48:10 install progress t=477s status=1426/4670 个文件 · 217.3 MiB/527.5 MiB · 下载游戏文件
+22:48:11 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-8min.png
+22:48:42 install progress t=508s status=1551/4670 个文件 · 219.0 MiB/527.5 MiB · 下载游戏文件
+22:48:42 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-8min.png
+22:49:14 install progress t=540s status=1679/4670 个文件 · 221.3 MiB/527.5 MiB · 下载游戏文件
+22:49:14 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-9min.png
+22:49:45 install progress t=572s status=1842/4670 个文件 · 223.2 MiB/527.5 MiB · 下载游戏文件
+22:49:46 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-10min.png
+22:50:17 install progress t=603s status=2021/4670 个文件 · 225.1 MiB/527.5 MiB · 下载游戏文件
+22:50:17 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-10min.png
+22:50:49 install progress t=635s status=2193/4670 个文件 · 226.7 MiB/527.5 MiB · 下载游戏文件
+22:50:49 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-11min.png
+22:51:20 install progress t=667s status=2367/4670 个文件 · 228.4 MiB/527.5 MiB · 下载游戏文件
+22:51:21 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-11min.png
+22:51:52 install progress t=699s status=2531/4670 个文件 · 231.3 MiB/527.5 MiB · 下载游戏文件
+22:51:53 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-12min.png
+22:52:24 install progress t=731s status=2695/4670 个文件 · 233.5 MiB/527.5 MiB · 下载游戏文件
+22:52:25 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-12min.png
+22:52:56 install progress t=762s status=2849/4670 个文件 · 235.6 MiB/527.5 MiB · 下载游戏文件
+22:52:56 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-13min.png
+22:53:28 install progress t=794s status=2990/4670 个文件 · 237.4 MiB/527.5 MiB · 下载游戏文件
+22:53:28 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-13min.png
+22:54:00 install progress t=826s status=3123/4670 个文件 · 239.3 MiB/527.5 MiB · 下载游戏文件
+22:54:00 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-14min.png
+22:54:31 install progress t=858s status=3265/4670 个文件 · 241.2 MiB/527.5 MiB · 下载游戏文件
+22:54:32 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-14min.png
+22:55:03 install progress t=890s status=3407/4670 个文件 · 242.9 MiB/527.5 MiB · 下载游戏文件
+22:55:04 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-15min.png
+22:55:35 install progress t=922s status=3533/4670 个文件 · 244.6 MiB/527.5 MiB · 下载游戏文件
+22:55:36 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-15min.png
+22:56:07 install progress t=954s status=3659/4670 个文件 · 245.9 MiB/527.5 MiB · 下载游戏文件
+22:56:08 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-16min.png
+22:56:40 install progress t=986s status=3783/4670 个文件 · 247.4 MiB/527.5 MiB · 下载游戏文件
+22:56:40 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-16min.png
+22:57:12 install progress t=1019s status=3939/4670 个文件 · 249.4 MiB/527.5 MiB · 下载游戏文件
+22:57:13 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-17min.png
+22:57:44 install progress t=1051s status=4146/4670 个文件 · 251.9 MiB/527.5 MiB · 下载游戏文件
+22:57:45 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-18min.png
+22:58:16 install progress t=1082s status=4314/4670 个文件 · 255.2 MiB/527.5 MiB · 下载游戏文件
+22:58:16 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-18min.png
+22:58:48 install progress t=1114s status=4425/4670 个文件 · 263.6 MiB/527.5 MiB · 下载游戏文件
+22:58:48 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-19min.png
+22:59:20 install progress t=1146s status=4462/4670 个文件 · 395.8 MiB/527.5 MiB · 下载游戏文件
+22:59:20 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-19min.png
+22:59:52 install progress t=1178s status=4549/4670 个文件 · 486.6 MiB/527.5 MiB · 下载游戏文件
+22:59:52 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-20min.png
+23:00:24 install progress t=1210s status=4639/4670 个文件 · 515.9 MiB/527.5 MiB · 下载游戏文件
+23:00:25 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-20min.png
+23:00:56 install progress t=1242s status=4670/4670 个文件 · 527.5 MiB/527.5 MiB · 下载完成
+23:00:56 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-21min.png
+23:01:28 install progress t=1274s status=4670/4670 个文件 · 527.5 MiB/527.5 MiB · 下载完成
+23:01:28 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-21min.png
+23:02:00 install progress t=1306s status=4670/4670 个文件 · 527.5 MiB/527.5 MiB · 下载完成
+23:02:01 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e-install-22min.png

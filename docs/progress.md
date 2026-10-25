@@ -11,8 +11,8 @@
 | Phase 1 | Git 基线 + Release 发布包 + GUI 验证 | ✅ 完成（见 `docs/phase1-verification.md`） |
 | **M1a** | 下载引擎加固 + 基础服务（路径/设置/下载源/日志轮转/单实例）+ 实例页 UI 安全修复 | ✅ 完成（见下） |
 | **M1b** | 版本清单/元数据/安装计划/下载（client/libraries/assets/log4j）+ 下载页 UI + 实例版本选择器 | ✅ 完成（见下） |
-| M2 | 启动链路修复接线 + 启动 UI + 真实离线启动 1.21.1 到主菜单（E2E） | ⏳ 下一步 |
-| M3 | 设置页 + Java 运行时管理/选择、实例设置 | 待开始 |
+| **M2** | 启动链路修复接线 + 启动 UI + 真实离线启动 Minecraft 到主菜单（E2E） | ✅ 完成（见下） |
+| M3 | 设置页 + Java 运行时管理/选择、实例设置 | ⏳ 下一步 |
 | M4 | 官方 Microsoft OAuth + Xbox/Minecraft 链 + DPAPI 令牌 + 账户页 | 待开始 |
 | M5 | Fabric/Quilt/Forge/NeoForge 安装与启动集成 | 待开始 |
 | M6 | 服务器列表 + --server/--port 一键加入 | 待开始 |
@@ -92,3 +92,38 @@
 - 真实 1.21.1 **完整下载 + 离线启动**（约 877 MiB）留到 M2/E2E：需要启动命令构造修复、Java 选择、进程日志面板，以及启动前自动安装（调用 M1b 的安装服务）。
 - 设置页 UI（下载源切换/并发/内存/快照显示）在 M3；当前安装服务已读取 LauncherSettings 的并发与下载源。
 - 镜像 URL 映射对 piston-meta/piston-data 的路径是否与 BMCLAPI 完全兼容需在真实全量下载中验证（缓存回退已兜底）。
+
+---
+
+## M2 记录（2026-10-25 深夜，关键 E2E 达成）
+
+### 交付内容
+
+1. **启动命令构造修复（GameCommandBuilder 重写，449 行）**
+   - 共享 `LaunchRuleEvaluator`：os.name / os.arch（x86_64/amd64/aarch64 别名）/ os.version（1s 超时正则）/ features（全 false 才匹配），最后匹配生效；builder、library 过滤、natives 解压三处共用。
+   - 路径根约束（`LaunchPathGuard`）：版本 id、版本目录、natives 目录、client jar、library artifact、native archive 全部限制在对应根目录内并拒绝 `..`/绝对路径，异常消息含原始路径与解析路径。
+   - client jar：`downloads.client.path` → `versions/<id>/<id>.jar` → 继承版本父 jar 回退。
+   - legacy（<1.13）自动补 `-cp ${classpath}` 与 `-Djava.library.path=${natives_directory}`；`-Xmx` 移到元数据 JVM 参数之后；logging（log4j2）参数按 `assets/logging/<id>` 是否存在自动追加并替换 `${path}`；新增 `${auth_xuid}/${clientid}/${user_properties}/${auth_session}`，替换后残留 `${` 抛 `GameLaunchValidationException`；Maven 坐标回退；natives zip-slip 校验保留。
+2. **启动编排（GameLaunchService）**：检查实例目录 → `InstallAsync`（自动补齐/校验游戏文件，进度映射）→ 解析元数据 → Java 选择（显式路径优先；否则精确匹配 `javaVersion.majorVersion`，再取最小可用高版本；无可用 Java 给出含版本列表的错误）→ 构建命令 → 启动进程并上报 `LaunchProgress`；离线会话日志不含令牌。
+3. **离线档案（OfflineProfile）**：Java `UUID.nameUUIDFromBytes("OfflinePlayer:"+name)` 兼容的 MD5 UUID v3（version/IETF variant 位、Java 字节序），已知值 `Notch → b50ad385-829d-3141-a216-7e7d7539ba7f` 交叉验证；玩家名 1..16 校验。
+4. **进程抽象**：`IGameProcess` / `IGameProcessLauncher`（便于测试与 UI），stdout/stderr 持续排空 + 最近 2000 行缓存；`Kill()`/退出码上报。
+5. **UI**：实例页新增「启动游戏 / 结束游戏」、启动进度条与阶段文本、游戏日志面板（最新在上，上限 500 行）；启动使用设置中的内存/Java/离线玩家名；DI 注册 GameCommandBuilder / GameProcessLauncher / GameLaunchService。
+
+### 验证结果（本机实测）
+
+| 检查 | 结果 |
+|---|---|
+| `dotnet build -c Release` | **0 警告 / 0 错误** |
+| `dotnet test` | **126 通过 / 0 失败 / 0 跳过**（新增 builder 9、启动编排/离线档案 22、启动 UI 2 等） |
+| **真实下载 E2E（Downloads 页）** | 通过下载页选择版本并下载：**4670 个文件 / 527.5 MiB**，约 20.5 分钟，SHA-1 与大小全部校验通过；进度条 100%，状态"版本 1.21.11 已下载并校验完成。" |
+| **真实离线启动 E2E** | 实例页创建实例 → 点击启动（自动检查文件/选择 Java）→ 启动出 `java` 进程，窗口 **`Minecraft 1.21.11`（GLFW30）**，截图确认进入 **Minecraft 主菜单**（Singleplayer/Multiplayer/Realms/Options/Quit Game）；WM_CLOSE 后应用状态"**游戏已退出（退出码 0）**"；应用退出码 0，运行期日志无 Critical/Error |
+| 文件落盘 | `versions/1.21.11/1.21.11.jar`（31 MB）、libraries 75 个 jar（65.6 MB）、assets/indexes/29.json、assets/objects 4591 个对象、assets/logging；应用数据合计 **527.9 MB** |
+
+证据：`docs/evidence/m2/`（minecraft-main-menu.png、minecraft-first-screen.png、launcher-after-launch.png、downloads-complete.png、download-install.log、launch-main-menu.log、launch-exit.log、launch-diagnostic.log、build/test 日志）。
+
+### 说明与遗留
+
+- 本次真实下载选中了 **1.21.11**（版本列表选择逻辑按子串匹配 `1.21.1` 命中了 `1.21.11`）；启动/主菜单均已验证。**精确 1.21.1 的端到端验证**放到下一里程碑榜首（已安装文件为 1.21.11，需再装 1.21.1 的 client/libs/assets 差异文件）。
+- builder 队友指出的 legacy（<1.13）安装链缺口：installer 对无 `downloads` 的旧版库/natives-only 库未做 Maven 回退，legacy E2E 留到 M5 加载器/旧版兼容阶段处理。
+- `ExtraGameArguments` / `ExtraJvmArguments` 目前未转发（builder 无扩展点），随 M3 设置页一起补齐。
+- 游戏日志面板改为"最新在上"以避免需要滚动；后续可加自动滚动条。

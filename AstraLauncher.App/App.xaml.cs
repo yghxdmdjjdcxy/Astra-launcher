@@ -10,6 +10,7 @@ using AstraLauncher.Downloader;
 using AstraLauncher.Game.Install;
 using AstraLauncher.Game.Instances;
 using AstraLauncher.Game.Java;
+using AstraLauncher.Game.Launch;
 using AstraLauncher.Game.Metadata;
 using AstraLauncher.Infrastructure.FileSystem;
 using AstraLauncher.Infrastructure.Logging;
@@ -94,6 +95,9 @@ public partial class App : Application
         builder.Services.AddSingleton<IVersionManifestService, VersionManifestService>();
         builder.Services.AddSingleton<VersionMetadataStore>();
         builder.Services.AddSingleton<IVersionInstallService, VersionInstallService>();
+        builder.Services.AddSingleton<GameCommandBuilder>();
+        builder.Services.AddSingleton<IGameProcessLauncher, GameProcessLauncher>();
+        builder.Services.AddSingleton<IGameLaunchService, GameLaunchService>();
         builder.Services.AddSingleton<IGameInstanceRepository, GameInstanceRepository>();
         builder.Services.AddSingleton<IJavaRuntimeDetector, JavaRuntimeDetector>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
