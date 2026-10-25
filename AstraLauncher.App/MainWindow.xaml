@@ -1,0 +1,30 @@
+<Window x:Class="AstraLauncher.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AstraLauncher.App.ViewModels"
+        Title="Astra Launcher" Height="560" Width="960" MinHeight="480" MinWidth="760">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:WelcomePageViewModel}"><StackPanel><TextBlock FontSize="28" Text="欢迎使用 Astra Launcher"/><TextBlock Margin="0,12,0,0" Text="基础架构已就绪。游戏版本、下载和认证将在后续已验证阶段提供。" TextWrapping="Wrap"/></StackPanel></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:InstancesPageViewModel}">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel><TextBlock FontSize="24" Text="游戏实例"/><TextBlock Margin="0,6,0,12" Text="创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。" TextWrapping="Wrap"/>
+                    <WrapPanel><TextBox Width="160" Margin="0,0,8,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/><TextBox Width="120" Margin="0,0,8,8" Text="{Binding VersionId, UpdateSourceTrigger=PropertyChanged}"/><Button Content="创建" Command="{Binding CreateCommand}" Margin="0,0,8,8"/><Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,8"/><Button Content="重命名" Command="{Binding RenameCommand}" Margin="0,0,8,8"/><Button Content="复制" Command="{Binding DuplicateCommand}" Margin="0,0,8,8"/><Button Content="删除" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/></WrapPanel>
+                    <WrapPanel><TextBox Width="360" Margin="0,0,8,8" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="要导入的现有游戏目录"/><Button Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="检测 Java" Command="{Binding DetectJavaCommand}"/></WrapPanel>
+                </StackPanel>
+                <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <ListBox ItemsSource="{Binding Instances}" SelectedItem="{Binding SelectedInstance}" DisplayMemberPath="Name" Margin="0,8,8,8"/>
+                    <ListBox Grid.Column="1" ItemsSource="{Binding JavaRuntimes}" Margin="8" DisplayMemberPath="ExecutablePath"/>
+                </Grid>
+                <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DownloadsPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="下载"/><TextBlock Margin="0,12,0,0" Text="Stage 3：真实下载队列。"/></StackPanel></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AccountsPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="账户"/><TextBlock Margin="0,12,0,0" Text="Stage 4：官方 Microsoft 登录与离线档案。"/></StackPanel></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ServersPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="服务器"/><TextBlock Margin="0,12,0,0" Text="Stage 7：服务器与联机基础设施。"/></StackPanel></DataTemplate>
+    </Window.Resources>
+    <DockPanel>
+        <Border DockPanel.Dock="Left" Width="180" Background="#1E293B" Padding="12"><StackPanel><TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="ASTRA" Margin="0,0,0,20"/><Button Content="首页" Command="{Binding NavigateCommand}" CommandParameter="Welcome" Margin="0,0,0,8"/><Button Content="游戏实例" Command="{Binding NavigateCommand}" CommandParameter="Instances" Margin="0,0,0,8"/><Button Content="下载" Command="{Binding NavigateCommand}" CommandParameter="Downloads" Margin="0,0,0,8"/><Button Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts" Margin="0,0,0,8"/><Button Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers"/></StackPanel></Border>
+        <Grid Margin="28"><ContentControl Content="{Binding Navigation.CurrentPage}"/></Grid>
+    </DockPanel>
+</Window>
