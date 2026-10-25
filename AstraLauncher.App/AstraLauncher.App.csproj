@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -14,8 +14,7 @@
     <ProjectReference Include="..\AstraLauncher.Downloader\AstraLauncher.Downloader.csproj" />
     <ProjectReference Include="..\AstraLauncher.Authentication\AstraLauncher.Authentication.csproj" />
     <ProjectReference Include="..\AstraLauncher.Multiplayer\AstraLauncher.Multiplayer.csproj" />
-  </ItemGroup>
-  <ItemGroup>
+  </ItemGroup>  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
   </ItemGroup>

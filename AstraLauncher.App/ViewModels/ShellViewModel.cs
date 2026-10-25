@@ -1,22 +1,47 @@
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
 using AstraLauncher.App.Services;
+using AstraLauncher.Core.Models;
+using AstraLauncher.Core.Services;
+using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.ViewModels;
 
 public sealed class ShellViewModel
 {
     private readonly InstancesPageViewModel _instances;
-    public ShellViewModel(INavigationService navigation, InstancesPageViewModel instances)
+    private readonly DownloadsPageViewModel _downloads;
+    private readonly IVersionManifestService _manifest;
+    private readonly ILogger<ShellViewModel> _logger;
+
+    public ShellViewModel(INavigationService navigation, InstancesPageViewModel instances, DownloadsPageViewModel downloads, IVersionManifestService manifest, ILogger<ShellViewModel> logger)
     {
         Navigation = navigation;
         _instances = instances;
+        _downloads = downloads;
+        _manifest = manifest;
+        _logger = logger;
         NavigateCommand = new RelayCommand(Navigate);
     }
 
     public INavigationService Navigation { get; }
+
     public ICommand NavigateCommand { get; }
-    public Task InitializeAsync() => _instances.InitializeAsync();
+
+    public async Task InitializeAsync()
+    {
+        await _instances.InitializeAsync();
+        await _downloads.InitializeAsync();
+        try
+        {
+            IReadOnlyList<VersionSummary> versions = await _manifest.GetVersionsAsync(includeSnapshots: false);
+            _instances.SetAvailableVersions(versions.Select(version => version.Id));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "版本列表加载失败；实例页仍可手动输入版本号。");
+        }
+    }
 
     private void Navigate(object? parameter)
     {

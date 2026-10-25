@@ -39,7 +39,7 @@ public sealed class VersionMetadataResolver(string minecraftDirectory)
             child.Id, child.InheritsFrom, child.MainClass ?? parent.MainClass, child.AssetIndex ?? parent.AssetIndex, child.JavaVersion ?? parent.JavaVersion,
             MergeLibraries(parent.Libraries, child.Libraries),
             new VersionArguments(parent.Arguments.Game.Concat(child.Arguments.Game).ToArray(), parent.Arguments.Jvm.Concat(child.Arguments.Jvm).ToArray()),
-            child.LegacyMinecraftArguments ?? parent.LegacyMinecraftArguments, downloads);
+            child.LegacyMinecraftArguments ?? parent.LegacyMinecraftArguments, downloads, child.Logging ?? parent.Logging);
     }
 
     private static IReadOnlyList<LibraryDescriptor> MergeLibraries(IReadOnlyList<LibraryDescriptor> parent, IReadOnlyList<LibraryDescriptor> child)

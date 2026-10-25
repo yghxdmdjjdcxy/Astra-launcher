@@ -25,7 +25,8 @@ public static class VersionMetadataParser
         string? mainClass = OptionalString(root, "mainClass");
         return new MinecraftVersionMetadata(
             id, inheritsFrom, mainClass, ParseAssetIndex(root, sourcePath), ParseJavaVersion(root, sourcePath),
-            ParseLibraries(root, sourcePath), ParseArguments(root, sourcePath), OptionalString(root, "minecraftArguments"), ParseDownloads(root, sourcePath));
+            ParseLibraries(root, sourcePath), ParseArguments(root, sourcePath), OptionalString(root, "minecraftArguments"), ParseDownloads(root, sourcePath),
+            ParseLogging(root, sourcePath));
     }
 
     private static AssetIndexDescriptor? ParseAssetIndex(JsonElement root, string? sourcePath)
@@ -101,6 +102,20 @@ public static class VersionMetadataParser
             JsonElement os = rule.TryGetProperty("os", out JsonElement candidate) ? candidate : default;
             return new ArgumentRule(RequiredString(rule, "action", sourcePath), OptionalString(os, "name"), OptionalString(os, "version"), OptionalString(os, "arch"), ParseBooleanMap(rule, "features", sourcePath));
         }).ToArray();
+    }
+
+    private static VersionLogging? ParseLogging(JsonElement root, string? sourcePath)
+    {
+        if (!root.TryGetProperty("logging", out JsonElement logging) || logging.ValueKind == JsonValueKind.Null) return null;
+        if (logging.ValueKind != JsonValueKind.Object) throw new VersionMetadataException("'logging' must be an object.", sourcePath);
+        if (!logging.TryGetProperty("client", out JsonElement client) || client.ValueKind == JsonValueKind.Null) throw new VersionMetadataException("'logging.client' is missing.", sourcePath);
+        if (client.ValueKind != JsonValueKind.Object) throw new VersionMetadataException("'logging.client' must be an object.", sourcePath);
+        if (!client.TryGetProperty("file", out JsonElement file) || file.ValueKind == JsonValueKind.Null) throw new VersionMetadataException("'logging.client.file' is missing.", sourcePath);
+        if (file.ValueKind != JsonValueKind.Object) throw new VersionMetadataException("'logging.client.file' must be an object.", sourcePath);
+        return new VersionLogging(new VersionLoggingClient(
+            RequiredString(client, "argument", sourcePath),
+            new VersionLoggingFile(RequiredString(file, "id", sourcePath), OptionalString(file, "sha1"), OptionalInt64(file, "size"), OptionalUri(file, "url", sourcePath)),
+            RequiredString(client, "type", sourcePath)));
     }
 
     private static IReadOnlyDictionary<string, DownloadArtifact> ParseDownloads(JsonElement root, string? sourcePath)

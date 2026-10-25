@@ -41,6 +41,9 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ObservableCollection<GameInstance> Instances { get; } = [];
     public ObservableCollection<JavaRuntimeInfo> JavaRuntimes { get; } = [];
 
+    /// <summary>Version ids offered by the version picker; the field stays editable for offline/unknown versions.</summary>
+    public ObservableCollection<string> AvailableVersions { get; } = [];
+
     public GameInstance? SelectedInstance
     {
         get => _selectedInstance;
@@ -64,6 +67,17 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand DetectJavaCommand { get; }
 
     public Task InitializeAsync() => RunAsync("加载实例列表", () => RefreshAsync(_selectedInstanceId));
+
+    /// <summary>Fills the version picker from the version manifest; the value is still free text when offline.</summary>
+    public void SetAvailableVersions(IEnumerable<string> versions)
+    {
+        ArgumentNullException.ThrowIfNull(versions);
+        AvailableVersions.Clear();
+        foreach (string version in versions)
+        {
+            if (!string.IsNullOrWhiteSpace(version) && !AvailableVersions.Contains(version)) AvailableVersions.Add(version);
+        }
+    }
 
     private async Task RefreshAsync(Guid? keepId)
     {

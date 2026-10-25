@@ -1,15 +1,21 @@
+using System.Net;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Threading;
 using AstraLauncher.App.Services;
 using AstraLauncher.App.ViewModels;
 using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
+using AstraLauncher.Downloader;
+using AstraLauncher.Game.Install;
+using AstraLauncher.Game.Instances;
+using AstraLauncher.Game.Java;
+using AstraLauncher.Game.Metadata;
 using AstraLauncher.Infrastructure.FileSystem;
 using AstraLauncher.Infrastructure.Logging;
 using AstraLauncher.Infrastructure.Net;
 using AstraLauncher.Infrastructure.Settings;
-using AstraLauncher.Game.Instances;
-using AstraLauncher.Game.Java;
+using AstraLauncher.Infrastructure.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -83,6 +89,11 @@ public partial class App : Application
         builder.Services.AddSingleton<ISettingsService, SettingsService>();
         builder.Services.AddSingleton<IDownloadSourceResolver>(_ => new DownloadSourceResolver(LauncherSettings.DefaultMirrorBaseUrl));
         builder.Services.AddSingleton<IDialogService, MessageBoxDialogService>();
+        builder.Services.AddSingleton(_ => CreateHttpClient());
+        builder.Services.AddSingleton(sp => new DownloadQueue(sp.GetRequiredService<HttpClient>(), new DownloadQueueOptions { MaximumConcurrentDownloads = LauncherSettings.DefaultMaxConcurrentDownloads }));
+        builder.Services.AddSingleton<IVersionManifestService, VersionManifestService>();
+        builder.Services.AddSingleton<VersionMetadataStore>();
+        builder.Services.AddSingleton<IVersionInstallService, VersionInstallService>();
         builder.Services.AddSingleton<IGameInstanceRepository, GameInstanceRepository>();
         builder.Services.AddSingleton<IJavaRuntimeDetector, JavaRuntimeDetector>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
@@ -94,6 +105,19 @@ public partial class App : Application
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         return builder.Build();
+    }
+
+    private static HttpClient CreateHttpClient()
+    {
+        var handler = new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+            ConnectTimeout = TimeSpan.FromSeconds(20),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+        };
+        var client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("AstraLauncher/1.0");
+        return client;
     }
 
     private bool TryAcquireSingleInstance()

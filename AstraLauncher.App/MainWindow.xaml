@@ -9,7 +9,7 @@
             <Grid>
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel><TextBlock FontSize="24" Text="游戏实例"/><TextBlock Margin="0,6,0,12" Text="创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。" TextWrapping="Wrap"/>
-                    <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="名称"/><TextBox Width="160" Margin="0,0,8,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="版本"/><TextBox Width="120" Margin="0,0,8,8" Text="{Binding VersionId, UpdateSourceTrigger=PropertyChanged}"/><Button Content="创建" Command="{Binding CreateCommand}" Margin="0,0,8,8"/><Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,8"/><Button Content="重命名" Command="{Binding RenameCommand}" Margin="0,0,8,8"/><Button Content="复制" Command="{Binding DuplicateCommand}" Margin="0,0,8,8"/><Button Content="删除" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/></WrapPanel>
+                    <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="名称"/><TextBox Width="160" Margin="0,0,8,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="版本"/><ComboBox Width="150" Margin="0,0,8,8" IsEditable="True" ItemsSource="{Binding AvailableVersions}" Text="{Binding VersionId, UpdateSourceTrigger=PropertyChanged}" ToolTip="从版本列表选择，或直接输入版本号"/><Button Content="创建" Command="{Binding CreateCommand}" Margin="0,0,8,8"/><Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,8"/><Button Content="重命名" Command="{Binding RenameCommand}" Margin="0,0,8,8"/><Button Content="复制" Command="{Binding DuplicateCommand}" Margin="0,0,8,8"/><Button Content="删除" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/></WrapPanel>
                     <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="导入路径"/><TextBox Width="360" Margin="0,0,8,8" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="要导入的现有游戏目录"/><Button Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="检测 Java" Command="{Binding DetectJavaCommand}"/></WrapPanel>
                 </StackPanel>
                 <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -21,7 +21,26 @@
                 <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:DownloadsPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="下载"/><TextBlock Margin="0,12,0,0" Text="Stage 3：真实下载队列。"/></StackPanel></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DownloadsPageViewModel}">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock FontSize="24" Text="下载"/>
+                    <TextBlock Margin="0,6,0,12" Text="选择 Minecraft 版本并下载客户端、依赖库与资源文件；下载源可在设置中切换（官方源 / 镜像 / 自动回退）。" TextWrapping="Wrap"/>
+                    <WrapPanel>
+                        <Button Content="刷新版本列表" Command="{Binding RefreshVersionsCommand}" Margin="0,0,8,8"/>
+                        <Button Content="下载所选版本" Command="{Binding InstallCommand}" Margin="0,0,8,8"/>
+                        <Button Content="取消下载" Command="{Binding CancelCommand}" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </StackPanel>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}" DisplayMemberPath="Id" Margin="0,8,8,8"/>
+                <StackPanel Grid.Row="2">
+                    <ProgressBar Height="18" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}"/>
+                    <TextBlock Margin="0,4,0,0" Text="{Binding ProgressText}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+            </Grid>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AccountsPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="账户"/><TextBlock Margin="0,12,0,0" Text="Stage 4：官方 Microsoft 登录与离线档案。"/></StackPanel></DataTemplate>
         <DataTemplate DataType="{x:Type vm:ServersPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="服务器"/><TextBlock Margin="0,12,0,0" Text="Stage 7：服务器与联机基础设施。"/></StackPanel></DataTemplate>
     </Window.Resources>

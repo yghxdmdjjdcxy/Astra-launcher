@@ -27,7 +27,7 @@ public sealed class DownloadQueueOptions
 /// Bounded-concurrency priority download queue with resume, integrity checks and pause/resume/cancel support.
 /// The supplied <see cref="HttpClient"/> should use <see cref="Timeout.InfiniteTimeSpan"/>; this queue owns its own timeouts.
 /// </summary>
-public sealed class DownloadQueue : IAsyncDisposable
+public sealed class DownloadQueue : IAsyncDisposable, IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly DownloadQueueOptions _options;
@@ -504,7 +504,6 @@ public sealed class DownloadQueue : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-
         foreach (WorkItem item in _targets.Values) item.AbortForShutdown();
         _targets.Clear();
         _shutdown.Cancel();
@@ -529,6 +528,12 @@ public sealed class DownloadQueue : IAsyncDisposable
         _shutdown.Dispose();
         _available.Dispose();
     }
+
+    /// <summary>
+    /// Synchronous fallback so the queue can also be registered in a DI container that is disposed synchronously
+    /// (for example the application host on exit). Prefer <see cref="DisposeAsync"/> when possible.
+    /// </summary>
+    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
     private enum QueueCancellationReason { None, Pause, Cancel, Shutdown }
 

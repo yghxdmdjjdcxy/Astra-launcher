@@ -1,0 +1,8 @@
+﻿T01 main window ready=True pid=133520
+SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\gui\shots-m1b\m1b-01-welcome.png
+T02 downloads page versionCount=17 status='已加载 103 个正式版本。' ready=True
+SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\gui\shots-m1b\m1b-02-downloads.png
+T03 instances page nav=True comboCount=1 comboItems=103 err=''
+SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\gui\shots-m1b\m1b-03-instances.png
+T04 closed=True code=0
+T05 log critical=0 error=0

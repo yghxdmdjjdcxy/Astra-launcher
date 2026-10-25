@@ -1,0 +1,15 @@
+C:\Users\admin\AppData\Local\Temp\astra-m1b-harness\Program.cs(15,50): warning CS0067: 从不使用事件“FakeSettings.Changed” [C:\Users\admin\AppData\Local\Temp\astra-m1b-harness\harness.csproj]
+STEP1 manifest
+MANIFEST_OK count=103 latest=26.3 type=release url=https://piston-meta.mojang.com/v1/packages/61fff1316bd50312624a858bbb5eb18fa45208ed/26.3.json
+STEP2 mirror manifest
+MIRROR status=200 bytes=278138 ct=application/json; charset=utf-8
+STEP3 metadataEnsure 1.21.1
+METADATA_OK id=1.21.1 mainClass=net.minecraft.client.main.Main java=21 libs=97 assets=17 logging=log4j2-xml
+STEP4 create plan
+PLAN_OK files=3962 knownBytes=919909872 groups=asset=3888,asset-index=1,client=1,library=70,logging=1,version-json=1
+PLAN_CLIENT=C:\Users\admin\AppData\Local\Temp\astra-m1b-data-0ade1e934ca04e5ca55b2fc582b0cc88\versions\1.21.1\1.21.1.jar
+PLAN_ASSETS_EXISTS=False 
+PLAN_INDEX_EXISTS=True
+STEP5 download one small asset object through the queue
+ASSET_OK path=C:\Users\admin\AppData\Local\Temp\astra-m1b-data-0ade1e934ca04e5ca55b2fc582b0cc88\assets\objects\9d\9dd32387135eefa7ab95996d52a5ca4cec8a3b30 bytes=86 expected=86
+HARNESS_OK
