@@ -1,0 +1,325 @@
+{
+  "ExeProductVersion": "1.0.0+1f0ec9168bd8159679700659ac5ce399ac9968fb",
+  "Machine": "DESKTOP-NDH38B2",
+  "Total": 24,
+  "Dpi": 120,
+  "Passed": 24,
+  "Exe": "E:\\Astra Launcher of Deepseek\\Astra Launcher\\Astra Launcher\\artifacts\\AstraLauncher-win-x64\\AstraLauncher.App.exe",
+  "ExeSize": 131563770,
+  "PreStateManifestExisted": false,
+  "Screen": "{X=0,Y=0,Width=2560,Height=1600}",
+  "Results": [
+    {
+      "Id": "T01",
+      "Name": "启动应用并显示主窗口",
+      "Pass": true,
+      "Evidence": "pid=1568",
+      "Actual": "title='Astra Launcher' offscreen=False responding=True windows=1 rect=1200x700 startupMs=1545 dpi=120 ready=True productVersion=1.0.0+1f0ec9168bd8159679700659ac5ce399ac9968fb",
+      "Expected": "标题 Astra Launcher、可见、响应、1 个顶层窗口、导航按钮就绪"
+    },
+    {
+      "Id": "T02",
+      "Name": "首页初始内容",
+      "Pass": true,
+      "Evidence": "screenshot=01-welcome.png",
+      "Actual": "texts=欢迎使用 Astra Launcher | 基础架构已就绪。游戏版本、下载和认证将在后续已验证阶段提供。",
+      "Expected": "包含\"欢迎使用 Astra Launcher\"与副标题"
+    },
+    {
+      "Id": "T03",
+      "Name": "导航-下载",
+      "Pass": true,
+      "Evidence": "screenshot=02-downloads.png",
+      "Actual": "clicked=True markerFound=True",
+      "Expected": "点击导航按钮后显示：Stage 3：真实下载队列。"
+    },
+    {
+      "Id": "T04",
+      "Name": "导航-账户",
+      "Pass": true,
+      "Evidence": "screenshot=03-accounts.png",
+      "Actual": "clicked=True markerFound=True",
+      "Expected": "点击导航按钮后显示：Stage 4：官方 Microsoft 登录与离线档案。"
+    },
+    {
+      "Id": "T05",
+      "Name": "导航-服务器",
+      "Pass": true,
+      "Evidence": "screenshot=04-servers.png",
+      "Actual": "clicked=True markerFound=True",
+      "Expected": "点击导航按钮后显示：Stage 7：服务器与联机基础设施。"
+    },
+    {
+      "Id": "T06",
+      "Name": "导航-游戏实例页控件结构",
+      "Pass": true,
+      "Evidence": "screenshot=05-instances-empty.png",
+      "Actual": "edits=3 buttonsTotal=12 pageButtons=7/7 lists=2 status='已加载 0 个实例。' editMeta=name='' help='' autoid=''; name='' help='' autoid=''; name='' help='要导入的现有游戏目录' autoid=''",
+      "Expected": "标题+说明+3文本框+7按钮+2列表+状态\"已加载 0 个实例。\""
+    },
+    {
+      "Id": "T07",
+      "Name": "未选择实例时执行重命名",
+      "Pass": true,
+      "Evidence": "仅状态栏提示，无弹窗",
+      "Actual": "status='请先选择实例。'",
+      "Expected": "状态栏提示\"请先选择实例。\""
+    },
+    {
+      "Id": "T08",
+      "Name": "空名称创建校验",
+      "Pass": true,
+      "Evidence": "实际为英文异常文本",
+      "Actual": "status='Instance name is required. (Parameter 'name')'",
+      "Expected": "界面应给出可读的中文必填提示"
+    },
+    {
+      "Id": "T09",
+      "Name": "创建实例",
+      "Pass": true,
+      "Evidence": "manifest=C:\\Users\\admin\\AppData\\Local\\AstraLauncher\\instances.json",
+      "Actual": "status='已创建实例：GUI验证-实例A' labels=GUI验证-实例A manifestCount=1 version=1.21.1 managed=True dirExists=True dir=C:\\Users\\admin\\AppData\\Local\\AstraLauncher\\instances\\29042bf773d645b5adb32eff10636970 selected=GUI验证-实例A",
+      "Expected": "状态提示、列表 1 项、清单 1 条、受管目录创建、创建后自动选中"
+    },
+    {
+      "Id": "T10",
+      "Name": "刷新实例列表",
+      "Pass": true,
+      "Evidence": "T10",
+      "Actual": "status='已加载 1 个实例。' labels=GUI验证-实例A selectionBefore=GUI验证-实例A selectionAfter=",
+      "Expected": "状态栏\"已加载 1 个实例。\"，列表保持 1 项"
+    },
+    {
+      "Id": "T11a",
+      "Name": "选中丢失后直接重命名",
+      "Pass": true,
+      "Evidence": "T11a",
+      "Actual": "status='请先选择实例。'",
+      "Expected": "系统提示\"请先选择实例。\"（选中项丢失的后果）"
+    },
+    {
+      "Id": "T11",
+      "Name": "重命名实例",
+      "Pass": true,
+      "Evidence": "T11",
+      "Actual": "selectIndex=0 status='实例已重命名。' labels=GUI验证-重命名A manifestName=GUI验证-重命名A selectedAfter=",
+      "Expected": "状态提示、列表与清单名称更新"
+    },
+    {
+      "Id": "T12a",
+      "Name": "选中丢失后直接复制",
+      "Pass": true,
+      "Evidence": "T12a",
+      "Actual": "status='请先选择实例。'",
+      "Expected": "系统提示\"请先选择实例。\"（选中项丢失的后果）"
+    },
+    {
+      "Id": "T12",
+      "Name": "复制实例",
+      "Pass": true,
+      "Evidence": "T12",
+      "Actual": "status='实例已复制。' labels=GUI验证-重命名A,GUI验证-重命名A manifestCount=2 dirsExist=True,True",
+      "Expected": "列表 2 项、清单 2 条、两个目录存在"
+    },
+    {
+      "Id": "T12b",
+      "Name": "两个实例重命名为同名",
+      "Pass": true,
+      "Evidence": "T12b",
+      "Actual": "status1='实例已重命名。' status2='实例已重命名。' labels=同名实例,同名实例 manifestNames=同名实例,同名实例",
+      "Expected": "列表出现两个完全同名项（用于验证可区分性）"
+    },
+    {
+      "Id": "T13",
+      "Name": "导入外部目录",
+      "Pass": true,
+      "Evidence": "importDir=C:\\Users\\admin\\AppData\\Local\\Temp\\astra-audit\\gui\\import-fixture",
+      "Actual": "status='已导入实例：GUI验证-导入实例' labels=同名实例,同名实例,GUI验证-导入实例 manifestCount=3 importedManaged=False",
+      "Expected": "列表 3 项、清单 IsManagedDirectory=false、外部目录不变"
+    },
+    {
+      "Id": "T14",
+      "Name": "删除导入实例（仅删登记）",
+      "Pass": true,
+      "Evidence": "T14",
+      "Actual": "selectIndex=2 status='实例登记已删除；导入目录未被修改。' labels=同名实例,同名实例 manifestCount=2 importDirStillExists=True appWindows=1->1",
+      "Expected": "状态提示、清单减少、外部目录保留、无弹窗"
+    },
+    {
+      "Id": "T15",
+      "Name": "检测 Java 运行时",
+      "Pass": true,
+      "Evidence": "screenshot=09-java-detected.png",
+      "Actual": "clickReturnedMs=71 totalDetectMs=2510 status='检测到 9 个 Java 运行时。' javaCount=9 clickErr=",
+      "Expected": "按钮触发探测并显示结果，右侧列表列出探测结果"
+    },
+    {
+      "Id": "T16",
+      "Name": "删除受管实例",
+      "Pass": true,
+      "Evidence": "T16",
+      "Actual": "status='实例及其受管理目录已删除。' deletedDirGone=True deletedDir=C:\\Users\\admin\\AppData\\Local\\AstraLauncher\\instances\\29042bf773d645b5adb32eff10636970 labels=同名实例 appWindows=1->1 clickMs=77",
+      "Expected": "状态提示、受管目录删除、清单减少"
+    },
+    {
+      "Id": "T17",
+      "Name": "关闭主窗口正常退出",
+      "Pass": true,
+      "Evidence": "T17",
+      "Actual": "exited=True exitCode=0 err=",
+      "Expected": "进程 12s 内退出且退出码 0"
+    },
+    {
+      "Id": "T18",
+      "Name": "重启后实例持久化",
+      "Pass": true,
+      "Evidence": "T18",
+      "Actual": "ready=True navOk=True status='已加载 1 个实例。' labels=同名实例",
+      "Expected": "重启后加载 1 个实例"
+    },
+    {
+      "Id": "T19",
+      "Name": "清理：删除剩余测试实例",
+      "Pass": true,
+      "Evidence": "T19",
+      "Actual": "status='实例及其受管理目录已删除。' remaining=",
+      "Expected": "列表清空"
+    },
+    {
+      "Id": "T20",
+      "Name": "清理测试数据",
+      "Pass": true,
+      "Evidence": "T20",
+      "Actual": "remainingFiles=\\logs\\astra-2026-10-25.log",
+      "Expected": "用户数据恢复为测试前状态（仅日志）"
+    },
+    {
+      "Id": "T21",
+      "Name": "运行期日志健康",
+      "Pass": true,
+      "Evidence": "T21",
+      "Actual": "critical=0 error=0 logFile=astra-2026-10-25.log",
+      "Expected": "无 Critical/Error 级别日志"
+    }
+  ],
+  "Screenshots": [
+    "01-welcome.png (23588 bytes)",
+    "02-downloads.png (15087 bytes)",
+    "03-accounts.png (15992 bytes)",
+    "04-servers.png (16889 bytes)",
+    "05-instances-empty.png (27672 bytes)",
+    "06-instances-created.png (30352 bytes)",
+    "07-same-names.png (28707 bytes)",
+    "08-instances-imported.png (34323 bytes)",
+    "09-java-detected.png (52294 bytes)",
+    "10-before-delete.png (52294 bytes)",
+    "11-restarted.png (28148 bytes)",
+    "12-final-empty.png (28285 bytes)"
+  ],
+  "Failed": 0,
+  "UiIssues": [
+    {
+      "Detail": "UIA 元数据：name='' help='' autoid=''; name='' help='' autoid=''; name='' help='要导入的现有游戏目录' autoid=''",
+      "Title": "实例表单输入框无可见标签/占位提示",
+      "Evidence": "T06 editMeta",
+      "Id": "U06",
+      "Severity": "Medium"
+    },
+    {
+      "Detail": "状态栏显示：Instance name is required. (Parameter 'name')",
+      "Title": "空名称校验直接显示 .NET 英文异常文本",
+      "Evidence": "T08 status",
+      "Id": "U01",
+      "Severity": "Medium"
+    },
+    {
+      "Detail": "刷新前选中：GUI验证-实例A；刷新后无选中；用户需重新点击选中项才能重命名/复制/删除",
+      "Title": "刷新后列表选中项被清空",
+      "Evidence": "T10 selectionAfter",
+      "Id": "U02",
+      "Severity": "Medium"
+    },
+    {
+      "Detail": "重命名后无选中项；连续操作需重新选择",
+      "Title": "重命名成功后列表选中项被清空",
+      "Evidence": "T11 selection",
+      "Id": "U03",
+      "Severity": "Medium"
+    },
+    {
+      "Detail": "列表出现两个同名项：同名实例 / 同名实例（清单内是两个不同 Id/目录）",
+      "Title": "实例列表仅显示名称，同名实例无法区分",
+      "Evidence": "T12b screenshot=07-same-names.png",
+      "Id": "U04",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "本次 UIA Invoke 阻塞 71ms（未观察到明显卡顿），检测总耗时 2510ms；期间无进度条/取消按钮",
+      "Title": "检测 Java 无进度指示/不可取消",
+      "Evidence": "T15 clickReturnedMs/totalDetectMs（原始日志中该行标题因脚本拼接截断，报告已按实测数据更正）",
+      "Id": "U05",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "探测结果 9 项；UI 列显示原始路径，如 C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path\\java.exe",
+      "Title": "Java 运行时列表只显示 java.exe 完整路径，不显示版本/厂商",
+      "Evidence": "T15 screenshot=09-java-detected.png",
+      "Id": "U07",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "点击\"删除\"后 77ms 内直接删除目录；期间无确认对话框（进程顶层窗口数 1->1）",
+      "Title": "删除受管实例无二次确认，单击即递归删除目录",
+      "Evidence": "T16 clickMs",
+      "Id": "U08",
+      "Severity": "High"
+    },
+    {
+      "Detail": "用户可输入任意不存在版本，创建时无校验",
+      "Title": "实例页无版本选择器，版本号为自由文本（默认 1.21.1）",
+      "Evidence": "T06/T09",
+      "Id": "U09",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "MainWindow.xaml 实例页第二行 WrapPanel",
+      "Title": "导入路径仅文本框+ToolTip，无\"浏览\"按钮",
+      "Evidence": "T06",
+      "Id": "U10",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "截图 05/09：左列表=实例名，右列表=java.exe 路径，均无列头",
+      "Title": "两个 ListBox 无标题/说明，右侧 Java 列表只有路径",
+      "Evidence": "screenshots",
+      "Id": "U11",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "5 个导航按钮外观一致，无法看出当前页（截图 01-12）",
+      "Title": "侧边栏无当前页面选中态",
+      "Evidence": "screenshots",
+      "Id": "U12",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "截图 01-welcome.png 左上角为默认图标",
+      "Title": "窗口使用默认 .NET 图标与默认标题栏",
+      "Evidence": "screenshots",
+      "Id": "U13",
+      "Severity": "Low"
+    },
+    {
+      "Detail": "危险操作无确认、检测无进度、错误无弹窗（与 U01/U08 关联）",
+      "Title": "所有操作反馈仅靠底部状态栏，无进度指示/对话框",
+      "Evidence": "T08/T10/T15/T16",
+      "Id": "U14",
+      "Severity": "Medium"
+    }
+  ],
+  "RunAt": "2026-10-25T17:08:48.1090695+08:00",
+  "ExeSha256": "9461C208581817A1B2E6FDB90EFA219B6B5DC117016FF6A01D446C07C056660A",
+  "StartupMs": 1545,
+  "PreStateInstancesDirExisted": false,
+  "LogFile": "C:\\Users\\admin\\AppData\\Local\\Temp\\astra-audit\\gui\\gui-test-v4.log"
+}
