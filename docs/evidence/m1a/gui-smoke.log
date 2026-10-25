@@ -1,0 +1,19 @@
+﻿PRESTATE manifest=False instances=False
+T01 READY=True pid=120700
+SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\gui\shots-m1a\m1a4-01-welcome.png
+T02 navOk=True labels=True edits=3 buttons=12 lists=2
+SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\gui\shots-m1a\m1a4-02-instances.png
+T03 create status='已创建实例：M1A4-实例' labels=M1A4-实例
+T04 refresh status='已加载 1 个实例。' selection=M1A4-实例
+T05 invoking delete via helper (background)...
+T05 dialog class='#32770' children=Button|是(&Y) ; Button|否(&N) ; Static| ; Static|将删除实例「M1A4-实例」及其目录（包含其中的存档/配置），此操作不可恢复。确认删除？
+SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\gui\shots-m1a\m1a4-03-delete-confirm.png
+T05 clicked button='是(&Y)'
+T05 delete status='实例及其受管理目录已删除。' remaining=
+T06 single instance...
+T06 dialog children=Button|确定 ; Static| ; Static|Astra Launcher 已在运行。
+T06 clicked='确定'
+T06 second exited=True code=0
+T07 main closed=True code=0
+T08 leftover=\logs\astra-2026-10-25.log
+T09 log critical=0 error=0

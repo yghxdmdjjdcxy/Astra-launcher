@@ -2,9 +2,12 @@ using System.Windows;
 using System.Windows.Threading;
 using AstraLauncher.App.Services;
 using AstraLauncher.App.ViewModels;
+using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Infrastructure.FileSystem;
 using AstraLauncher.Infrastructure.Logging;
+using AstraLauncher.Infrastructure.Net;
+using AstraLauncher.Infrastructure.Settings;
 using AstraLauncher.Game.Instances;
 using AstraLauncher.Game.Java;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,38 +18,71 @@ namespace AstraLauncher.App;
 
 public partial class App : Application
 {
+    private const string SingleInstanceMutexName = @"Local\AstraLauncher.SingleInstance";
     private IHost? _host;
+    private Mutex? _singleInstanceMutex;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        _host = CreateHost();
-        _host.Start();
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
-        _host.Services.GetRequiredService<MainWindow>().Show();
+
+        if (!TryAcquireSingleInstance())
+        {
+            MessageBox.Show("Astra Launcher 已在运行。", "Astra Launcher", MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown(0);
+            return;
+        }
+
+        try
+        {
+            _host = CreateHost();
+            _host.Start();
+            _host.Services.GetRequiredService<MainWindow>().Show();
+        }
+        catch (Exception exception)
+        {
+            LogCritical(exception, "Launcher startup failed");
+            MessageBox.Show($"Astra Launcher 启动失败，请查看日志。{Environment.NewLine}{exception.Message}", "Astra Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         if (_host is not null)
         {
-            _host.StopAsync().GetAwaiter().GetResult();
+            try
+            {
+                // Run the host shutdown on the thread pool so a hosted service that needs the UI thread cannot deadlock the UI thread.
+                Task.Run(() => _host.StopAsync()).GetAwaiter().GetResult();
+            }
+            catch (Exception)
+            {
+                // Shutdown is best-effort; the process is exiting anyway.
+            }
+
             _host.Dispose();
         }
 
+        ReleaseSingleInstance();
         base.OnExit(e);
     }
 
     private static IHost CreateHost()
     {
-        HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+        HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
         var paths = new LauncherPaths();
+        paths.EnsureCreated();
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
         builder.Logging.AddProvider(new FileLoggerProvider(paths.LogsDirectory));
         builder.Services.AddSingleton<ILauncherPaths>(paths);
+        builder.Services.AddSingleton<ISettingsService, SettingsService>();
+        builder.Services.AddSingleton<IDownloadSourceResolver>(_ => new DownloadSourceResolver(LauncherSettings.DefaultMirrorBaseUrl));
+        builder.Services.AddSingleton<IDialogService, MessageBoxDialogService>();
         builder.Services.AddSingleton<IGameInstanceRepository, GameInstanceRepository>();
         builder.Services.AddSingleton<IJavaRuntimeDetector, JavaRuntimeDetector>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
@@ -58,6 +94,44 @@ public partial class App : Application
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         return builder.Build();
+    }
+
+    private bool TryAcquireSingleInstance()
+    {
+        var mutex = new Mutex(initiallyOwned: false, SingleInstanceMutexName);
+        try
+        {
+            if (mutex.WaitOne(0))
+            {
+                _singleInstanceMutex = mutex;
+                return true;
+            }
+        }
+        catch (AbandonedMutexException)
+        {
+            // The previous launcher crashed without releasing the mutex; take ownership.
+            _singleInstanceMutex = mutex;
+            return true;
+        }
+
+        mutex.Dispose();
+        return false;
+    }
+
+    private void ReleaseSingleInstance()
+    {
+        if (_singleInstanceMutex is null) return;
+        try
+        {
+            _singleInstanceMutex.ReleaseMutex();
+        }
+        catch (ApplicationException)
+        {
+            // The mutex was abandoned or already released; disposing below is enough.
+        }
+
+        _singleInstanceMutex.Dispose();
+        _singleInstanceMutex = null;
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

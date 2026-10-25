@@ -51,4 +51,55 @@ public sealed class GameInstanceRepositoryTests : IAsyncLifetime
         Assert.True(Directory.Exists(externalDirectory));
         Assert.Empty(await repository.ListAsync());
     }
+
+    [Fact]
+    public async Task CorruptManifestIsQuarantinedAndRecoveredFromBackup()
+    {
+        var repository = new GameInstanceRepository(new LauncherPaths(_root));
+        GameInstance created = await repository.CreateAsync("Vanilla", "1.21.1");
+        // A second write produces the backup of the previous (valid) manifest.
+        await repository.RenameAsync(created.Id, "Renamed");
+        string manifest = Path.Combine(_root, "instances.json");
+        Assert.True(File.Exists(manifest + ".bak"));
+
+        await File.WriteAllTextAsync(manifest, "{ this is not valid json");
+
+        IReadOnlyList<GameInstance> recovered = await repository.ListAsync();
+
+        Assert.Single(recovered);
+        Assert.Equal("Renamed", recovered[0].Name);
+        Assert.NotEmpty(Directory.GetFiles(_root, "instances.json.corrupt-*.json"));
+    }
+
+    [Fact]
+    public async Task DuplicateAsync_RefusesCopyIntoSourceDirectory()
+    {
+        var repository = new GameInstanceRepository(new LauncherPaths(_root));
+        GameInstance created = await repository.CreateAsync("Vanilla", "1.21.1");
+        string instancesDirectory = Path.GetFullPath(Path.Combine(_root, "instances"));
+        GameInstance importedRoot = await repository.ImportAsync("InstancesRoot", "1.21.1", instancesDirectory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.DuplicateAsync(importedRoot.Id, "CopyOfRoot"));
+
+        await repository.DeleteAsync(importedRoot.Id, deleteManagedDirectory: false);
+        Assert.True(Directory.Exists(created.DirectoryPath));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_FailedDirectoryDeleteKeepsManifestConsistent()
+    {
+        var repository = new GameInstanceRepository(new LauncherPaths(_root));
+        GameInstance created = await repository.CreateAsync("Vanilla", "1.21.1");
+        string lockedFile = Path.Combine(created.DirectoryPath, "locked.dat");
+        await File.WriteAllTextAsync(lockedFile, "lock");
+
+        using (FileStream _ = new(lockedFile, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            await Assert.ThrowsAsync<IOException>(() => repository.DeleteAsync(created.Id, deleteManagedDirectory: true));
+        }
+
+        // The manifest was written before the directory deletion, so the instance list stays consistent.
+        Assert.Empty(await repository.ListAsync());
+        Assert.True(Directory.Exists(created.DirectoryPath));
+    }
 }

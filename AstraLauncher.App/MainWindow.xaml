@@ -9,12 +9,14 @@
             <Grid>
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel><TextBlock FontSize="24" Text="游戏实例"/><TextBlock Margin="0,6,0,12" Text="创建的实例使用独立目录；导入目录只登记，删除时不会修改原文件。" TextWrapping="Wrap"/>
-                    <WrapPanel><TextBox Width="160" Margin="0,0,8,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/><TextBox Width="120" Margin="0,0,8,8" Text="{Binding VersionId, UpdateSourceTrigger=PropertyChanged}"/><Button Content="创建" Command="{Binding CreateCommand}" Margin="0,0,8,8"/><Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,8"/><Button Content="重命名" Command="{Binding RenameCommand}" Margin="0,0,8,8"/><Button Content="复制" Command="{Binding DuplicateCommand}" Margin="0,0,8,8"/><Button Content="删除" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/></WrapPanel>
-                    <WrapPanel><TextBox Width="360" Margin="0,0,8,8" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="要导入的现有游戏目录"/><Button Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="检测 Java" Command="{Binding DetectJavaCommand}"/></WrapPanel>
+                    <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="名称"/><TextBox Width="160" Margin="0,0,8,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="版本"/><TextBox Width="120" Margin="0,0,8,8" Text="{Binding VersionId, UpdateSourceTrigger=PropertyChanged}"/><Button Content="创建" Command="{Binding CreateCommand}" Margin="0,0,8,8"/><Button Content="刷新" Command="{Binding RefreshCommand}" Margin="0,0,8,8"/><Button Content="重命名" Command="{Binding RenameCommand}" Margin="0,0,8,8"/><Button Content="复制" Command="{Binding DuplicateCommand}" Margin="0,0,8,8"/><Button Content="删除" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/></WrapPanel>
+                    <WrapPanel><TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="导入路径"/><TextBox Width="360" Margin="0,0,8,8" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}" ToolTip="要导入的现有游戏目录"/><Button Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="检测 Java" Command="{Binding DetectJavaCommand}"/></WrapPanel>
                 </StackPanel>
-                <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <ListBox ItemsSource="{Binding Instances}" SelectedItem="{Binding SelectedInstance}" DisplayMemberPath="Name" Margin="0,8,8,8"/>
-                    <ListBox Grid.Column="1" ItemsSource="{Binding JavaRuntimes}" Margin="8" DisplayMemberPath="ExecutablePath"/>
+                <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <TextBlock Margin="0,8,8,4" FontWeight="SemiBold" Text="实例列表"/>
+                    <TextBlock Grid.Column="1" Margin="8,8,8,4" FontWeight="SemiBold" Text="Java 运行时"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Instances}" SelectedItem="{Binding SelectedInstance}" DisplayMemberPath="Name" Margin="0,0,8,8"/>
+                    <ListBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding JavaRuntimes}" Margin="8" DisplayMemberPath="ExecutablePath"/>
                 </Grid>
                 <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </Grid>
