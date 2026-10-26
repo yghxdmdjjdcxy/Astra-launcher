@@ -1,9 +1,10 @@
 Single-file executable: artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe
-Size bytes: 65079284
+Size bytes: 65081803
 Size MB: 62.1
 FileVersion: 1.0.0.0
-ProductVersion: 1.0.0+d6892b77ff5d38b1cf02ddddf9346179c8fe1901
-SHA256: E7B839E5EE2AF529F3C8B3B923A1A4023B2F9E1EDA5E975817D3EA88A0774FE9
-Built: 2026-10-26T22:27:41.1993130+08:00
+ProductVersion: 1.0.0+84e9319cc3ee719e674909767d9f0918f1b34783
+SHA256: D26445CA31907F80A9C5798FD39FD17BB4973CFE96848BB7D7D83A1D416304D0
+Built: 2026-10-26T22:46:51.4508085+08:00
 Command: scripts/publish-single-file.ps1
-Smoke: single-file start -> window in 2s, settings/downloads navigation OK, exit code 0, no extra files, log 0 Critical/0 Error
+Smoke: start 2s -> window; portable .minecraft created/resolved; settings page shows directory; exit code 0; 0 Critical/0 Error
+Portable layout verified separately: versions/libraries/assets shared with other launchers (see docs/evidence/minecraft-directory)
