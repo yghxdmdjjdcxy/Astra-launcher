@@ -24,6 +24,8 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
     private const string LwjglUrl = "https://libraries.minecraft.net/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3.jar";
     private const string NativeUrl = "https://libraries.minecraft.net/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives.jar";
     private const string DeniedLibraryUrl = "https://libraries.minecraft.net/com/example/denied/1.0/denied-1.0.jar";
+    private const string LegacyLibraryUrl = "https://libraries.minecraft.net/com/example/legacy/1.0/legacy-1.0.jar";
+    private const string LegacyNativeOtherUrl = "https://libraries.minecraft.net/com/example/legacy-natives/1.0/legacy-natives-1.0-natives-legacy-other.jar";
     private const string AssetIndexUrl = "https://piston-meta.mojang.com/v1/packages/bbbb/17.json";
     private const string LoggingUrl = "https://launchermeta.mojang.com/v1/objects/cccc/client-1.12.xml";
 
@@ -47,6 +49,8 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
     private readonly byte[] _asset2;
     private readonly string _assetHash1;
     private readonly string _assetHash2;
+    private readonly string _legacyNativeUrl;
+    private readonly string _legacyNativeDestination;
 
     public VersionInstallServiceTests()
     {
@@ -70,6 +74,12 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
         _asset2 = Encoding.UTF8.GetBytes("icon-png");
         _assetHash1 = Sha1(_asset1);
         _assetHash2 = Sha1(_asset2);
+        string nativeClassifier = OperatingSystem.IsWindows()
+            ? "natives-windows"
+            : OperatingSystem.IsMacOS() ? "natives-macos" : "natives-linux";
+        string legacyNativeRelativePath = $"com/example/legacy-natives/1.0/legacy-natives-1.0-{nativeClassifier}.jar";
+        _legacyNativeUrl = "https://libraries.minecraft.net/" + legacyNativeRelativePath;
+        _legacyNativeDestination = Path.Combine(_paths.LibrariesDirectory, legacyNativeRelativePath.Replace('/', Path.DirectorySeparatorChar));
         string assetIndexJson = $$"""
         {"objects":{"minecraft/sounds/click.ogg":{"hash":"{{_assetHash1}}","size": {{_asset1.Length}} },"icons/icon.png":{"hash":"{{_assetHash2}}","size": {{_asset2.Length}} } } }
         """;
@@ -122,6 +132,18 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
               "downloads": {
                 "artifact": { "path": "com/example/other-os/1.0/other-os-1.0.jar", "sha1": "{{Sha1(_library)}}", "size": {{_library.Length}}, "url": "{{DeniedLibraryUrl}}" }
               }
+            },
+            {
+              "name": "com.example:legacy:1.0"
+            },
+            {
+              "name": "com.example:legacy-natives:1.0",
+              "natives": { "windows": "natives-windows", "osx": "natives-macos", "linux": "natives-linux" },
+              "downloads": {
+                "classifiers": {
+                  "natives-legacy-other": { "path": "com/example/legacy-natives/1.0/legacy-natives-1.0-natives-legacy-other.jar", "sha1": "{{Sha1(_native)}}", "size": {{_native.Length}}, "url": "{{LegacyNativeOtherUrl}}" }
+                }
+              }
             }
           ]
         }
@@ -135,6 +157,8 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
         _handler.Add(LwjglUrl, _library);
         _handler.Add(NativeUrl, _native);
         _handler.Add(DeniedLibraryUrl, _library);
+        _handler.Add(LegacyLibraryUrl, _library);
+        _handler.Add(_legacyNativeUrl, _native);
         _handler.Add(AssetIndexUrl, _assetIndex);
         _handler.Add(LoggingUrl, _logging);
         _handler.Add(AssetUrl(_assetHash1), _asset1);
@@ -150,10 +174,12 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
         VersionInstallPlan plan = await _service.CreatePlanAsync(VersionId);
 
         Assert.Equal(VersionId, plan.VersionId);
-        Assert.Equal(9, plan.Files.Count);
+        // The fixture now contributes two extra legacy files: the Maven fallback of a downloads-less library and the
+        // classifier fallback of a natives-only library (which has no base jar to download).
+        Assert.Equal(11, plan.Files.Count);
         Assert.Single(plan.Files, file => file.Category == "version-json");
         Assert.Single(plan.Files, file => file.Category == "client");
-        Assert.Equal(3, plan.Files.Count(file => file.Category == "library"));
+        Assert.Equal(5, plan.Files.Count(file => file.Category == "library"));
         Assert.Single(plan.Files, file => file.Category == "asset-index");
         Assert.Equal(2, plan.Files.Count(file => file.Category == "asset"));
         Assert.Single(plan.Files, file => file.Category == "logging");
@@ -163,6 +189,14 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
         Assert.Contains(plan.Files, file => file.DestinationPath == Path.Combine(_root, "assets", "indexes", "17.json"));
         Assert.Contains(plan.Files, file => file.DestinationPath == Path.Combine(_root, "assets", "logging", "client-1.12.xml"));
         Assert.Contains(plan.Files, file => file.DestinationPath == Path.Combine(_root, "assets", "objects", _assetHash1[..2], _assetHash1));
+        Assert.Contains(plan.Files, file => file.DestinationPath == Path.Combine(_root, "libraries", "com", "example", "legacy", "1.0", "legacy-1.0.jar")
+            && string.Equals(file.Url, LegacyLibraryUrl, StringComparison.Ordinal)
+            && file.Sha1 is null
+            && file.Size is null);
+        Assert.Contains(plan.Files, file => file.DestinationPath == _legacyNativeDestination
+            && string.Equals(file.Url, _legacyNativeUrl, StringComparison.Ordinal)
+            && file.Sha1 is null
+            && file.Size is null);
         Assert.Equal(0, _handler.CountFor(DeniedLibraryUrl));
     }
 
@@ -176,6 +210,8 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
         await AssertFileContentAsync(Path.Combine(_root, "libraries", "com", "example", "artifact", "1.0", "artifact-1.0.jar"), _library);
         await AssertFileContentAsync(Path.Combine(_root, "libraries", "org", "lwjgl", "lwjgl", "3.3.3", "lwjgl-3.3.3.jar"), _library);
         await AssertFileContentAsync(Path.Combine(_root, "libraries", "org", "lwjgl", "lwjgl", "3.3.3", "lwjgl-3.3.3-natives.jar"), _native);
+        await AssertFileContentAsync(Path.Combine(_root, "libraries", "com", "example", "legacy", "1.0", "legacy-1.0.jar"), _library);
+        await AssertFileContentAsync(_legacyNativeDestination, _native);
         await AssertFileContentAsync(Path.Combine(_root, "assets", "indexes", "17.json"), _assetIndex);
         await AssertFileContentAsync(Path.Combine(_root, "assets", "objects", _assetHash1[..2], _assetHash1), _asset1);
         await AssertFileContentAsync(Path.Combine(_root, "assets", "objects", _assetHash2[..2], _assetHash2), _asset2);
@@ -185,8 +221,11 @@ public sealed class VersionInstallServiceTests : IAsyncLifetime
         Assert.Equal(1, _handler.CountFor(ClientUrl));
         Assert.Equal(1, _handler.CountFor(LibraryUrl));
         Assert.Equal(1, _handler.CountFor(NativeUrl));
+        Assert.Equal(1, _handler.CountFor(LegacyLibraryUrl));
+        Assert.Equal(1, _handler.CountFor(_legacyNativeUrl));
         Assert.Equal(1, _handler.CountFor(AssetIndexUrl));
         Assert.Equal(1, _handler.CountFor(LoggingUrl));
+        Assert.Equal(0, _handler.CountFor(LegacyNativeOtherUrl));
         Assert.Equal(0, _handler.CountFor(DeniedLibraryUrl));
 
         // A second install must be a no-op: nothing is requested again and the files stay intact.

@@ -91,7 +91,15 @@ public partial class App : Application
         builder.Services.AddSingleton<IDownloadSourceResolver>(_ => new DownloadSourceResolver(LauncherSettings.DefaultMirrorBaseUrl));
         builder.Services.AddSingleton<IDialogService, MessageBoxDialogService>();
         builder.Services.AddSingleton(_ => CreateHttpClient());
-        builder.Services.AddSingleton(sp => new DownloadQueue(sp.GetRequiredService<HttpClient>(), new DownloadQueueOptions { MaximumConcurrentDownloads = LauncherSettings.DefaultMaxConcurrentDownloads }));
+        builder.Services.AddSingleton(sp => new DownloadQueue(sp.GetRequiredService<HttpClient>(), new DownloadQueueOptions
+        {
+            MaximumConcurrentDownloads = 8,
+            MaximumConcurrentDownloadsPerHost = 6,
+            EnableSegmentedDownloads = true,
+            SegmentsPerFile = 4,
+            MinimumSegmentSizeBytes = 2 * 1024 * 1024,
+            MaximumConcurrentSegments = 8,
+        }));
         builder.Services.AddSingleton<IVersionManifestService, VersionManifestService>();
         builder.Services.AddSingleton<VersionMetadataStore>();
         builder.Services.AddSingleton<IVersionInstallService, VersionInstallService>();
@@ -106,6 +114,7 @@ public partial class App : Application
         builder.Services.AddSingleton<DownloadsPageViewModel>();
         builder.Services.AddSingleton<AccountsPageViewModel>();
         builder.Services.AddSingleton<ServersPageViewModel>();
+        builder.Services.AddSingleton<SettingsPageViewModel>();
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         return builder.Build();

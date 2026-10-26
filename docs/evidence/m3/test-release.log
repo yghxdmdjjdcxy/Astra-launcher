@@ -1,0 +1,7 @@
+E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Tests\bin\Release\net10.0-windows\AstraLauncher.Tests.dll (.NETCoreApp,Version=v10.0)的测试运行
+VSTest 版本 18.0.1 (x64)
+
+正在启动测试执行，请稍候...
+总共 1 个测试文件与指定模式相匹配。
+
+已通过! - 失败:     0，通过:   144，已跳过:     0，总计:   144，持续时间: 2 s - AstraLauncher.Tests.dll (net10.0)

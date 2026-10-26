@@ -12,8 +12,8 @@
 | **M1a** | 下载引擎加固 + 基础服务（路径/设置/下载源/日志轮转/单实例）+ 实例页 UI 安全修复 | ✅ 完成（见下） |
 | **M1b** | 版本清单/元数据/安装计划/下载（client/libraries/assets/log4j）+ 下载页 UI + 实例版本选择器 | ✅ 完成（见下） |
 | **M2** | 启动链路修复接线 + 启动 UI + 真实离线启动 Minecraft 到主菜单（E2E） | ✅ 完成（见下） |
-| M3 | 设置页 + Java 运行时管理/选择、实例设置 | ⏳ 下一步 |
-| M4 | 官方 Microsoft OAuth + Xbox/Minecraft 链 + DPAPI 令牌 + 账户页 | 待开始 |
+| **M3** | 多线程分段下载 + 设置页/Java 选择 + 额外参数转发 + legacy 库回退 + 精确 1.21.1 E2E | ✅ 完成（见下） |
+| M4 | 官方 Microsoft 登录：OAuth + Xbox/Minecraft 链 + DPAPI 令牌 + 账户页/多账户/离线档案 | ⏳ 下一步 |
 | M5 | Fabric/Quilt/Forge/NeoForge 安装与启动集成 | 待开始 |
 | M6 | 服务器列表 + --server/--port 一键加入 | 待开始 |
 | M7 | 全量测试、真实端到端验收、文档与最终报告 | 待开始 |
@@ -127,3 +127,40 @@
 - builder 队友指出的 legacy（<1.13）安装链缺口：installer 对无 `downloads` 的旧版库/natives-only 库未做 Maven 回退，legacy E2E 留到 M5 加载器/旧版兼容阶段处理。
 - `ExtraGameArguments` / `ExtraJvmArguments` 目前未转发（builder 无扩展点），随 M3 设置页一起补齐。
 - 游戏日志面板改为"最新在上"以避免需要滚动；后续可加自动滚动条。
+
+---
+
+## M3 记录（2026-10-26 晚间：多线程下载 + 设置页 + 精确 1.21.1 E2E）
+
+### 交付内容
+
+1. **单文件多线程分段下载（DownloadQueue）**
+   - 新增 `DownloadQueueOptions`：`EnableSegmentedDownloads=true`、`SegmentsPerFile=4`、`MinimumSegmentSizeBytes=2MiB`、`MaximumConcurrentSegments=8`（均有范围校验）。
+   - 大文件（已知大小 ≥ 阈值）先发 `Range: bytes=0-0` 探测：206 → 按段并行下载（每段独立 Range、独立 FileStream 写同一预分配 `.astra.part` 的不同偏移，`SemaphoreSlim` 限制并发段数，段内重试 3 次并校验 ContentRange）；200（服务器忽略 Range）→ 复用响应回退单流；小文件/未知大小 → 单流。
+   - 进度聚合单调不回退；任一段最终失败取消其它段并抛原始异常；取消/暂停删除 part（分段模式不支持续传，属设计取舍）；成功后长度 + SHA-1 校验并原子替换。
+   - App DI 队列调整为 8 workers / host 6 并发 / 4 段 / 8 并发段。
+2. **设置页 + Java 运行时选择（WPF/MVVM）**：`SettingsPageViewModel` 加载/保存 `settings.json`（内存、并发下载、下载源、镜像地址、Java 自动/手动、离线玩家名、显示快照、额外 JVM/游戏参数）；Java 探测列表 + 自动选择；异常中文提示 + 日志；`PageKey.Settings` + 左侧"设置"导航 + 设置页 XAML；Shell 启动初始化设置页；App DI 注册。
+3. **额外 JVM/游戏参数真正转发**：`GameLaunchRequest` 新增可选 `ExtraJvmArguments/ExtraGameArguments`；Builder 将 JVM 额外参数放在 `-Xmx` 之后、mainClass 之前，游戏额外参数追加在 game 参数之后；`GameLaunchService` 支持空格分词 + 双引号整体参数、未闭合引号快速失败、日志不记录参数内容。
+4. **legacy（<1.13）库安装回退**：无 `downloads.artifact` URL 的库按 Maven 坐标到 `libraries/<path>`，URL 指向 `https://libraries.minecraft.net/<mavenPath>`；natives classifier 缺失时按坐标+classifier 回退；保留路径根校验/去重。真实旧版启动端到端仍留 M5 验证。
+5. **精确 1.21.1 端到端**：下载页精确选中 `1.21.1`（避免 1.21.11 子串误选）→ 下载 → 实例页创建实例并启动 → 进入 Minecraft 1.21.1 主菜单 → 退出码 0。
+
+### 验证结果（本机实测）
+
+| 检查 | 结果 |
+|---|---|
+| `dotnet build -c Release` | **0 警告 / 0 错误** |
+| `dotnet test` | **144 通过 / 0 失败 / 0 跳过**（新增分段下载 6、设置页 4、导航、额外参数、legacy 回退等） |
+| **多线程下载效果** | 1.21.1：**3962 文件 / 877.3 MiB / 686 秒**（约 1.28 MiB/s；client jar 25.6 MB 分段下载）；对比 M2 单流 1.21.11：527.5 MiB / 1242 秒（约 0.43 MiB/s）→ 综合吞吐约 **3 倍** |
+| **精确 1.21.1 E2E** | 状态"版本 1.21.1 已下载并校验完成。"；启动出 `java` 进程，窗口 **`Minecraft 1.21.1`（GLFW30）**，点击 Continue 后进入 **1.21.1 主菜单**；WM_CLOSE 后应用状态"**游戏已退出（退出码 0）**"；应用退出码 0，运行期日志 0 Critical / 0 Error |
+| 设置页 GUI 冒烟 | 12/12 标签齐全；点击保存 → "设置已保存。"；`settings.json` 正确写入（4096 MiB、并发 4、源=OfficialWithFallback、镜像=BMCLAPI、离线名 Player）；关闭退出码 0，日志无错误 |
+| 磁盘 | 应用数据 1.30 GB（1.21.11 + 1.21.1 两套版本文件），C: 剩余约 4 GB |
+
+证据：`docs/evidence/m3/`（minecraft-1.21.1-main-menu.png、minecraft-1.21.1-first-screen.png、downloads-1.21.1-complete.png、settings-page.png、e2e-1.21.1.log、settings-smoke.log、build/test 日志）。
+
+### 说明与遗留
+
+- 分段下载设计上不支持断点续传（大文件暂停会丢弃该文件 part 重新开始）；1.21.1 E2E 全程未中断。
+- 设置保存后镜像地址/显示快照的运行期联动尚未接线（`IDownloadSourceResolver` 启动时以默认镜像构造，修改镜像需重启；快照过滤仍待下载页接入）。
+- 一次失败的 E2E 尝试中出现过 `DownloadQueue` 被提前 Dispose 的一次性异常，后续完整 E2E 未复现（临时诊断代码已移除）；作为稳定性观察项。
+- 本机 HTTP 实际经本地代理（127.0.0.1:7890），分段下载仍按请求并行生效。
+- 真实 legacy（1.8.9 等）完整启动留 M5 加载器/旧版兼容阶段验证。

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -21,6 +22,18 @@ public sealed class DownloadQueueOptions
     public TimeSpan InitialRetryDelay { get; init; } = TimeSpan.FromSeconds(1);
     public TimeSpan MaximumRetryDelay { get; init; } = TimeSpan.FromSeconds(30);
     public int ProgressReportIntervalMilliseconds { get; init; } = 100;
+
+    /// <summary>Enables parallel HTTP Range downloads for files of at least <see cref="MinimumSegmentSizeBytes"/>.</summary>
+    public bool EnableSegmentedDownloads { get; init; } = true;
+
+    /// <summary>Maximum number of segments one file is split into. Segmented downloads are not resumable.</summary>
+    public int SegmentsPerFile { get; init; } = 4;
+
+    /// <summary>Smallest file size that is worth splitting into parallel Range requests; also the target segment size.</summary>
+    public long MinimumSegmentSizeBytes { get; init; } = 2 * 1024 * 1024;
+
+    /// <summary>Maximum number of segment requests that may run at the same time for a single file.</summary>
+    public int MaximumConcurrentSegments { get; init; } = 8;
 }
 
 /// <summary>
@@ -41,6 +54,9 @@ public sealed class DownloadQueue : IAsyncDisposable, IDisposable
     private readonly long _progressIntervalTicks;
     private int _disposed;
 
+    /// <summary>Retries per segment on top of the initial attempt; every retry restarts the whole segment range.</summary>
+    private const int SegmentMaximumRetries = 3;
+
     public DownloadQueue(HttpClient httpClient, DownloadQueueOptions? options = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -50,6 +66,9 @@ public sealed class DownloadQueue : IAsyncDisposable, IDisposable
         if (_options.RequestHeadersTimeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(options), "RequestHeadersTimeout must be positive.");
         if (_options.ReadIdleTimeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(options), "ReadIdleTimeout must be positive.");
         if (_options.ProgressReportIntervalMilliseconds < 0) throw new ArgumentOutOfRangeException(nameof(options), "ProgressReportIntervalMilliseconds must not be negative.");
+        if (_options.SegmentsPerFile is < 1 or > 16) throw new ArgumentOutOfRangeException(nameof(options), "SegmentsPerFile must be between 1 and 16.");
+        if (_options.MinimumSegmentSizeBytes <= 0) throw new ArgumentOutOfRangeException(nameof(options), "MinimumSegmentSizeBytes must be positive.");
+        if (_options.MaximumConcurrentSegments is < 1 or > 32) throw new ArgumentOutOfRangeException(nameof(options), "MaximumConcurrentSegments must be between 1 and 32.");
         _progressIntervalTicks = (long)(Stopwatch.Frequency * (_options.ProgressReportIntervalMilliseconds / 1000.0));
         _workers = Enumerable.Range(0, _options.MaximumConcurrentDownloads).Select(_ => Task.Run(WorkerLoopAsync)).ToArray();
     }
@@ -232,32 +251,70 @@ public sealed class DownloadQueue : IAsyncDisposable, IDisposable
             }
         }
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Get, request.Source);
-        if (existing > 0)
+        // Segmented downloads need a known size and an empty part file; they cannot be resumed.
+        HttpResponseMessage? reusedProbeResponse = null;
+        long? segmentedSize = null;
+        if (existing == 0
+            && _options.EnableSegmentedDownloads
+            && request.ExpectedSize is long segmentedTotal
+            && segmentedTotal >= _options.MinimumSegmentSizeBytes)
         {
-            httpRequest.Headers.Range = new RangeHeaderValue(existing, null);
-            if (metadata?.EntityTag is string entityTag && EntityTagHeaderValue.TryParse(entityTag, out EntityTagHeaderValue? parsedTag))
+            HttpResponseMessage probe = await SendRangeProbeAsync(request.Source, cancellationToken).ConfigureAwait(false);
+            bool keepProbeResponse = false;
+            try
             {
-                httpRequest.Headers.IfRange = new RangeConditionHeaderValue(parsedTag);
+                if (probe.StatusCode == HttpStatusCode.PartialContent)
+                {
+                    ContentRangeHeaderValue? probeRange = probe.Content.Headers.ContentRange;
+                    if (probeRange is { From: 0, Length: long usableTotal })
+                    {
+                        if (usableTotal != segmentedTotal)
+                        {
+                            DeletePartFiles(item);
+                            throw new DownloadIntegrityException($"The server reported {usableTotal} bytes for '{destination}' but {segmentedTotal} were expected.");
+                        }
+
+                        segmentedSize = usableTotal;
+                    }
+
+                    // A 206 response only carries the probed byte, so the plain download request below is used otherwise.
+                }
+                else if (probe.StatusCode == HttpStatusCode.OK)
+                {
+                    // The server ignored the probe Range header: reuse this response for the sequential download.
+                    keepProbeResponse = true;
+                    reusedProbeResponse = probe;
+                }
+                else if (probe.StatusCode != HttpStatusCode.RequestedRangeNotSatisfiable)
+                {
+                    throw new DownloadHttpException(probe.StatusCode, $"GET {request.Source} returned {(int)probe.StatusCode} ({probe.ReasonPhrase}).", GetRetryAfter(probe));
+                }
             }
-            else if (metadata?.LastModified is DateTimeOffset lastModified)
+            finally
             {
-                httpRequest.Headers.IfRange = new RangeConditionHeaderValue(lastModified);
+                if (!keepProbeResponse) probe.Dispose();
             }
         }
 
-        using var headersTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        headersTimeout.CancelAfter(_options.RequestHeadersTimeout);
+        if (segmentedSize is long totalToSegment)
+        {
+            await DownloadSegmentedAsync(item, totalToSegment, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         HttpResponseMessage response;
-        try
+        HttpRequestMessage? httpRequest = null;
+        if (reusedProbeResponse is null)
         {
-            response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, headersTimeout.Token).ConfigureAwait(false);
+            httpRequest = CreateGetRequest(request, existing, metadata);
+            response = await SendWithHeadersTimeoutAsync(request.Source, httpRequest, cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        else
         {
-            throw new DownloadTimeoutException($"Timed out waiting for a response from '{request.Source}'.", exception);
+            response = reusedProbeResponse;
         }
 
+        using (httpRequest)
         using (response)
         {
             if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable && existing > 0)
@@ -354,6 +411,264 @@ public sealed class DownloadQueue : IAsyncDisposable, IDisposable
 
             File.Move(part, destination, overwrite: true);
             TryDeleteFile(metadataPath);
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendWithHeadersTimeoutAsync(Uri source, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
+    {
+        using var headersTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        headersTimeout.CancelAfter(_options.RequestHeadersTimeout);
+        try
+        {
+            return await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, headersTimeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new DownloadTimeoutException($"Timed out waiting for a response from '{source}'.", exception);
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendRangeProbeAsync(Uri source, CancellationToken cancellationToken)
+    {
+        using HttpRequestMessage probeRequest = new(HttpMethod.Get, source);
+        probeRequest.Headers.Range = new RangeHeaderValue(0, 0);
+        return await SendWithHeadersTimeoutAsync(source, probeRequest, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static HttpRequestMessage CreateGetRequest(DownloadRequest request, long existing, PartMetadata? metadata)
+    {
+        HttpRequestMessage httpRequest = new(HttpMethod.Get, request.Source);
+        if (existing > 0)
+        {
+            httpRequest.Headers.Range = new RangeHeaderValue(existing, null);
+            if (metadata?.EntityTag is string entityTag && EntityTagHeaderValue.TryParse(entityTag, out EntityTagHeaderValue? parsedTag))
+            {
+                httpRequest.Headers.IfRange = new RangeConditionHeaderValue(parsedTag);
+            }
+            else if (metadata?.LastModified is DateTimeOffset lastModified)
+            {
+                httpRequest.Headers.IfRange = new RangeConditionHeaderValue(lastModified);
+            }
+        }
+
+        return httpRequest;
+    }
+
+    /// <summary>
+    /// Downloads <paramref name="total"/> bytes with parallel HTTP Range requests. Segmented downloads are not resumable:
+    /// the partial file is always created from scratch and removed when the download is interrupted.
+    /// </summary>
+    private async Task DownloadSegmentedAsync(WorkItem item, long total, CancellationToken cancellationToken)
+    {
+        DownloadRequest request = item.Request;
+        string destination = request.DestinationPath;
+        string part = PartPath(item);
+        string metadataPath = MetadataPath(item);
+
+        // The part file is not a resume candidate in segmented mode, so anything stale is dropped first.
+        DeletePartFiles(item);
+
+        int segmentCount = GetSegmentCount(total);
+        SegmentRange[] segments = CreateSegments(total, segmentCount);
+        using (FileStream allocation = new(part, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Write))
+        {
+            allocation.SetLength(total);
+        }
+
+        SegmentProgress progress = new(item, segmentCount, total);
+        using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using SemaphoreSlim gate = new(_options.MaximumConcurrentSegments);
+        Task<Exception?>[] tasks = new Task<Exception?>[segmentCount];
+        for (int index = 0; index < segmentCount; index++)
+        {
+            int segmentIndex = index;
+            tasks[index] = RunSegmentAsync(segmentIndex);
+        }
+
+        async Task<Exception?> RunSegmentAsync(int segmentIndex)
+        {
+            try
+            {
+                await gate.WaitAsync(linked.Token).ConfigureAwait(false);
+                try
+                {
+                    await DownloadSegmentWithRetriesAsync(item, part, segments[segmentIndex], segmentIndex, progress, linked.Token).ConfigureAwait(false);
+                }
+                finally
+                {
+                    gate.Release();
+                }
+
+                return null;
+            }
+            catch (OperationCanceledException exception)
+            {
+                // Cancellation caused by a failing sibling segment is not an error of this segment.
+                return cancellationToken.IsCancellationRequested ? exception : null;
+            }
+            catch (Exception exception)
+            {
+                CancelQuietly(linked);
+                return exception;
+            }
+        }
+
+        Exception?[] failures = await Task.WhenAll(tasks).ConfigureAwait(false);
+        Exception? failure = null;
+        foreach (Exception? candidate in failures)
+        {
+            if (candidate is null) continue;
+            failure = candidate;
+            break;
+        }
+
+        if (failure is null)
+        {
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                long written = new FileInfo(part).Length;
+                if (written != total)
+                {
+                    DeletePartFiles(item);
+                    throw new DownloadIntegrityException($"The segmented download of '{destination}' produced {written} of {total} bytes.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.ExpectedSha1))
+                {
+                    string actual = await ComputeSha1Async(part, cancellationToken).ConfigureAwait(false);
+                    if (!actual.Equals(request.ExpectedSha1, StringComparison.OrdinalIgnoreCase))
+                    {
+                        DeletePartFiles(item);
+                        throw new DownloadIntegrityException($"SHA-1 mismatch for '{destination}'.");
+                    }
+                }
+
+                item.SetProgress(total, total);
+                File.Move(part, destination, overwrite: true);
+                TryDeleteFile(metadataPath);
+            }
+            catch (OperationCanceledException)
+            {
+                // A preallocated part file is not a valid resume candidate, so an interrupted completion drops it.
+                DeletePartFiles(item);
+                throw;
+            }
+
+            return;
+        }
+
+        DeletePartFiles(item);
+        ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+
+    private async Task DownloadSegmentWithRetriesAsync(WorkItem item, string part, SegmentRange segment, int segmentIndex, SegmentProgress progress, CancellationToken cancellationToken)
+    {
+        for (int attempt = 0; attempt <= SegmentMaximumRetries; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            progress.Reset(segmentIndex);
+            try
+            {
+                await DownloadSegmentOnceAsync(item, part, segment, segmentIndex, progress, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception) when (attempt < SegmentMaximumRetries)
+            {
+                // Restart the whole segment range: its bytes are counted again from zero.
+            }
+        }
+    }
+
+    private async Task DownloadSegmentOnceAsync(WorkItem item, string part, SegmentRange segment, int segmentIndex, SegmentProgress progress, CancellationToken cancellationToken)
+    {
+        DownloadRequest request = item.Request;
+        using HttpRequestMessage httpRequest = new(HttpMethod.Get, request.Source);
+        httpRequest.Headers.Range = new RangeHeaderValue(segment.Start, segment.End);
+        HttpResponseMessage response = await SendWithHeadersTimeoutAsync(request.Source, httpRequest, cancellationToken).ConfigureAwait(false);
+        using (response)
+        {
+            if (response.StatusCode != HttpStatusCode.PartialContent)
+            {
+                throw new DownloadIntegrityException($"The server returned {(int)response.StatusCode} instead of the requested byte range for '{request.DestinationPath}'.");
+            }
+
+            ContentRangeHeaderValue? contentRange = response.Content.Headers.ContentRange;
+            bool expectedRange = contentRange is ContentRangeHeaderValue received
+                && received.From == segment.Start
+                && received.To == segment.End
+                && received.Length == segment.Total;
+            if (!expectedRange)
+            {
+                throw new DownloadIntegrityException($"The server returned an unexpected byte range for '{request.DestinationPath}'.");
+            }
+
+            await using Stream input = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            await using FileStream output = new(part, FileMode.Open, FileAccess.Write, FileShare.ReadWrite | FileShare.Write, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            output.Seek(segment.Start, SeekOrigin.Begin);
+            byte[] buffer = new byte[81920];
+            long remaining = segment.End - segment.Start + 1;
+            while (remaining > 0)
+            {
+                int read = await ReadWithIdleTimeoutAsync(input, buffer, cancellationToken).ConfigureAwait(false);
+                if (read == 0) break;
+                if (read > remaining)
+                {
+                    throw new DownloadIntegrityException($"The response body for '{request.DestinationPath}' exceeded the requested byte range.", deletePartialFile: false);
+                }
+
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                remaining -= read;
+                progress.Add(segmentIndex, read);
+            }
+
+            if (remaining != 0)
+            {
+                throw new DownloadIntegrityException($"The download of '{request.DestinationPath}' stopped {remaining} byte(s) short of the requested byte range.", deletePartialFile: false);
+            }
+
+            await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private int GetSegmentCount(long total)
+    {
+        long minimum = _options.MinimumSegmentSizeBytes;
+        long count = total / minimum;
+        if (total % minimum != 0) count++;
+        return (int)Math.Clamp(count, 1, _options.SegmentsPerFile);
+    }
+
+    private static SegmentRange[] CreateSegments(long total, int segmentCount)
+    {
+        SegmentRange[] segments = new SegmentRange[segmentCount];
+        long shorterLength = total / segmentCount;
+        long longerSegments = total % segmentCount;
+        long start = 0;
+        for (int index = 0; index < segmentCount; index++)
+        {
+            long end = start + shorterLength + (index < longerSegments ? 1 : 0) - 1;
+            segments[index] = new SegmentRange(start, end, total);
+            start = end + 1;
+        }
+
+        return segments;
+    }
+
+    private static void CancelQuietly(CancellationTokenSource source)
+    {
+        try
+        {
+            source.Cancel();
+        }
+        catch (Exception)
+        {
+            // Cancelling the sibling segments is best effort: the source may already be disposed or a callback may fail.
         }
     }
 
@@ -538,6 +853,44 @@ public sealed class DownloadQueue : IAsyncDisposable, IDisposable
     private enum QueueCancellationReason { None, Pause, Cancel, Shutdown }
 
     private sealed record PartMetadata(string? EntityTag, DateTimeOffset? LastModified, long? TotalLength);
+
+    /// <summary>Inclusive byte range assigned to one segment; <c>total</c> is the size of the complete file.</summary>
+    private readonly record struct SegmentRange(long Start, long End, long Total);
+
+    /// <summary>
+    /// Aggregates the bytes written by concurrent segments. Reporting happens under the lock so the reported
+    /// value can never move backwards, even while a failed segment is restarted from its beginning.
+    /// </summary>
+    private sealed class SegmentProgress
+    {
+        private readonly WorkItem _item;
+        private readonly long[] _received;
+        private readonly long _total;
+        private readonly object _gate = new();
+        private long _lastReported;
+
+        public SegmentProgress(WorkItem item, int segmentCount, long total)
+        {
+            _item = item;
+            _received = new long[segmentCount];
+            _total = total;
+        }
+
+        public void Add(int segmentIndex, long bytes)
+        {
+            Interlocked.Add(ref _received[segmentIndex], bytes);
+            lock (_gate)
+            {
+                long received = 0;
+                for (int index = 0; index < _received.Length; index++) received += Interlocked.Read(ref _received[index]);
+                if (received <= _lastReported) return;
+                _lastReported = received;
+                _item.SetProgress(received, _total);
+            }
+        }
+
+        public void Reset(int segmentIndex) => Interlocked.Exchange(ref _received[segmentIndex], 0);
+    }
 
     private sealed class WorkItem : IDownloadHandle
     {

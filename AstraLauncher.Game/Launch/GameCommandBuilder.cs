@@ -39,10 +39,12 @@ public sealed class GameCommandBuilder
         AddLoggingArgument(arguments, metadata, minecraftDirectory);
         AddJvmDefaults(arguments, metadataJvmArguments, classPath, nativesDirectory);
         arguments.Add("-Xmx" + request.MaximumMemoryMiB.ToString(CultureInfo.InvariantCulture) + "M");
+        AddExtraArguments(arguments, request.ExtraJvmArguments, "JVM");
         arguments.Add(metadata.MainClass!);
         arguments.AddRange(metadata.Arguments.Game.Count > 0
             ? SelectArguments(metadata.Arguments.Game, variables)
             : SplitLegacyArguments(metadata.LegacyMinecraftArguments, variables));
+        AddExtraArguments(arguments, request.ExtraGameArguments, "game");
         return new GameLaunchCommand(Path.GetFullPath(request.JavaExecutablePath), arguments, gameDirectory);
     }
 
@@ -227,6 +229,25 @@ public sealed class GameCommandBuilder
         var result = new List<string>();
         foreach (string token in CommandLineTokenizer.Tokenize(arguments)) result.Add(Replace(token, variables));
         return result;
+    }
+
+    /// <summary>
+    /// Appends user-supplied arguments verbatim. Blank entries are ignored and placeholders are rejected because the
+    /// launcher cannot expand variables the user invented.
+    /// </summary>
+    private static void AddExtraArguments(List<string> arguments, IReadOnlyList<string>? extraArguments, string kind)
+    {
+        if (extraArguments is null) return;
+        foreach (string argument in extraArguments)
+        {
+            if (string.IsNullOrWhiteSpace(argument)) continue;
+            if (argument.Contains("${", StringComparison.Ordinal))
+            {
+                throw new GameLaunchValidationException($"Extra {kind} argument '{argument}' contains an unsupported placeholder.");
+            }
+
+            arguments.Add(argument);
+        }
     }
 
     /// <summary>Expands every known placeholder and rejects arguments that would still contain one.</summary>

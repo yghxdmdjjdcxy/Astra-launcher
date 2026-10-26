@@ -263,6 +263,119 @@ public sealed class DownloadQueueTests : IAsyncLifetime
         Assert.Throws<ArgumentOutOfRangeException>(() => queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/x"), Path.Combine(_root, "x.bin"), maximumAttempts: 0)));
     }
 
+    [Fact]
+    public async Task SegmentedDownloadUsesParallelRangeRequests()
+    {
+        byte[] data = new byte[2_621_440]; // 2.5 MiB: two segments with the 2 MiB minimum segment size.
+        Random.Shared.NextBytes(data);
+        SegmentedHandler handler = new(data);
+        await using DownloadQueue queue = Queue(handler, SegmentedOptions());
+        string target = Path.Combine(_root, "segmented.bin");
+        string sha1 = Sha1(data);
+
+        IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/segmented"), target, sha1, data.Length));
+        await job.Completion.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(DownloadState.Completed, job.Progress.State);
+        Assert.Equal(data, await File.ReadAllBytesAsync(target));
+        Assert.Equal(sha1, Sha1(await File.ReadAllBytesAsync(target)));
+        Assert.False(File.Exists(target + ".astra.part"));
+
+        List<(long From, long To)> ranges = handler.Ranges.Where(range => range.To > range.From).ToList();
+        Assert.True(ranges.Count >= 2, $"Expected at least two range requests but saw {ranges.Count}.");
+        Assert.Equal(data.Length, ranges.Sum(range => range.To - range.From + 1));
+    }
+
+    [Fact]
+    public async Task FallsBackToSingleStreamWhenServerIgnoresRanges()
+    {
+        byte[] data = new byte[2_621_440];
+        Random.Shared.NextBytes(data);
+        SegmentedHandler handler = new(data, honorRanges: false);
+        await using DownloadQueue queue = Queue(handler, SegmentedOptions());
+        string target = Path.Combine(_root, "no-ranges.bin");
+
+        IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/no-ranges"), target, expectedSize: data.Length));
+        await job.Completion.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(DownloadState.Completed, job.Progress.State);
+        Assert.Equal(data, await File.ReadAllBytesAsync(target));
+        Assert.NotEmpty(handler.Ranges); // The segmented path probed the server with a Range request first.
+        Assert.InRange(handler.RequestCount, 1, 2); // The probe response body is reused instead of requesting the file again.
+    }
+
+    [Fact]
+    public async Task SmallFilesUseASinglePlainRequest()
+    {
+        byte[] data = new byte[512 * 1024];
+        Random.Shared.NextBytes(data);
+        SegmentedHandler handler = new(data);
+        await using DownloadQueue queue = Queue(handler, SegmentedOptions());
+        string target = Path.Combine(_root, "small-download.bin");
+
+        IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/small"), target, expectedSize: data.Length));
+        await job.Completion.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(DownloadState.Completed, job.Progress.State);
+        Assert.Equal(data, await File.ReadAllBytesAsync(target));
+        Assert.Empty(handler.Ranges);
+        Assert.Equal(1, handler.RequestCount);
+    }
+
+    [Fact]
+    public async Task FailsWhenSegmentContentRangeDoesNotMatch()
+    {
+        byte[] data = new byte[2_621_440];
+        Random.Shared.NextBytes(data);
+        SegmentedHandler handler = new(data, corruptContentRange: true);
+        await using DownloadQueue queue = Queue(handler, SegmentedOptions());
+        string target = Path.Combine(_root, "bad-segment.bin");
+
+        IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/bad-segment"), target, expectedSize: data.Length, maximumAttempts: 1));
+        await Assert.ThrowsAsync<DownloadIntegrityException>(() => job.Completion);
+
+        Assert.Equal(DownloadState.Failed, job.Progress.State);
+        Assert.False(File.Exists(target));
+        Assert.False(File.Exists(target + ".astra.part"));
+        Assert.True(handler.Ranges.Count(range => range.To > range.From) >= 4, "Expected the segment requests to be retried.");
+    }
+
+    [Fact]
+    public async Task CancellingSegmentedDownloadLeavesNoPartialFile()
+    {
+        byte[] data = new byte[3 * 1024 * 1024];
+        Random.Shared.NextBytes(data);
+        SegmentedHandler handler = new(data, chunkSize: 8 * 1024, chunkDelay: TimeSpan.FromMilliseconds(5));
+        await using DownloadQueue queue = Queue(handler, SegmentedOptions());
+        string target = Path.Combine(_root, "segmented-cancel.bin");
+        IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/segmented-cancel"), target, expectedSize: data.Length));
+        await WaitUntilAsync(() => job.Progress.BytesReceived > 0);
+
+        job.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => job.Completion);
+        Assert.Equal(DownloadState.Cancelled, job.Progress.State);
+        Assert.False(File.Exists(target));
+        Assert.False(File.Exists(target + ".astra.part"));
+    }
+
+    [Fact]
+    public async Task SegmentedDownloadHonoursMaximumConcurrentSegments()
+    {
+        byte[] data = new byte[5 * 1024 * 1024];
+        Random.Shared.NextBytes(data);
+        SegmentedHandler handler = new(data, headerDelay: TimeSpan.FromMilliseconds(25));
+        await using DownloadQueue queue = Queue(handler, SegmentedOptions(segmentsPerFile: 8, minimumSegmentSizeBytes: 1024 * 1024, maximumConcurrentSegments: 2));
+        string target = Path.Combine(_root, "segmented-limit.bin");
+
+        IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/segmented-limit"), target, expectedSize: data.Length));
+        await job.Completion.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(data, await File.ReadAllBytesAsync(target));
+        Assert.InRange(handler.MaximumConcurrentSegmentsSeen, 1, 2);
+        Assert.Equal(6, handler.RequestCount); // One probe plus five segments of 1 MiB each.
+    }
+
     private static DownloadQueue Queue(HttpMessageHandler handler, DownloadQueueOptions? options = null)
         => new(new HttpClient(handler), options ?? new DownloadQueueOptions
         {
@@ -271,6 +384,21 @@ public sealed class DownloadQueueTests : IAsyncLifetime
             InitialRetryDelay = TimeSpan.FromMilliseconds(1),
             MaximumRetryDelay = TimeSpan.FromMilliseconds(5),
         });
+
+    private static DownloadQueueOptions SegmentedOptions(
+        int segmentsPerFile = 4,
+        long minimumSegmentSizeBytes = 2 * 1024 * 1024,
+        int maximumConcurrentSegments = 8)
+        => new()
+        {
+            MaximumConcurrentDownloads = 1,
+            MaximumConcurrentDownloadsPerHost = 1,
+            InitialRetryDelay = TimeSpan.FromMilliseconds(1),
+            MaximumRetryDelay = TimeSpan.FromMilliseconds(5),
+            SegmentsPerFile = segmentsPerFile,
+            MinimumSegmentSizeBytes = minimumSegmentSizeBytes,
+            MaximumConcurrentSegments = maximumConcurrentSegments,
+        };
 
     private static HttpResponseMessage Response(HttpStatusCode code, byte[] data) => new(code) { Content = new ByteArrayContent(data) };
 
@@ -323,6 +451,108 @@ public sealed class DownloadQueueTests : IAsyncLifetime
             response.Content.Headers.ContentLength = slice.Length;
             if (start > 0) response.Content.Headers.ContentRange = new ContentRangeHeaderValue(start, data.Length - 1, data.Length);
             return Task.FromResult(response);
+        }
+    }
+
+    private sealed class SegmentedHandler : HttpMessageHandler
+    {
+        private readonly byte[] _data;
+        private readonly bool _honorRanges;
+        private readonly bool _corruptContentRange;
+        private readonly int _chunkSize;
+        private readonly TimeSpan _chunkDelay;
+        private readonly TimeSpan _headerDelay;
+        private readonly List<(long From, long To)> _ranges = [];
+        private int _requestCount;
+        private int _inFlightSegments;
+        private int _maximumConcurrentSegments;
+
+        public SegmentedHandler(byte[] data, bool honorRanges = true, bool corruptContentRange = false, int chunkSize = 0, TimeSpan chunkDelay = default, TimeSpan headerDelay = default)
+        {
+            _data = data;
+            _honorRanges = honorRanges;
+            _corruptContentRange = corruptContentRange;
+            _chunkSize = chunkSize;
+            _chunkDelay = chunkDelay;
+            _headerDelay = headerDelay;
+        }
+
+        public int RequestCount => Volatile.Read(ref _requestCount);
+
+        public int MaximumConcurrentSegmentsSeen => Volatile.Read(ref _maximumConcurrentSegments);
+
+        public IReadOnlyList<(long From, long To)> Ranges
+        {
+            get
+            {
+                lock (_ranges) return _ranges.ToArray();
+            }
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _requestCount);
+            long from = 0;
+            long to = _data.Length - 1;
+            bool hasRange = false;
+            if (request.Headers.Range is { Ranges.Count: > 0 } range)
+            {
+                RangeItemHeaderValue item = range.Ranges.First();
+                from = item.From ?? 0;
+                to = item.To ?? _data.Length - 1;
+                hasRange = true;
+                lock (_ranges) _ranges.Add((from, to));
+            }
+
+            if (!hasRange || !_honorRanges)
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(_data) };
+            }
+
+            bool isSegment = to > from;
+            if (isSegment && _headerDelay > TimeSpan.Zero)
+            {
+                int inFlight = Interlocked.Increment(ref _inFlightSegments);
+                UpdateMaximumConcurrentSegments(inFlight);
+                try
+                {
+                    await Task.Delay(_headerDelay, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _inFlightSegments);
+                }
+            }
+
+            if (from < 0 || to < from || to >= _data.Length)
+            {
+                return new HttpResponseMessage(HttpStatusCode.RequestedRangeNotSatisfiable);
+            }
+
+            int offset = (int)from;
+            int length = (int)(to - from + 1);
+            byte[] slice = _data[offset..(offset + length)];
+            HttpResponseMessage response = new(HttpStatusCode.PartialContent)
+            {
+                Content = isSegment && _chunkSize > 0
+                    ? new StreamContent(new SlowStream(slice, _chunkSize, _chunkDelay))
+                    : new ByteArrayContent(slice),
+            };
+            response.Content.Headers.ContentLength = slice.Length;
+            long reportedFrom = _corruptContentRange && isSegment ? from + 1 : from;
+            response.Content.Headers.ContentRange = new ContentRangeHeaderValue(reportedFrom, to, _data.Length);
+            return response;
+        }
+
+        private void UpdateMaximumConcurrentSegments(int candidate)
+        {
+            int current = Volatile.Read(ref _maximumConcurrentSegments);
+            while (candidate > current)
+            {
+                int observed = Interlocked.CompareExchange(ref _maximumConcurrentSegments, candidate, current);
+                if (observed == current) return;
+                current = observed;
+            }
         }
     }
 

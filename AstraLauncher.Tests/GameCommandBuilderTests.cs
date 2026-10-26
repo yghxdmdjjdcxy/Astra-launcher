@@ -249,6 +249,76 @@ public sealed class GameCommandBuilderTests : IDisposable
         Assert.Contains(Path.GetFullPath(mavenJar), entries);
     }
 
+    [Fact]
+    public void Build_AppendsExtraJvmAndGameArgumentsInOrder()
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(
+            versionId,
+            jvm: [new LaunchArgument(["-Dastra.metadata=true"], [])],
+            game: [new LaunchArgument(["--username", "${auth_player_name}"], [])]);
+
+        GameLaunchCommand command = _builder.Build(
+            metadata,
+            CreateRequest(
+                Authenticated(),
+                extraJvmArguments: ["-Dastra.extra=quoted value", "-Dastra.flag"],
+                extraGameArguments: ["--astra-game", "two words"]));
+
+        int memoryIndex = IndexOf(command.Arguments, "-Xmx4096M");
+        int mainClassIndex = IndexOf(command.Arguments, "net.minecraft.client.main.Main");
+        int extraJvmIndex = IndexOf(command.Arguments, "-Dastra.extra=quoted value");
+        Assert.True(extraJvmIndex > memoryIndex, "Extra JVM arguments must follow -Xmx.");
+        Assert.True(extraJvmIndex < mainClassIndex, "Extra JVM arguments must precede the main class.");
+        Assert.Contains("-Dastra.flag", command.Arguments);
+
+        int metadataGameIndex = IndexOf(command.Arguments, "--username");
+        int extraGameIndex = IndexOf(command.Arguments, "--astra-game");
+        Assert.True(extraGameIndex > metadataGameIndex, "Extra game arguments must follow the metadata game arguments.");
+        Assert.Equal("two words", command.Arguments[extraGameIndex + 1]);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Build_RejectsUnknownPlaceholdersInExtraArguments(bool placeInJvmArguments)
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(versionId);
+        IReadOnlyList<string>? extraJvm = placeInJvmArguments ? ["-Dastra.extra=${unknown}"] : null;
+        IReadOnlyList<string>? extraGame = placeInJvmArguments ? null : ["--astra-extra", "${unknown}"];
+
+        GameLaunchValidationException exception = Assert.Throws<GameLaunchValidationException>(() =>
+        {
+            _ = _builder.Build(
+                metadata,
+                CreateRequest(Authenticated(), extraJvmArguments: extraJvm, extraGameArguments: extraGame));
+        });
+
+        Assert.Contains("${unknown}", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_IgnoresBlankExtraArguments()
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(versionId);
+
+        GameLaunchCommand command = _builder.Build(
+            metadata,
+            CreateRequest(
+                Authenticated(),
+                extraJvmArguments: ["", "   ", "-Dastra.extra=true"],
+                extraGameArguments: ["\t", "--astra-extra", "  "]));
+
+        Assert.Contains("-Dastra.extra=true", command.Arguments);
+        Assert.Contains("--astra-extra", command.Arguments);
+        Assert.DoesNotContain(command.Arguments, argument => string.IsNullOrWhiteSpace(argument));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
@@ -288,8 +358,19 @@ public sealed class GameCommandBuilderTests : IDisposable
     private static GameSession Authenticated() =>
         new(GameSessionKind.Authenticated, "Steve", "uuid-1234", "access-token", "msa", "xuid-123", "client-456");
 
-    private GameLaunchRequest CreateRequest(GameSession session) =>
-        new(_root, _gameDirectory, _javaPath, 4096, session, VersionType);
+    private GameLaunchRequest CreateRequest(
+        GameSession session,
+        IReadOnlyList<string>? extraJvmArguments = null,
+        IReadOnlyList<string>? extraGameArguments = null) =>
+        new(
+            _root,
+            _gameDirectory,
+            _javaPath,
+            4096,
+            session,
+            VersionType,
+            extraJvmArguments,
+            extraGameArguments);
 
     private string WriteVersionJar(string versionId) =>
         WriteFile(Path.Combine(_root, "versions", versionId, versionId + ".jar"), "client-jar");

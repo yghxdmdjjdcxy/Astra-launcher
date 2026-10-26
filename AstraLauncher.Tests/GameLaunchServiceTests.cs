@@ -241,6 +241,61 @@ public sealed class GameLaunchServiceTests : IAsyncLifetime
         Assert.Equal(0, _install.InstallCalls);
     }
 
+    [Fact]
+    public async Task LaunchAsync_ForwardsTokenizedExtraArgumentsToBuilder()
+    {
+        await WriteVersionMetadataAsync(majorVersion: 21);
+        _java.Runtimes = [new JavaRuntimeInfo(CreateJavaRuntime("jdk-21"), "21.0.1", 21, null)];
+
+        await CreateService().LaunchAsync(
+            CreateInstance(),
+            CreateOfflineSession(),
+            new GameLaunchOptions(
+                ExtraJvmArguments: "-Dastra.quoted=\"hello world\" -Dastra.flag",
+                ExtraGameArguments: "--astra-game \"two words\""));
+
+        GameLaunchCommand command = Assert.IsType<GameLaunchCommand>(_launcher.Command);
+        int quotedJvmIndex = IndexOf(command.Arguments, "-Dastra.quoted=hello world");
+        int memoryIndex = IndexOf(command.Arguments, "-Xmx4096M");
+        int mainClassIndex = IndexOf(command.Arguments, MainClass);
+        Assert.True(quotedJvmIndex > memoryIndex, "Extra JVM arguments must follow -Xmx.");
+        Assert.True(quotedJvmIndex < mainClassIndex, "Extra JVM arguments must precede the main class.");
+        Assert.Contains("-Dastra.flag", command.Arguments);
+
+        int extraGameIndex = IndexOf(command.Arguments, "--astra-game");
+        Assert.True(extraGameIndex > IndexOf(command.Arguments, "--gameDir"), "Extra game arguments must follow the metadata game arguments.");
+        Assert.Equal("two words", command.Arguments[extraGameIndex + 1]);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task LaunchAsync_WhenExtraArgumentsHaveUnmatchedQuote_ThrowsWithoutLaunching(bool quoteJvmArguments)
+    {
+        await WriteVersionMetadataAsync(majorVersion: 21);
+        _java.Runtimes = [new JavaRuntimeInfo(CreateJavaRuntime("jdk-21"), "21.0.1", 21, null)];
+        GameLaunchOptions options = quoteJvmArguments
+            ? new GameLaunchOptions(ExtraJvmArguments: "-Dastra.quoted=\"unterminated")
+            : new GameLaunchOptions(ExtraGameArguments: "--astra-game \"unterminated");
+
+        GameLaunchValidationException exception = await Assert.ThrowsAsync<GameLaunchValidationException>(() =>
+            CreateService().LaunchAsync(CreateInstance(), CreateOfflineSession(), options));
+
+        Assert.Contains("unmatched", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, _install.InstallCalls);
+        Assert.Equal(0, _launcher.StartCalls);
+    }
+
+    private static int IndexOf(IReadOnlyList<string> arguments, string value)
+    {
+        for (int index = 0; index < arguments.Count; index++)
+        {
+            if (string.Equals(arguments[index], value, StringComparison.Ordinal)) return index;
+        }
+
+        return -1;
+    }
+
     private GameLaunchService CreateService() => new(
         _paths,
         _install,

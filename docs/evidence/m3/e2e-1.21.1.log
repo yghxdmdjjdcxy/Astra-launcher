@@ -1,0 +1,82 @@
+﻿21:57:17 E2E-1.21.1 EXACT START
+21:57:22 app pid=40432
+21:57:24 downloads list loaded=True
+21:57:24 select exact 1.21.1 = True
+21:57:25 install started
+21:57:56 t=32s 253/3962 个文件 · 165.9 MiB/877.3 MiB · 下载游戏文件
+21:57:57 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-1min.png
+21:58:29 t=64s 264/3962 个文件 · 184.3 MiB/877.3 MiB · 下载游戏文件
+21:58:29 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-1min.png
+21:59:01 t=96s 371/3962 个文件 · 212.0 MiB/877.3 MiB · 下载游戏文件
+21:59:01 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-2min.png
+21:59:33 t=128s 671/3962 个文件 · 231.7 MiB/877.3 MiB · 下载游戏文件
+21:59:33 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-2min.png
+22:00:05 t=160s 920/3962 个文件 · 236.0 MiB/877.3 MiB · 下载游戏文件
+22:00:05 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-3min.png
+22:00:36 t=191s 1103/3962 个文件 · 239.2 MiB/877.3 MiB · 下载游戏文件
+22:00:37 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-3min.png
+22:01:07 t=223s 1293/3962 个文件 · 242.7 MiB/877.3 MiB · 下载游戏文件
+22:01:08 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-4min.png
+22:01:39 t=254s 1475/3962 个文件 · 249.1 MiB/877.3 MiB · 下载游戏文件
+22:01:40 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-4min.png
+22:02:11 t=286s 1665/3962 个文件 · 253.5 MiB/877.3 MiB · 下载游戏文件
+22:02:11 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-5min.png
+22:02:42 t=318s 1945/3962 个文件 · 257.5 MiB/877.3 MiB · 下载游戏文件
+22:02:43 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-5min.png
+22:03:14 t=349s 2166/3962 个文件 · 261.1 MiB/877.3 MiB · 下载游戏文件
+22:03:15 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-6min.png
+22:03:46 t=381s 2370/3962 个文件 · 268.0 MiB/877.3 MiB · 下载游戏文件
+22:03:46 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-6min.png
+22:04:17 t=412s 2581/3962 个文件 · 274.5 MiB/877.3 MiB · 下载游戏文件
+22:04:18 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-7min.png
+22:04:48 t=443s 2845/3962 个文件 · 280.6 MiB/877.3 MiB · 下载游戏文件
+22:04:49 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-7min.png
+22:05:20 t=475s 3156/3962 个文件 · 285.6 MiB/877.3 MiB · 下载游戏文件
+22:05:20 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-8min.png
+22:05:52 t=507s 3438/3962 个文件 · 292.6 MiB/877.3 MiB · 下载游戏文件
+22:05:52 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-8min.png
+22:06:23 t=539s 3699/3962 个文件 · 300.7 MiB/877.3 MiB · 下载游戏文件
+22:06:24 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-9min.png
+22:06:55 t=570s 3769/3962 个文件 · 401.6 MiB/877.3 MiB · 下载游戏文件
+22:06:55 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-10min.png
+22:07:27 t=602s 3802/3962 个文件 · 713.1 MiB/877.3 MiB · 下载游戏文件
+22:07:28 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-10min.png
+22:07:58 t=634s 3867/3962 个文件 · 824.8 MiB/877.3 MiB · 下载游戏文件
+22:07:59 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-11min.png
+22:08:30 t=665s 3942/3962 个文件 · 874.6 MiB/877.3 MiB · 下载游戏文件
+22:08:30 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-11min.png
+22:08:50 install status: 版本 1.21.1 已下载并校验完成。
+22:08:50 INSTALL outcome=ok elapsed=686s
+22:08:50 clientJar exists=True size=26836906
+22:08:51 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-install-done.png
+22:08:53 create status='已创建实例：E2E-1.21.1'
+22:08:53 launch clicked
+22:08:59 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:01 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:03 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:06 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:08 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:10 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:12 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:15 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:17 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:19 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:21 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:24 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:26 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:28 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:30 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:33 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:35 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:37 launch status: 游戏已启动（PID 45204），正在等待退出…
+22:09:39 LAUNCH outcome=game-window elapsed=46s
+22:09:39 game title='Minecraft 1.21.1' class='GLFW30'
+22:09:54 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-game-first-screen.png
+22:09:55 clicked Continue for onboarding
+22:10:01 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\e2e1211-game-main-menu.png
+22:10:01 sent WM_CLOSE to game
+22:10:04 game exit: 游戏已退出（退出码 0）。
+22:10:08 app closed
+22:10:08 app log critical=0 error=0
+22:10:09 appdata MB=1297.9
+22:10:09 E2E-1.21.1 EXACT DONE

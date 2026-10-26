@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Java;
@@ -80,6 +81,10 @@ public sealed class GameLaunchService : IGameLaunchService
             throw new GameLaunchValidationException($"The game directory of instance '{instance.Name}' does not exist: {gameDirectory}");
         }
 
+        // Parse the user-supplied arguments before touching the installation so malformed input fails fast.
+        IReadOnlyList<string> extraJvmArguments = ParseExtraArguments(options.ExtraJvmArguments, "JVM");
+        IReadOnlyList<string> extraGameArguments = ParseExtraArguments(options.ExtraGameArguments, "game");
+
         Report(progress, "准备启动", $"正在准备启动「{instance.Name}」（版本 {instance.VersionId}）…", 0);
 
         // 1. Make sure every file the version needs is present and verified before touching Java.
@@ -107,8 +112,7 @@ public sealed class GameLaunchService : IGameLaunchService
                 instance.VersionId);
         }
 
-        // 4. Build the Java command line. Extra game/JVM arguments are not forwarded yet because the builder owns the
-        // command layout; that stays a follow-up once the builder exposes extension points.
+        // 4. Build the Java command line, forwarding the extra JVM/game arguments parsed from the launch options.
         Report(progress, "生成启动命令", "正在生成启动参数…");
         int memoryMiB = options.MemoryMiB > 0 ? options.MemoryMiB : DefaultMemoryMiB;
         var request = new GameLaunchRequest(
@@ -117,7 +121,19 @@ public sealed class GameLaunchService : IGameLaunchService
             javaExecutablePath,
             memoryMiB,
             session,
-            options.VersionType);
+            options.VersionType,
+            extraJvmArguments,
+            extraGameArguments);
+        if (extraJvmArguments.Count > 0 || extraGameArguments.Count > 0)
+        {
+            // Only the counts are logged: extra arguments may contain access tokens or other secrets.
+            _logger.LogInformation(
+                "Forwarding {ExtraJvmArgumentCount} extra JVM and {ExtraGameArgumentCount} extra game arguments for version {VersionId}.",
+                extraJvmArguments.Count,
+                extraGameArguments.Count,
+                instance.VersionId);
+        }
+
         GameLaunchCommand command = _commandBuilder.Build(metadata, request);
 
         // 5. Start the process unless the caller cancelled in the meantime.
@@ -178,6 +194,48 @@ public sealed class GameLaunchService : IGameLaunchService
         }
 
         return (Path.GetFullPath(selected.ExecutablePath), selected);
+    }
+
+    /// <summary>
+    /// Splits a user-entered argument string into individual arguments. Whitespace separates arguments, double quotes
+    /// group text (for example a path containing spaces) and are removed, and an unmatched quote is rejected before
+    /// anything is installed or launched.
+    /// </summary>
+    private static IReadOnlyList<string> ParseExtraArguments(string? text, string kind)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        var result = new List<string>();
+        var current = new StringBuilder();
+        bool quoted = false;
+        bool hasToken = false;
+        foreach (char character in text)
+        {
+            if (character == '"')
+            {
+                quoted = !quoted;
+                hasToken = true;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(character) && !quoted)
+            {
+                if (hasToken)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                    hasToken = false;
+                }
+
+                continue;
+            }
+
+            current.Append(character);
+            hasToken = true;
+        }
+
+        if (quoted) throw new GameLaunchValidationException($"Extra {kind} arguments contain an unmatched double quote.");
+        if (hasToken) result.Add(current.ToString());
+        return result;
     }
 
     private static void Report(IProgress<LaunchProgress>? progress, string stage, string message, double? percent = null) =>

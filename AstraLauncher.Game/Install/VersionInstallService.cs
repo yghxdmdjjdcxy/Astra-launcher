@@ -257,19 +257,24 @@ public sealed class VersionInstallService : IVersionInstallService
     {
         foreach (LibraryDescriptor library in metadata.Libraries)
         {
-            if (!RulesAllow(library.Rules) || library.Downloads is not { } downloads)
+            if (!RulesAllow(library.Rules))
             {
                 continue;
             }
 
-            if (downloads.Artifact is { } artifact
-                && artifact.Url is Uri artifactUri
-                && TryResolveLibraryPath(artifact.Path, library.Name, classifier: null, out string? artifactPath))
+            bool nativeLibrary = library.Natives.Count > 0;
+            if (TryAddArtifact(library, out InstallFile artifactFile))
             {
-                add(new InstallFile(artifactUri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, artifactPath), artifact.Sha1, artifact.Size, LibraryCategory));
+                add(artifactFile);
+            }
+            else if (!nativeLibrary && TryCreateMavenFallback(library.Name, classifier: null, out InstallFile fallbackArtifact))
+            {
+                // Legacy metadata has no downloads block at all; the official Maven repository is the only source.
+                // Natives-only libraries are skipped here because they publish no base jar, only the classifier below.
+                add(fallbackArtifact);
             }
 
-            if (downloads.Classifiers.Count == 0
+            if (!nativeLibrary
                 || !library.Natives.TryGetValue(CurrentOperatingSystemName(), out string? classifierTemplate)
                 || string.IsNullOrWhiteSpace(classifierTemplate))
             {
@@ -277,16 +282,63 @@ public sealed class VersionInstallService : IVersionInstallService
             }
 
             string classifier = classifierTemplate.Replace("${arch}", CurrentArchitectureName(), StringComparison.Ordinal);
-            if (!downloads.Classifiers.TryGetValue(classifier, out DownloadArtifact? nativeArtifact) || nativeArtifact.Url is not Uri nativeUri)
+            if (TryAddNativeArtifact(library, classifier, out InstallFile nativeFile))
             {
-                continue;
+                add(nativeFile);
             }
-
-            if (TryResolveLibraryPath(nativeArtifact.Path, library.Name, classifier, out string? nativePath))
+            else if (TryCreateMavenFallback(library.Name, classifier, out InstallFile fallbackNative))
             {
-                add(new InstallFile(nativeUri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, nativePath), nativeArtifact.Sha1, nativeArtifact.Size, LibraryCategory));
+                // Legacy natives-only entries reference their archive only through the Maven classifier.
+                add(fallbackNative);
             }
         }
+    }
+
+    private bool TryAddArtifact(LibraryDescriptor library, out InstallFile file)
+    {
+        file = null!;
+        if (library.Downloads?.Artifact is { } artifact
+            && artifact.Url is Uri artifactUri
+            && TryResolveLibraryPath(artifact.Path, library.Name, classifier: null, out string relativePath))
+        {
+            file = new InstallFile(artifactUri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, relativePath), artifact.Sha1, artifact.Size, LibraryCategory);
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryAddNativeArtifact(LibraryDescriptor library, string classifier, out InstallFile file)
+    {
+        file = null!;
+        if (library.Downloads is { } downloads
+            && downloads.Classifiers.TryGetValue(classifier, out DownloadArtifact? artifact)
+            && artifact.Url is Uri artifactUri
+            && TryResolveLibraryPath(artifact.Path, library.Name, classifier, out string relativePath))
+        {
+            file = new InstallFile(artifactUri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, relativePath), artifact.Sha1, artifact.Size, LibraryCategory);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Builds a download for legacy metadata that only names the Maven coordinate: the official library repository is
+    /// the implicit source and no size or SHA-1 is available, so only the presence of the file can be verified.
+    /// </summary>
+    private bool TryCreateMavenFallback(string coordinate, string? classifier, out InstallFile file)
+    {
+        file = null!;
+        if (!TryGetMavenPath(coordinate, classifier, out string mavenPath)
+            || !TryResolveLibraryPath(mavenPath, coordinate, classifier, out string relativePath))
+        {
+            return false;
+        }
+
+        string url = "https://libraries.minecraft.net/" + relativePath.Replace(Path.DirectorySeparatorChar, '/');
+        file = new InstallFile(url, Path.Combine(_paths.LibrariesDirectory, relativePath), null, null, LibraryCategory);
+        return true;
     }
 
     private async Task AddAssetFilesAsync(MinecraftVersionMetadata metadata, DownloadSourceMode mode, Action<InstallFile> add, CancellationToken cancellationToken)
@@ -525,8 +577,22 @@ public sealed class VersionInstallService : IVersionInstallService
     private bool TryResolveLibraryPath(string? metadataPath, string coordinate, string? classifier, out string relativePath)
     {
         relativePath = string.Empty;
-        string? candidate = string.IsNullOrWhiteSpace(metadataPath) ? MavenPath(coordinate, classifier) : metadataPath;
-        if (string.IsNullOrWhiteSpace(candidate) || Path.IsPathRooted(candidate))
+        string? candidate;
+        if (!string.IsNullOrWhiteSpace(metadataPath))
+        {
+            candidate = metadataPath;
+        }
+        else if (TryGetMavenPath(coordinate, classifier, out string mavenPath))
+        {
+            candidate = mavenPath;
+        }
+        else
+        {
+            _logger.LogWarning("Skipping library {Library}: the name cannot be resolved to a safe Maven path.", coordinate);
+            return false;
+        }
+
+        if (Path.IsPathRooted(candidate))
         {
             _logger.LogWarning("Skipping library {Library}: the artifact path '{ArtifactPath}' is not a relative path.", coordinate, candidate);
             return false;
@@ -545,21 +611,38 @@ public sealed class VersionInstallService : IVersionInstallService
         return true;
     }
 
-    private static string? MavenPath(string coordinate, string? classifier)
+    private static bool TryGetMavenPath(string coordinate, string? classifier, out string mavenPath)
     {
+        mavenPath = string.Empty;
         string[] segments = coordinate.Split(':');
-        if (segments.Length < 3)
+        if (segments.Length < 3
+            || !IsSafeMavenSegment(segments[0])
+            || !IsSafeMavenSegment(segments[1])
+            || !IsSafeMavenSegment(segments[2]))
         {
-            return null;
+            return false;
+        }
+
+        string? effectiveClassifier = classifier ?? (segments.Length > 3 ? segments[3] : null);
+        if (effectiveClassifier is not null && !IsSafeMavenSegment(effectiveClassifier))
+        {
+            return false;
         }
 
         string group = segments[0].Replace('.', Path.DirectorySeparatorChar);
-        string artifactId = segments[1];
-        string version = segments[2];
-        string? effectiveClassifier = classifier ?? (segments.Length > 3 ? segments[3] : null);
-        string fileName = effectiveClassifier is null ? $"{artifactId}-{version}.jar" : $"{artifactId}-{version}-{effectiveClassifier}.jar";
-        return Path.Combine(group, artifactId, version, fileName);
+        string fileName = effectiveClassifier is null
+            ? $"{segments[1]}-{segments[2]}.jar"
+            : $"{segments[1]}-{segments[2]}-{effectiveClassifier}.jar";
+        mavenPath = Path.Combine(group, segments[1], segments[2], fileName);
+        return true;
     }
+
+    private static bool IsSafeMavenSegment(string segment) =>
+        segment.Length > 0
+        && segment is not "." and not ".."
+        && !segment.Contains("..", StringComparison.Ordinal)
+        && !segment.Contains('/')
+        && !segment.Contains('\\');
 
     private static async Task<string?> ReadInheritsFromAsync(string metadataPath, CancellationToken cancellationToken)
     {

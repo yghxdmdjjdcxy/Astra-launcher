@@ -1,0 +1,10 @@
+﻿22:11:29 app pid=44540
+22:11:34 settings texts found=12/12: 设置,内存 MiB,并发下载,下载源,镜像地址,Java 运行时,离线玩家名,显示快照,额外 JVM 参数,额外游戏参数,保存设置,重新检测 Java
+22:11:35 edits=6 combos=2 checkboxes=1
+22:11:35 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\e2e\shots\m3-settings.png
+22:11:36 saveClicked=True status='设置已保存。'
+22:11:36 settings.json exists=True
+22:11:36 settings bytes=348 content={   "MemoryMiB": 4096,   "MaxConcurrentDownloads": 4,   "DownloadSourceMode": 2,   "MirrorBaseUrl": "https://bmclapi2.bangbang93.com",   "JavaExecutablePath": null,   "GameArguments": null,   "JvmArguments": null,   "ShowSnapshots": false,   "OfflinePlayerName": "Player",   "LastSelectedInstanceId":
+22:11:40 app closed
+22:11:40 app log critical=0 error=0
+22:11:40 SETTINGS SMOKE DONE

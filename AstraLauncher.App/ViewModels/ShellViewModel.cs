@@ -11,14 +11,16 @@ public sealed class ShellViewModel
 {
     private readonly InstancesPageViewModel _instances;
     private readonly DownloadsPageViewModel _downloads;
+    private readonly SettingsPageViewModel _settings;
     private readonly IVersionManifestService _manifest;
     private readonly ILogger<ShellViewModel> _logger;
 
-    public ShellViewModel(INavigationService navigation, InstancesPageViewModel instances, DownloadsPageViewModel downloads, IVersionManifestService manifest, ILogger<ShellViewModel> logger)
+    public ShellViewModel(INavigationService navigation, InstancesPageViewModel instances, DownloadsPageViewModel downloads, SettingsPageViewModel settings, IVersionManifestService manifest, ILogger<ShellViewModel> logger)
     {
         Navigation = navigation;
         _instances = instances;
         _downloads = downloads;
+        _settings = settings;
         _manifest = manifest;
         _logger = logger;
         NavigateCommand = new RelayCommand(Navigate);
@@ -32,6 +34,15 @@ public sealed class ShellViewModel
     {
         await _instances.InitializeAsync();
         await _downloads.InitializeAsync();
+        try
+        {
+            await _settings.InitializeAsync();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "设置页初始化失败；设置页将使用默认值。");
+        }
+
         try
         {
             IReadOnlyList<VersionSummary> versions = await _manifest.GetVersionsAsync(includeSnapshots: false);

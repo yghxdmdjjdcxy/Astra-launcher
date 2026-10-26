@@ -49,9 +49,61 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AccountsPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="账户"/><TextBlock Margin="0,12,0,0" Text="Stage 4：官方 Microsoft 登录与离线档案。"/></StackPanel></DataTemplate>
         <DataTemplate DataType="{x:Type vm:ServersPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="服务器"/><TextBlock Margin="0,12,0,0" Text="Stage 7：服务器与联机基础设施。"/></StackPanel></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsPageViewModel}">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock FontSize="24" Text="设置"/>
+                    <TextBlock Margin="0,6,0,10" Text="调整启动内存、下载源和 Java 运行时。修改仅在点击“保存设置”后写入。" TextWrapping="Wrap"/>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1" Margin="0,0,12,0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="性能与下载"/>
+                        <Grid Margin="0,6,0,18">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Margin="0,0,12,8" VerticalAlignment="Center" Text="内存 MiB"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Width="160" Margin="0,0,0,8" HorizontalAlignment="Left" Text="{Binding MemoryMiB, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Grid.Row="1" Margin="0,0,12,8" VerticalAlignment="Center" Text="并发下载"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Width="160" Margin="0,0,0,8" HorizontalAlignment="Left" Text="{Binding MaxConcurrentDownloads, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Grid.Row="2" Margin="0,0,12,8" VerticalAlignment="Center" Text="下载源"/>
+                            <ComboBox Grid.Row="2" Grid.Column="1" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left" ItemsSource="{Binding AvailableSourceModes}" SelectedItem="{Binding SourceMode}"/>
+                            <TextBlock Grid.Row="3" Margin="0,0,12,0" VerticalAlignment="Center" Text="镜像地址"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MirrorBaseUrl, UpdateSourceTrigger=PropertyChanged}" ToolTip="镜像不可用时回退到官方源；留空将恢复默认镜像地址。"/>
+                        </Grid>
+                        <TextBlock FontWeight="SemiBold" Text="Java 运行时"/>
+                        <Grid Margin="0,6,0,18">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <TextBlock Margin="0,0,12,0" VerticalAlignment="Center" Text="选择 Java"/>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding JavaOptions}" SelectedItem="{Binding SelectedJavaChoice}" DisplayMemberPath="Display" ToolTip="“自动选择”会按游戏版本要求匹配已检测的 Java。"/>
+                        </Grid>
+                        <TextBlock FontWeight="SemiBold" Text="游戏与账户"/>
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Margin="0,0,12,8" VerticalAlignment="Center" Text="离线玩家名"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Width="200" Margin="0,0,0,8" HorizontalAlignment="Left" MaxLength="16" Text="{Binding OfflinePlayerName, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Grid.Row="1" Margin="0,0,12,8" VerticalAlignment="Center" Text="显示快照"/>
+                            <CheckBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" VerticalAlignment="Center" Content="在版本列表中显示快照版本" IsChecked="{Binding ShowSnapshots}"/>
+                            <TextBlock Grid.Row="2" Margin="0,0,12,8" VerticalAlignment="Center" Text="额外 JVM 参数"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" Text="{Binding JvmArguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="附加到 Java 命令行，例如 -XX:+UseG1GC。"/>
+                            <TextBlock Grid.Row="3" Margin="0,0,12,0" VerticalAlignment="Center" Text="额外游戏参数"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding GameArguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="附加到游戏参数，例如 --demo。"/>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+                <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                    <WrapPanel>
+                        <Button Content="保存设置" Command="{Binding SaveCommand}" Margin="0,0,8,8" Padding="14,4" FontWeight="SemiBold"/>
+                        <Button Content="重新检测 Java" Command="{Binding RefreshJavaCommand}" Margin="0,0,8,8" Padding="14,4"/>
+                    </WrapPanel>
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
     </Window.Resources>
     <DockPanel>
-        <Border DockPanel.Dock="Left" Width="180" Background="#1E293B" Padding="12"><StackPanel><TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="ASTRA" Margin="0,0,0,20"/><Button Content="首页" Command="{Binding NavigateCommand}" CommandParameter="Welcome" Margin="0,0,0,8"/><Button Content="游戏实例" Command="{Binding NavigateCommand}" CommandParameter="Instances" Margin="0,0,0,8"/><Button Content="下载" Command="{Binding NavigateCommand}" CommandParameter="Downloads" Margin="0,0,0,8"/><Button Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts" Margin="0,0,0,8"/><Button Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers"/></StackPanel></Border>
+        <Border DockPanel.Dock="Left" Width="180" Background="#1E293B" Padding="12"><StackPanel><TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="ASTRA" Margin="0,0,0,20"/><Button Content="首页" Command="{Binding NavigateCommand}" CommandParameter="Welcome" Margin="0,0,0,8"/><Button Content="游戏实例" Command="{Binding NavigateCommand}" CommandParameter="Instances" Margin="0,0,0,8"/><Button Content="下载" Command="{Binding NavigateCommand}" CommandParameter="Downloads" Margin="0,0,0,8"/><Button Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts" Margin="0,0,0,8"/><Button Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers" Margin="0,0,0,8"/><Button Content="设置" Command="{Binding NavigateCommand}" CommandParameter="Settings"/></StackPanel></Border>
         <Grid Margin="28"><ContentControl Content="{Binding Navigation.CurrentPage}"/></Grid>
     </DockPanel>
 </Window>
