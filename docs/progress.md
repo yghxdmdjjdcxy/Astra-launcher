@@ -164,3 +164,11 @@
 - 一次失败的 E2E 尝试中出现过 `DownloadQueue` 被提前 Dispose 的一次性异常，后续完整 E2E 未复现（临时诊断代码已移除）；作为稳定性观察项。
 - 本机 HTTP 实际经本地代理（127.0.0.1:7890），分段下载仍按请求并行生效。
 - 真实 legacy（1.8.9 等）完整启动留 M5 加载器/旧版兼容阶段验证。
+
+### 单文件发布（2026-10-26）
+
+- 新增 `scripts/publish-single-file.ps1`：`dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true`，产出**唯一文件** `artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe`。
+- 结果：**62.1 MB（65,079,284 字节）**，自包含 .NET 10/WPF 运行时（目标机无需安装 .NET），ProductVersion `1.0.0+d6892b7…`，SHA-256 `E7B839E5EE2AF529F3C8B3B923A1A4023B2F9E1EDA5E975817D3EA88A0774FE9`。
+- `AstraLauncher.App.csproj` 将 `appsettings.json` 标记为 `CopyToPublishDirectory=Never`（该文件可选，默认日志级别与内容等价），保证发布目录只有 1 个 exe；普通文件夹构建仍保留该文件。
+- 单文件 GUI 冒烟：启动 2 秒内出现主窗口；首页/设置/下载导航正常；关闭退出码 0；运行期日志 0 Critical/0 Error；启动后 exe 目录仍只有 1 个文件（原生组件解压到 `%TEMP%\.net`，属单文件 WPF 正常行为）。
+- 证据：`docs/evidence/single-exe/`（single-file-welcome.png、single-file-settings.png、smoke.log、publish.log、build-info.txt）。

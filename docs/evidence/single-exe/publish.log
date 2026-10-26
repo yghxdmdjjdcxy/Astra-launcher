@@ -1,0 +1,23 @@
+Publishing single-file executable to E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\artifacts\AstraLauncher-win-x64-single ...
+  正在确定要还原的项目…
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Core\AstraLauncher.Core.csproj (用时 7.63 秒)。
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Infrastructure\AstraLauncher.Infrastructure.csproj (用时 7.63 秒)。
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Downloader\AstraLauncher.Downloader.csproj (用时 7.63 秒)。
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Multiplayer\AstraLauncher.Multiplayer.csproj (用时 7.63 秒)。
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Game\AstraLauncher.Game.csproj (用时 7.63 秒)。
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Authentication\AstraLauncher.Authentication.csproj (用时 7.63 秒)。
+  已还原 E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\AstraLauncher.App.csproj (用时 7.64 秒)。
+  AstraLauncher.Core -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Core\bin\Release\net10.0\AstraLauncher.Core.dll
+  AstraLauncher.Authentication -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Authentication\bin\Release\net10.0\AstraLauncher.Authentication.dll
+  AstraLauncher.Multiplayer -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Multiplayer\bin\Release\net10.0\AstraLauncher.Multiplayer.dll
+  AstraLauncher.Infrastructure -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Infrastructure\bin\Release\net10.0\AstraLauncher.Infrastructure.dll
+  AstraLauncher.Downloader -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Downloader\bin\Release\net10.0\AstraLauncher.Downloader.dll
+  AstraLauncher.Game -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Game\bin\Release\net10.0\AstraLauncher.Game.dll
+  AstraLauncher.App -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\win-x64\AstraLauncher.App.dll
+  AstraLauncher.App -> E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\artifacts\AstraLauncher-win-x64-single\
+
+Single-file executable: E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\artifacts\AstraLauncher-win-x64-single\AstraLauncher.exe
+Size: 62.1 MB (65,079,284 bytes)
+File version: 1.0.0.0
+Product version: 1.0.0+d6892b77ff5d38b1cf02ddddf9346179c8fe1901
+Done.

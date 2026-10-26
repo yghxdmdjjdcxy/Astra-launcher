@@ -1,0 +1,12 @@
+﻿22:27:24 files before start=1
+22:27:26 started pid=49736 window=True after=2s
+22:27:30 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\single\single-file-welcome.png
+22:27:30 welcome texts=ASTRA | 首页 | 游戏实例 | 下载 | 账户 | 服务器
+22:27:31 settings nav=True
+22:27:32 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\single\single-file-settings.png
+22:27:32 settings labels=设置,保存设置,Java 运行时
+22:27:33 downloads nav=True
+22:27:34 exitSettled=True exitCode=0
+22:27:35 files after start=1 names=AstraLauncher.exe
+22:27:35 app log critical=0 error=0
+22:27:35 SINGLE-FILE SMOKE DONE
