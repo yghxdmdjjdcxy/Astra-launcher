@@ -6,7 +6,9 @@ using AstraLauncher.App.Services;
 using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Java;
+using AstraLauncher.Infrastructure.FileSystem;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 namespace AstraLauncher.App.ViewModels;
 
@@ -21,12 +23,14 @@ public sealed class SettingsPageViewModel : PageViewModel
 
     private readonly ISettingsService _settings;
     private readonly IJavaRuntimeDetector _java;
+    private readonly ILauncherPaths _paths;
     private readonly ILogger<SettingsPageViewModel> _logger;
     private readonly IDialogService _dialogs;
     private int _memoryMiB = LauncherSettings.DefaultMemoryMiB;
     private int _maxConcurrentDownloads = LauncherSettings.DefaultMaxConcurrentDownloads;
     private DownloadSourceMode _sourceMode = DownloadSourceMode.OfficialWithFallback;
     private string _mirrorBaseUrl = LauncherSettings.DefaultMirrorBaseUrl;
+    private string _minecraftDirectory = string.Empty;
     private JavaRuntimeOption? _selectedJavaChoice = AutomaticJavaOption;
     private string? _selectedJavaPath;
     private bool _showSnapshots;
@@ -36,19 +40,23 @@ public sealed class SettingsPageViewModel : PageViewModel
     private bool _isBusy;
     private string _statusMessage = "正在加载设置…";
 
-    public SettingsPageViewModel(ISettingsService settings, IJavaRuntimeDetector java, ILogger<SettingsPageViewModel> logger, IDialogService dialogs) : base("设置")
+    public SettingsPageViewModel(ISettingsService settings, IJavaRuntimeDetector java, ILauncherPaths paths, ILogger<SettingsPageViewModel> logger, IDialogService dialogs) : base("设置")
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(java);
+        ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(dialogs);
         _settings = settings;
         _java = java;
+        _paths = paths;
         _logger = logger;
         _dialogs = dialogs;
+        MinecraftDirectory = paths.MinecraftDirectory;
         JavaOptions.Add(AutomaticJavaOption);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         RefreshJavaCommand = new AsyncRelayCommand(RefreshJavaAsync);
+        BrowseMinecraftDirectoryCommand = new RelayCommand(_ => BrowseMinecraftDirectory());
     }
 
     public IReadOnlyList<DownloadSourceMode> AvailableSourceModes { get; } = Enum.GetValues<DownloadSourceMode>();
@@ -62,6 +70,12 @@ public sealed class SettingsPageViewModel : PageViewModel
     public DownloadSourceMode SourceMode { get => _sourceMode; set => SetProperty(ref _sourceMode, value); }
 
     public string MirrorBaseUrl { get => _mirrorBaseUrl; set => SetProperty(ref _mirrorBaseUrl, value); }
+
+    /// <summary>
+    /// Gets or sets the Minecraft root directory (normally a <c>.minecraft</c> folder) that holds versions,
+    /// libraries and assets. Saving applies it immediately; files already in that folder are reused.
+    /// </summary>
+    public string MinecraftDirectory { get => _minecraftDirectory; set => SetProperty(ref _minecraftDirectory, value); }
 
     public JavaRuntimeOption? SelectedJavaChoice
     {
@@ -98,6 +112,8 @@ public sealed class SettingsPageViewModel : PageViewModel
 
     public ICommand RefreshJavaCommand { get; }
 
+    public ICommand BrowseMinecraftDirectoryCommand { get; }
+
     /// <summary>Loads persisted settings and refreshes the detected Java runtime list.</summary>
     public async Task InitializeAsync()
     {
@@ -106,6 +122,7 @@ public sealed class SettingsPageViewModel : PageViewModel
         {
             LauncherSettings settings = await _settings.GetAsync();
             ApplySettings(settings);
+            MinecraftDirectory = _paths.MinecraftDirectory;
             IReadOnlyList<JavaRuntimeInfo> runtimes = await _java.DetectAsync();
             RebuildJavaOptions(runtimes, settings.JavaExecutablePath);
             StatusMessage = runtimes.Count == 0
@@ -129,11 +146,19 @@ public sealed class SettingsPageViewModel : PageViewModel
         IsBusy = true;
         try
         {
+            string? requestedMinecraftDirectory = string.IsNullOrWhiteSpace(MinecraftDirectory) ? null : MinecraftDirectory.Trim();
+            if (requestedMinecraftDirectory is not null)
+            {
+                // Validate before persisting so an invalid path cannot break the next startup.
+                _ = Path.GetFullPath(requestedMinecraftDirectory);
+            }
+
             LauncherSettings settings = await _settings.GetAsync();
             settings.MemoryMiB = MemoryMiB;
             settings.MaxConcurrentDownloads = MaxConcurrentDownloads;
             settings.DownloadSourceMode = SourceMode;
             settings.MirrorBaseUrl = string.IsNullOrWhiteSpace(MirrorBaseUrl) ? LauncherSettings.DefaultMirrorBaseUrl : MirrorBaseUrl;
+            settings.MinecraftDirectory = requestedMinecraftDirectory;
             settings.JavaExecutablePath = SelectedJavaChoice?.ExecutablePath;
             settings.ShowSnapshots = ShowSnapshots;
             settings.OfflinePlayerName = string.IsNullOrWhiteSpace(OfflinePlayerName) ? "Player" : OfflinePlayerName;
@@ -143,7 +168,10 @@ public sealed class SettingsPageViewModel : PageViewModel
             await _settings.SaveAsync(settings);
             ApplySettings(settings);
             SelectedJavaPath = settings.JavaExecutablePath;
-            StatusMessage = "设置已保存。";
+            _paths.SetMinecraftDirectory(settings.MinecraftDirectory ?? LauncherPaths.ResolveDefaultMinecraftDirectory());
+            _paths.EnsureCreated();
+            MinecraftDirectory = _paths.MinecraftDirectory;
+            StatusMessage = $"设置已保存。Minecraft 目录：{_paths.MinecraftDirectory}";
         }
         catch (Exception exception)
         {
@@ -193,6 +221,24 @@ public sealed class SettingsPageViewModel : PageViewModel
         JvmArguments = settings.JvmArguments;
     }
 
+    private void BrowseMinecraftDirectory()
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "选择 Minecraft 目录（versions / libraries / assets）",
+            Multiselect = false,
+        };
+        if (Directory.Exists(MinecraftDirectory))
+        {
+            dialog.InitialDirectory = MinecraftDirectory;
+        }
+
+        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.FolderName))
+        {
+            MinecraftDirectory = dialog.FolderName;
+        }
+    }
+
     private void RebuildJavaOptions(IReadOnlyList<JavaRuntimeInfo> runtimes, string? preferredPath)
     {
         JavaOptions.Clear();
@@ -227,6 +273,8 @@ public sealed class SettingsPageViewModel : PageViewModel
     {
         UnauthorizedAccessException => $"{operation}失败：没有访问权限，请检查设置文件或目录的权限。",
         IOException ioException => $"{operation}失败：{ioException.Message}",
+        ArgumentException argumentException => $"{operation}失败：路径或参数无效（{argumentException.Message}）。",
+        NotSupportedException => $"{operation}失败：路径格式不受支持，请选择本机目录。",
         InvalidOperationException invalidOperationException => $"{operation}失败：{invalidOperationException.Message}",
         _ => $"{operation}失败，请稍后重试。"
     };

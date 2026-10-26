@@ -48,4 +48,53 @@ public sealed class LauncherPathsTests
             }
         }
     }
+
+    [Fact]
+    public void SplitLayout_KeepsLauncherDataPrivateAndMinecraftFilesShared()
+    {
+        var paths = new LauncherPaths(@"C:\AstraData", @"D:\Games\.minecraft");
+
+        Assert.Equal(@"C:\AstraData", paths.ApplicationDataDirectory);
+        Assert.Equal(@"C:\AstraData\logs", paths.LogsDirectory);
+        Assert.Equal(@"C:\AstraData\instances", paths.InstancesDirectory);
+        Assert.Equal(@"D:\Games\.minecraft", paths.MinecraftDirectory);
+        Assert.Equal(@"D:\Games\.minecraft\versions", paths.VersionsDirectory);
+        Assert.Equal(@"D:\Games\.minecraft\libraries", paths.LibrariesDirectory);
+        Assert.Equal(@"D:\Games\.minecraft\assets", paths.AssetsDirectory);
+        Assert.Equal(@"C:\AstraData\java-runtime", paths.RuntimeDirectory);
+        Assert.Equal(@"C:\AstraData\cache", paths.CacheDirectory);
+        Assert.Equal(@"C:\AstraData\temp", paths.TempDirectory);
+    }
+
+    [Fact]
+    public void SetMinecraftDirectory_RecomputesSharedDirectories()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AstraLauncher.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var paths = new LauncherPaths(root);
+            string minecraft = Path.Combine(root, "portable", ".minecraft");
+
+            paths.SetMinecraftDirectory(minecraft);
+            paths.EnsureCreated();
+
+            Assert.Equal(Path.GetFullPath(minecraft), paths.MinecraftDirectory);
+            Assert.Equal(Path.Combine(Path.GetFullPath(minecraft), "versions"), paths.VersionsDirectory);
+            Assert.True(Directory.Exists(paths.VersionsDirectory));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void SetMinecraftDirectory_RejectsBlankPaths()
+    {
+        var paths = new LauncherPaths(@"C:\AstraTest");
+        Assert.Throws<ArgumentException>(() => paths.SetMinecraftDirectory("   "));
+    }
 }

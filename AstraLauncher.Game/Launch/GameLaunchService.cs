@@ -116,7 +116,7 @@ public sealed class GameLaunchService : IGameLaunchService
         Report(progress, "生成启动命令", "正在生成启动参数…");
         int memoryMiB = options.MemoryMiB > 0 ? options.MemoryMiB : DefaultMemoryMiB;
         var request = new GameLaunchRequest(
-            _paths.ApplicationDataDirectory,
+            _paths.MinecraftDirectory,
             gameDirectory,
             javaExecutablePath,
             memoryMiB,

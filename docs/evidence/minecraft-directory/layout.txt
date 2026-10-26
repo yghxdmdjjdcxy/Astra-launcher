@@ -1,0 +1,20 @@
+Minecraft directory layout verification
+=====================================
+
+Portable .minecraft next to executed application:
+  versions=2 [1.21.1, 1.21.11]
+  libraries jars=117
+  assets objects=8362
+  assets indexes=3
+  assets/logging present=true
+  versions/1.21.1/1.21.1.json=true
+  versions/1.21.1/1.21.1.jar=true
+  total size=1318.4 MB
+
+Legacy launcher-private layout (%LOCALAPPDATA%\\AstraLauncher) after migration:
+  versions/libraries/assets absent (moved)
+  logs/settings/instances/java-runtime/cache/temp remain
+
+Launch: instance created -> Minecraft 1.21.1 (GLFW30) main menu -> WM_CLOSE -> exit code 0
+
+Settings page shows the resolved Minecraft directory and allows changing it (browse button).

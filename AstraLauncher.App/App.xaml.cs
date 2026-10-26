@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Windows;
@@ -47,6 +48,7 @@ public partial class App : Application
         {
             _host = CreateHost();
             _host.Start();
+            ApplyMinecraftDirectory();
             _host.Services.GetRequiredService<MainWindow>().Show();
         }
         catch (Exception exception)
@@ -82,6 +84,9 @@ public partial class App : Application
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
         var paths = new LauncherPaths();
+        // Version/libraries/assets live in a shared .minecraft folder (portable next to the executable when available,
+        // otherwise the existing %APPDATA%\.minecraft) so other launchers can reuse the same installation.
+        paths.SetMinecraftDirectory(LauncherPaths.ResolveDefaultMinecraftDirectory());
         paths.EnsureCreated();
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
@@ -120,8 +125,38 @@ public partial class App : Application
         return builder.Build();
     }
 
-    private static HttpClient CreateHttpClient()
+    /// <summary>
+    /// Applies the configured Minecraft root directory (if any), creates its folders and migrates legacy launcher data
+    /// before any page starts using the paths.
+    /// </summary>
+    private void ApplyMinecraftDirectory()
     {
+        if (_host is null)
+        {
+            return;
+        }
+
+        ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
+        ILauncherPaths paths = _host.Services.GetRequiredService<ILauncherPaths>();
+        try
+        {
+            LauncherSettings settings = _host.Services.GetRequiredService<ISettingsService>().GetAsync().GetAwaiter().GetResult();
+            if (!string.IsNullOrWhiteSpace(settings.MinecraftDirectory))
+            {
+                paths.SetMinecraftDirectory(settings.MinecraftDirectory);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            logger.LogWarning(exception, "Could not apply the configured Minecraft directory; using the default.");
+        }
+
+        paths.EnsureCreated();
+        MinecraftDataMigrator.MigrateLegacyMinecraftData(paths, logger);
+        logger.LogInformation("Minecraft directory resolved to {MinecraftDirectory}.", paths.MinecraftDirectory);
+    }
+
+    private static HttpClient CreateHttpClient()    {
         var handler = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.All,

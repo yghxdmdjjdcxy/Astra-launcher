@@ -34,6 +34,13 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets an optional explicit Java executable.</summary>
     public string? JavaExecutablePath { get; set; }
 
+    /// <summary>
+    /// Gets or sets the Minecraft root directory used for versions/libraries/assets (normally a <c>.minecraft</c> folder).
+    /// When null the launcher resolves a default: a <c>.minecraft</c> folder beside the executable, an existing
+    /// <c>%APPDATA%\.minecraft</c>, or a newly created portable folder.
+    /// </summary>
+    public string? MinecraftDirectory { get; set; }
+
     /// <summary>Gets or sets extra game arguments appended to the generated command line.</summary>
     public string? GameArguments { get; set; }
 
@@ -64,6 +71,7 @@ public sealed class LauncherSettings
 
         MirrorBaseUrl = NormalizeMirrorBaseUrl(MirrorBaseUrl);
         JavaExecutablePath = NormalizeOptionalText(JavaExecutablePath);
+        MinecraftDirectory = NormalizeOptionalText(MinecraftDirectory);
         GameArguments = NormalizeOptionalText(GameArguments);
         JvmArguments = NormalizeOptionalText(JvmArguments);
         OfflinePlayerName = NormalizePlayerName(OfflinePlayerName);

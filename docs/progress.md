@@ -172,3 +172,17 @@
 - `AstraLauncher.App.csproj` 将 `appsettings.json` 标记为 `CopyToPublishDirectory=Never`（该文件可选，默认日志级别与内容等价），保证发布目录只有 1 个 exe；普通文件夹构建仍保留该文件。
 - 单文件 GUI 冒烟：启动 2 秒内出现主窗口；首页/设置/下载导航正常；关闭退出码 0；运行期日志 0 Critical/0 Error；启动后 exe 目录仍只有 1 个文件（原生组件解压到 `%TEMP%\.net`，属单文件 WPF 正常行为）。
 - 证据：`docs/evidence/single-exe/`（single-file-welcome.png、single-file-settings.png、smoke.log、publish.log、build-info.txt）。
+
+### `.minecraft` 共享目录（2026-10-26 深夜，兼容其他启动器）
+
+- `ILauncherPaths`/`LauncherPaths` 拆分：`ApplicationDataDirectory`（启动器私有：settings/logs/instances/java-runtime/cache/temp，仍在 `%LOCALAPPDATA%\AstraLauncher`）与 `MinecraftDirectory`（共享：versions/libraries/assets）。
+- 默认 Minecraft 目录解析顺序：exe 旁边的 `.minecraft`（已存在即用，便携模式）→ 已存在的 `%APPDATA%\.minecraft`（复用官方启动器/PCL 的安装）→ 在 exe 旁创建 `.minecraft`（若安装目录只读则回退 `%APPDATA%\.minecraft`）。目录会在设置页显示，可编辑并带"浏览…"文件夹选择器，保存后立即生效。
+- 标准布局：`versions/<id>/<id>.json+jar`、`libraries/`、`assets/indexes|objects|logging`，其他启动器可直接识别；已有文件按 SHA-1/大小校验后复用，只补缺失文件（含 PCL 已安装版本，本地 metadata 优先读取，无需重新下载）。
+- 自动迁移：第一次以新版本启动时，若旧布局 `%LOCALAPPDATA%\AstraLauncher\{versions,libraries,assets}` 存在且目标 `.minecraft` 还没有版本，则把三目录迁移（同卷 Move，跨卷复制后删除）到 `.minecraft`，启动器私有目录保持不变；目标已有版本时跳过迁移避免覆盖。
+- 修复：`VersionMetadataStore` 与 `GameLaunchService` 里遗留的 `ApplicationDataDirectory` 硬编码改为 `MinecraftDirectory`（否则迁移后启动会去旧路径找 version json）。
+- 验证（本机实测）：
+  - 便携模式（exe 旁空 `.minecraft`）：启动 45 秒完成 1.3 GB 迁移；`.minecraft` 得到 **versions=2（1.21.1、1.21.11）/ 117 个库 jar / 8362 个资源对象 / 3 个 asset index / logging**，旧目录的 versions/libraries/assets 消失，启动器私有目录保留；设置页显示便携路径；创建实例启动 **Minecraft 1.21.1**（GLFW30）→ 主菜单截图 → 退出码 0，日志 0 Critical/0 Error。
+  - 单文件 exe（放在 `.minecraft` 旁边）：启动 5 秒，设置页解析到 exe 旁 `.minecraft`，启动同一实例 20 秒进入 **1.21.1 主菜单**，退出码 0，0 Critical/0 Error；exe 目录保持"exe + .minecraft"两项。
+  - 既有 `%APPDATA%\.minecraft`（官方 26.3）也被正确识别并复用（测试中曾写入的临时 1.21.1 文件已清理，仅保留 26.3）。
+- 证据：`docs/evidence/minecraft-directory/`（settings-minecraft-directory.png、minecraft-1.21.1-from-portable-main-menu.png、portable-e2e.log、single-exe-e2e.log、layout.txt、build/test 日志）。
+- 遗留：Fabric/Quilt/Forge/NeoForge 等加载器版本（PCL 自定义版本）要到 M5 才会出现在版本列表并能启动；旧版（<1.13）启动链仍留 M5。

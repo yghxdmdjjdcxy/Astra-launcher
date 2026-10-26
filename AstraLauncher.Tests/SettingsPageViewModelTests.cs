@@ -4,6 +4,7 @@ using AstraLauncher.App.ViewModels;
 using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Java;
+using AstraLauncher.Infrastructure.FileSystem;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AstraLauncher.Tests;
@@ -59,6 +60,7 @@ public sealed class SettingsPageViewModelTests
         Assert.Equal($"Java 21 · 21.0.4 · {Java21Path}", viewModel.JavaOptions[2].Display);
         Assert.Equal(Java21Path, viewModel.SelectedJavaPath);
         Assert.Equal(Java21Path, viewModel.SelectedJavaChoice?.ExecutablePath);
+        Assert.False(string.IsNullOrWhiteSpace(viewModel.MinecraftDirectory));
         Assert.False(viewModel.IsBusy);
         Assert.Empty(dialogs.ErrorMessages);
     }
@@ -88,6 +90,7 @@ public sealed class SettingsPageViewModelTests
         viewModel.OfflinePlayerName = "   ";
         viewModel.GameArguments = "  --demo  ";
         viewModel.JvmArguments = "  -XX:+UseG1GC  ";
+        viewModel.MinecraftDirectory = Path.Combine(Path.GetTempPath(), "AstraLauncher.Tests", Guid.NewGuid().ToString("N"), ".minecraft");
 
         viewModel.SaveCommand.Execute(null);
         await WaitForAsync(() => settings.Saves.Count == 1 && viewModel.SaveCommand.CanExecute(null), "保存设置完成");
@@ -102,12 +105,32 @@ public sealed class SettingsPageViewModelTests
         Assert.Equal("Player", saved.OfflinePlayerName);
         Assert.Equal("--demo", saved.GameArguments);
         Assert.Equal("-XX:+UseG1GC", saved.JvmArguments);
-        Assert.Equal("设置已保存。", viewModel.StatusMessage);
+        Assert.Equal(viewModel.MinecraftDirectory, saved.MinecraftDirectory);
+        Assert.StartsWith("设置已保存。Minecraft 目录：", viewModel.StatusMessage, StringComparison.Ordinal);
         Assert.Equal(512, viewModel.MemoryMiB);
         Assert.Equal(32, viewModel.MaxConcurrentDownloads);
         Assert.Equal(LauncherSettings.DefaultMirrorBaseUrl, viewModel.MirrorBaseUrl);
         Assert.Equal("Player", viewModel.OfflinePlayerName);
         Assert.Empty(dialogs.ErrorMessages);
+        Assert.False(viewModel.IsBusy);
+    }
+
+    [Fact]
+    public async Task SaveCommand_WhenMinecraftDirectoryIsInvalid_ShowsErrorAndDoesNotPersist()
+    {
+        var settings = new FakeSettingsService();
+        var java = new FakeJavaRuntimeDetector();
+        var dialogs = new RecordingDialogService();
+        SettingsPageViewModel viewModel = CreateViewModel(settings, java, dialogs);
+        await viewModel.InitializeAsync();
+
+        viewModel.MinecraftDirectory = "C:\\invalid\0path";
+
+        viewModel.SaveCommand.Execute(null);
+        await WaitForAsync(() => dialogs.ErrorMessages.Count == 1 && viewModel.SaveCommand.CanExecute(null), "无效目录错误处理完成");
+
+        Assert.Contains("保存设置失败", viewModel.StatusMessage, StringComparison.Ordinal);
+        Assert.Empty(settings.Saves);
         Assert.False(viewModel.IsBusy);
     }
 
@@ -166,7 +189,10 @@ public sealed class SettingsPageViewModelTests
     }
 
     private static SettingsPageViewModel CreateViewModel(FakeSettingsService settings, FakeJavaRuntimeDetector java, RecordingDialogService dialogs) =>
-        new(settings, java, NullLogger<SettingsPageViewModel>.Instance, dialogs);
+        new(settings, java, CreatePaths(), NullLogger<SettingsPageViewModel>.Instance, dialogs);
+
+    private static LauncherPaths CreatePaths() =>
+        new(Path.Combine(Path.GetTempPath(), "AstraLauncher.Tests", Guid.NewGuid().ToString("N")));
 
     private static async Task WaitForAsync(Func<bool> condition, string description)
     {

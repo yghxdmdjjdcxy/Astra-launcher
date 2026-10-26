@@ -52,7 +52,7 @@ public sealed class VersionMetadataStore
         try
         {
             await EnsureVersionFileAsync(versionId, new HashSet<string>(StringComparer.Ordinal), cancellationToken).ConfigureAwait(false);
-            return await new VersionMetadataResolver(_paths.ApplicationDataDirectory).ResolveAsync(versionId, cancellationToken).ConfigureAwait(false);
+            return await new VersionMetadataResolver(_paths.MinecraftDirectory).ResolveAsync(versionId, cancellationToken).ConfigureAwait(false);
         }
         finally
         {

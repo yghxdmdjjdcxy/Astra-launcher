@@ -37,7 +37,7 @@ public sealed class NavigationServiceTests
             new DownloadsPageViewModel(new EmptyManifestService(), new NoopInstallService(), NullLogger<DownloadsPageViewModel>.Instance, dialogs),
             new AccountsPageViewModel(),
             new ServersPageViewModel(),
-            new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), NullLogger<SettingsPageViewModel>.Instance, dialogs),
+            new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N"))), NullLogger<SettingsPageViewModel>.Instance, dialogs),
             NullLogger<NavigationService>.Instance);
     }
 

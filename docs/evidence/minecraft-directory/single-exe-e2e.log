@@ -1,0 +1,17 @@
+﻿22:44:00 SINGLE-EXE .MINECRAFT E2E START
+22:44:01 before: portableEmpty=False legacyVersionsExists=False legacySizeMB=0
+22:44:08 app pid=52612 window=True after=5s
+22:44:14 after startup: portableMcExists=True versions=2 [1.21.1,1.21.11] libraries=117 assets=8362 mcSizeMB=1318.4 legacyVersionsExists=False
+22:44:14 layout: 1.21.1json=True 1.21.1jar=True indexes=3 logging=True
+22:44:16 settings MinecraftDirectory='E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\artifacts\AstraLauncher-win-x64-single\.minecraft' matchesPortable=True
+22:44:17 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\minecraft-dir\shots\single-settings.png
+22:44:18 create instance: 已创建实例：E2E-SINGLE
+22:44:39 game window=True after=20s
+22:44:39 game title='Minecraft 1.21.1 (未响应)'
+22:44:54 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\minecraft-dir\shots\single-game-first-screen.png
+22:45:01 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\minecraft-dir\shots\single-game-main-menu.png
+22:45:06 exit status: 游戏已退出（退出码 0）。
+22:45:11 app log critical=0 error=0
+22:45:11 applog: 2026-10-26T14:41:55.8147444+00:00 [Information] AstraLauncher.App.App: Minecraft directory resolved to E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft.
+22:45:11 applog: 2026-10-26T14:44:05.0603315+00:00 [Information] AstraLauncher.App.App: Minecraft directory resolved to E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\artifacts\AstraLauncher-win-x64-single\.minecraft.
+22:45:11 SINGLE-EXE .MINECRAFT E2E DONE

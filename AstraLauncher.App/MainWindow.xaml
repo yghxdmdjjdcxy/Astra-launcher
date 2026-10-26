@@ -54,7 +54,7 @@
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <StackPanel>
                     <TextBlock FontSize="24" Text="设置"/>
-                    <TextBlock Margin="0,6,0,10" Text="调整启动内存、下载源和 Java 运行时。修改仅在点击“保存设置”后写入。" TextWrapping="Wrap"/>
+                    <TextBlock Margin="0,6,0,10" Text="调整 Minecraft 目录、启动内存、下载源和 Java 运行时。修改仅在点击“保存设置”后写入；Minecraft 目录保存后立即生效。" TextWrapping="Wrap"/>
                 </StackPanel>
                 <ScrollViewer Grid.Row="1" Margin="0,0,12,0" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
@@ -70,6 +70,14 @@
                             <ComboBox Grid.Row="2" Grid.Column="1" Width="220" Margin="0,0,0,8" HorizontalAlignment="Left" ItemsSource="{Binding AvailableSourceModes}" SelectedItem="{Binding SourceMode}"/>
                             <TextBlock Grid.Row="3" Margin="0,0,12,0" VerticalAlignment="Center" Text="镜像地址"/>
                             <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MirrorBaseUrl, UpdateSourceTrigger=PropertyChanged}" ToolTip="镜像不可用时回退到官方源；留空将恢复默认镜像地址。"/>
+                        </Grid>
+                        <TextBlock FontWeight="SemiBold" Text="Minecraft 目录"/>
+                        <TextBlock Margin="0,4,0,8" Text="versions / libraries / assets 的存放位置。默认使用 exe 旁边的 .minecraft（其次 %APPDATA%\.minecraft）；可与其他启动器共用，目录中已有文件会被直接复用，缺失文件才下载。" TextWrapping="Wrap"/>
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Margin="0,0,12,0" VerticalAlignment="Center" Text="目录路径"/>
+                            <TextBox Grid.Column="1" Text="{Binding MinecraftDirectory, UpdateSourceTrigger=PropertyChanged}" ToolTip="留空将使用默认目录；保存后立即生效（新版本安装与启动都会使用该目录）。"/>
+                            <Button Grid.Column="2" Content="浏览…" Command="{Binding BrowseMinecraftDirectoryCommand}" Margin="8,0,0,0" Padding="12,2"/>
                         </Grid>
                         <TextBlock FontWeight="SemiBold" Text="Java 运行时"/>
                         <Grid Margin="0,6,0,18">
