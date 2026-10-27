@@ -1,11 +1,10 @@
 Single-file executable: artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe
-Size bytes: 65129295
+Size bytes: 65131368
 Size MB: 62.1
 FileVersion: 1.0.0.0
-ProductVersion: 1.0.0+5ec8c254109b04e092fb83bc9f8c6b3b9c5f7984
-SHA256: 5A50084ABF380342881541D26FA8D1F26AE9DC06C2A9E4D2A3BF94E659A603FF
-Built: 2026-10-27T22:26:33.4976820+08:00
+ProductVersion: 1.0.0+92b18132070af138576e53c2e49991be62208c90
+SHA256: 2B7FA0851E22E5104CBC07F90C084C059C4CCDAF49C972262ECACC4217607066
+Built: 2026-10-27T23:05:55.2959480+08:00
 Command: scripts/publish-single-file.ps1
-Smoke: start 5s -> window; welcome 4/4 key texts; instances page OK; exit code 0; fresh log 0 Critical/0 Error
-UI screenshots: docs/evidence/ui-redesign/
-Portable layout: docs/evidence/minecraft-directory/
+Smoke: portable start -> window, welcome/settings/accounts pages OK (settings shows Minecraft dir and launcher data dir), exit 0, fresh log 0 Critical/0 Error
+Launcher data lives in <MinecraftDirectory>\\AstraLauncher (verified in F:\\MC)
