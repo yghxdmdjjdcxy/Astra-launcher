@@ -1,0 +1,17 @@
+﻿22:24:15 UI SMOKE START
+22:24:19 window=True after=3s
+22:24:29 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\ui\shots\01-welcome.png
+22:24:31 page 游戏实例 clicked=True texts=7/7 missing=
+22:24:32 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\ui\shots\02-instances.png
+22:24:33 page 下载 clicked=True texts=5/5 missing=
+22:24:34 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\ui\shots\03-downloads.png
+22:24:36 page 账户 clicked=True texts=6/6 missing=
+22:24:37 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\ui\shots\04-accounts.png
+22:24:39 page 服务器 clicked=True texts=2/2 missing=
+22:24:40 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\ui\shots\05-servers.png
+22:24:41 page 设置 clicked=True texts=6/6 missing=
+22:24:42 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\ui\shots\06-settings.png
+22:24:44 home again text found=True
+22:24:44 exit=0 settled=True
+22:24:44 app log critical=35 error=1
+22:24:44 UI SMOKE DONE

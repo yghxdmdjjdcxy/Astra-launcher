@@ -21,7 +21,7 @@ public sealed class DownloadsPageViewModel : PageViewModel
     private bool _isBusy;
     private bool _ignoreProgressCallbacks;
     private double _progressPercent;
-    private string _progressText = string.Empty;
+    private string _progressText = "尚未开始下载。选择版本后点击「下载所选版本」。";
     private CancellationTokenSource? _installCancellation;
 
     public DownloadsPageViewModel(IVersionManifestService manifest, IVersionInstallService install, ILogger<DownloadsPageViewModel> logger, IDialogService dialogs) : base("下载")
