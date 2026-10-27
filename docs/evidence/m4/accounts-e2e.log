@@ -1,0 +1,22 @@
+﻿22:08:08 M4 ACCOUNTS E2E START
+22:08:18 app pid=15396 window=True after=8s
+22:08:25 account labels=8/8: 账户,Microsoft,Client ID,添加 Microsoft 账户,添加离线档案,玩家名,删除账户,刷新
+22:08:26 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m4\shots\m4-accounts-page.png
+22:08:26 edits=2
+22:08:26 set offline name
+22:08:27 offline add status='M4Tester'
+22:08:28 accounts items=1: M4Tester离线档案UUID：d7a8b078-b268-38d2-9221-0066f671c361
+22:08:28 accounts.json exists=True
+22:08:28 accounts bytes=326 hasRefreshField=False hasPlainM4=True
+22:08:29 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m4\shots\m4-account-added.png
+22:08:32 microsoft empty status='官方 Microsoft 登录需要 Azure 应用注册的公共客户端 ID；离线档案无需登录，仅用于单机游戏。'
+22:08:33 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m4\shots\m4-microsoft-clientid-hint.png
+22:08:35 create instance: 已创建实例：M4-ACCOUNT-OFFLINE
+22:09:28 game window=True after=52s
+22:09:28 game title='Minecraft 1.21.1'
+22:09:41 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m4\shots\m4-game-main-menu.png
+22:09:42 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m4\shots\m4-launch-with-offline-account.png
+22:09:47 exit status: 游戏已退出（退出码 0）。
+22:09:51 app log critical=0 error=0
+22:09:51 settings SelectedAccountId present=True OfflinePlayerName=True
+22:09:51 M4 ACCOUNTS E2E DONE

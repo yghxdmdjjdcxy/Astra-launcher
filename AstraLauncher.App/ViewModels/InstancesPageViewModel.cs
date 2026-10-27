@@ -22,6 +22,7 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly IDialogService _dialogs;
     private readonly ISettingsService? _settings;
     private readonly IGameLaunchService? _launchService;
+    private readonly AstraLauncher.Authentication.IAccountService? _accounts;
     private readonly RelayCommand _stopCommand;
     private GameInstance? _selectedInstance;
     private Guid? _selectedInstanceId;
@@ -42,7 +43,8 @@ public sealed class InstancesPageViewModel : PageViewModel
         ILogger<InstancesPageViewModel> logger,
         IDialogService dialogs,
         ISettingsService? settings = null,
-        IGameLaunchService? launchService = null) : base("游戏实例")
+        IGameLaunchService? launchService = null,
+        AstraLauncher.Authentication.IAccountService? accounts = null) : base("游戏实例")
     {
         _instances = instances;
         _java = java;
@@ -50,6 +52,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         _dialogs = dialogs;
         _settings = settings;
         _launchService = launchService;
+        _accounts = accounts;
         RefreshCommand = new AsyncRelayCommand(() => RunAsync("刷新实例列表", () => RefreshAsync(_selectedInstanceId)));
         CreateCommand = new AsyncRelayCommand(CreateAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync);
@@ -220,10 +223,12 @@ public sealed class InstancesPageViewModel : PageViewModel
         try
         {
             LauncherSettings settings = await _settings.GetAsync(cancellation.Token);
-            GameSession session = OfflineProfile.Create(settings.OfflinePlayerName ?? "Player");
+            GameSession session = await BuildSessionAsync(settings, cancellation.Token);
             var options = new GameLaunchOptions(settings.MemoryMiB, settings.JavaExecutablePath, settings.GameArguments, settings.JvmArguments);
             var progress = new Progress<LaunchProgress>(OnLaunchProgress);
-            AppendLog($"[launcher] 离线玩家：{session.PlayerName}（{session.PlayerUuid}）");
+            AppendLog(session.Kind == GameSessionKind.Authenticated
+                ? $"[launcher] 官方账户：{session.PlayerName}（{session.PlayerUuid}）"
+                : $"[launcher] 离线玩家：{session.PlayerName}（{session.PlayerUuid}）");
             IGameProcess process = await _launchService.LaunchAsync(selected, session, options, progress, cancellation.Token);
             _runningProcess = process;
             process.OutputReceived += OnGameOutput;
@@ -251,6 +256,34 @@ public sealed class InstancesPageViewModel : PageViewModel
             IsLaunching = false;
             LaunchStage = string.Empty;
         }
+    }
+
+    private async Task<GameSession> BuildSessionAsync(LauncherSettings settings, CancellationToken cancellationToken)
+    {
+        if (_accounts is not null)
+        {
+            try
+            {
+                AstraLauncher.Authentication.AccountProfile? selected = await _accounts.GetSelectedAsync(cancellationToken);
+                if (selected is { IsMicrosoft: true })
+                {
+                    AstraLauncher.Authentication.MinecraftSessionInfo info = await _accounts.GetMinecraftSessionAsync(selected.Id, cancellationToken)
+                        ?? throw new InvalidOperationException("Microsoft 账户会话不可用，请在账户页重新登录。");
+                    return new GameSession(GameSessionKind.Authenticated, info.PlayerName, info.PlayerUuid, info.AccessToken, "msa", info.Xuid, info.ClientId);
+                }
+
+                if (selected is { Kind: AstraLauncher.Authentication.AccountKind.Offline })
+                {
+                    return OfflineProfile.Create(selected.PlayerName);
+                }
+            }
+            catch (AstraLauncher.Authentication.AccountAuthenticationException exception)
+            {
+                throw new InvalidOperationException($"Microsoft 登录失败：{exception.Message} 请在账户页重新登录。", exception);
+            }
+        }
+
+        return OfflineProfile.Create(settings.OfflinePlayerName ?? "Player");
     }
 
     private void OnLaunchProgress(LaunchProgress progress)

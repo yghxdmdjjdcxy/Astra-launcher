@@ -1,5 +1,6 @@
 using AstraLauncher.App.Services;
 using AstraLauncher.App.ViewModels;
+using AstraLauncher.Authentication;
 using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Instances;
@@ -35,7 +36,7 @@ public sealed class NavigationServiceTests
             new WelcomePageViewModel(),
             new InstancesPageViewModel(new GameInstanceRepository(new LauncherPaths(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))), new FakeJavaRuntimeDetector(), NullLogger<InstancesPageViewModel>.Instance, dialogs),
             new DownloadsPageViewModel(new EmptyManifestService(), new NoopInstallService(), NullLogger<DownloadsPageViewModel>.Instance, dialogs),
-            new AccountsPageViewModel(),
+            new AccountsPageViewModel(new FakeSettingsService(), new FakeAccountService(), NullLogger<AccountsPageViewModel>.Instance, dialogs),
             new ServersPageViewModel(),
             new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N"))), NullLogger<SettingsPageViewModel>.Instance, dialogs),
             NullLogger<NavigationService>.Instance);
@@ -58,6 +59,29 @@ public sealed class NavigationServiceTests
         public Task<LauncherSettings> GetAsync(CancellationToken cancellationToken = default) => Task.FromResult(new LauncherSettings());
 
         public Task SaveAsync(LauncherSettings settings, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class FakeAccountService : IAccountService
+    {
+        public Task<IReadOnlyList<AccountProfile>> GetAccountsAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<AccountProfile>>([]);
+
+        public Task<AccountProfile?> GetSelectedAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<AccountProfile?>(null);
+
+        public Task<AccountProfile?> SelectAsync(Guid? accountId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<AccountProfile?>(null);
+
+        public Task<AccountProfile> AddOfflineAsync(string playerName, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfile(Guid.NewGuid(), AccountKind.Offline, playerName, Guid.NewGuid().ToString("N")));
+
+        public Task<AccountProfile> AddMicrosoftAsync(string clientId, IProgress<DeviceCodeInfo>? prompt = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfile(Guid.NewGuid(), AccountKind.Microsoft, "MicrosoftPlayer", Guid.NewGuid().ToString("N"), Xuid: "0", ClientId: clientId));
+
+        public Task RemoveAsync(Guid accountId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<MinecraftSessionInfo?> GetMinecraftSessionAsync(Guid accountId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<MinecraftSessionInfo?>(null);
     }
 
     private sealed class FakeJavaRuntimeDetector : IJavaRuntimeDetector

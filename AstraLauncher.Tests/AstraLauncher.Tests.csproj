@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AstraLauncher.App\AstraLauncher.App.csproj" />
+    <ProjectReference Include="..\AstraLauncher.Authentication\AstraLauncher.Authentication.csproj" />
     <ProjectReference Include="..\AstraLauncher.Core\AstraLauncher.Core.csproj" />
     <ProjectReference Include="..\AstraLauncher.Infrastructure\AstraLauncher.Infrastructure.csproj" />
     <ProjectReference Include="..\AstraLauncher.Game\AstraLauncher.Game.csproj" />

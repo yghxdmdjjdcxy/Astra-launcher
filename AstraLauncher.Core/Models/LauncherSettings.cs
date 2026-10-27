@@ -41,6 +41,9 @@ public sealed class LauncherSettings
     /// </summary>
     public string? MinecraftDirectory { get; set; }
 
+    /// <summary>Gets or sets the Azure application (public client) id used for Microsoft device-code sign-in.</summary>
+    public string? MicrosoftClientId { get; set; }
+
     /// <summary>Gets or sets extra game arguments appended to the generated command line.</summary>
     public string? GameArguments { get; set; }
 

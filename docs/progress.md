@@ -13,8 +13,8 @@
 | **M1b** | 版本清单/元数据/安装计划/下载（client/libraries/assets/log4j）+ 下载页 UI + 实例版本选择器 | ✅ 完成（见下） |
 | **M2** | 启动链路修复接线 + 启动 UI + 真实离线启动 Minecraft 到主菜单（E2E） | ✅ 完成（见下） |
 | **M3** | 多线程分段下载 + 设置页/Java 选择 + 额外参数转发 + legacy 库回退 + 精确 1.21.1 E2E | ✅ 完成（见下） |
-| M4 | 官方 Microsoft 登录：OAuth + Xbox/Minecraft 链 + DPAPI 令牌 + 账户页/多账户/离线档案 | ⏳ 下一步 |
-| M5 | Fabric/Quilt/Forge/NeoForge 安装与启动集成 | 待开始 |
+| **M4** | 官方 Microsoft 登录：OAuth + Xbox/Minecraft 链 + DPAPI 令牌 + 账户页/多账户/离线档案 | ✅ 完成（见下） |
+| M5 | Fabric/Quilt/Forge/NeoForge 安装与启动集成 | ⏳ 下一步 |
 | M6 | 服务器列表 + --server/--port 一键加入 | 待开始 |
 | M7 | 全量测试、真实端到端验收、文档与最终报告 | 待开始 |
 
@@ -186,3 +186,38 @@
   - 既有 `%APPDATA%\.minecraft`（官方 26.3）也被正确识别并复用（测试中曾写入的临时 1.21.1 文件已清理，仅保留 26.3）。
 - 证据：`docs/evidence/minecraft-directory/`（settings-minecraft-directory.png、minecraft-1.21.1-from-portable-main-menu.png、portable-e2e.log、single-exe-e2e.log、layout.txt、build/test 日志）。
 - 遗留：Fabric/Quilt/Forge/NeoForge 等加载器版本（PCL 自定义版本）要到 M5 才会出现在版本列表并能启动；旧版（<1.13）启动链仍留 M5。
+
+---
+
+## M4 记录（2026-10-27 晚间：官方微软登录链 + 离线档案 + 账户页）
+
+### 交付内容
+
+1. **认证链（AstraLauncher.Authentication）**
+   - `DeviceCodeOAuthClient`：Microsoft identity platform 设备码流（`consumers` 端点，scope `XboxLive.signin offline_access`），设备码请求/轮询（authorization_pending / slow_down / expired_token / authorization_declined）、刷新令牌。
+   - `XboxLiveAuthenticator`：`user.auth.xboxlive.com` RPS 认证（`d=<access_token>`）、`xsts.auth.xboxlive.com` RPS 授权（`rp://api.minecraftservices.com/`），解析 uhs/xid（XUID），映射 XErr（无 Xbox 档案/地区/儿童账户/封禁）。
+   - `MinecraftAuthenticator`：`login_with_xbox`（`XBL3.0 x=<uhs>;<xsts>`）→ `/minecraft/profile`，UUID 32 位 hex 转标准连字符格式；404 → 未拥有 Java 版。
+   - `DpapiTokenProtector`：Windows DPAPI（CurrentUser）加解密刷新令牌。
+   - `AccountStore`：`%LOCALAPPDATA%\AstraLauncher\accounts.json`，refresh token 仅以 DPAPI 密文持久化、不落 access token，原子写、损坏文件隔离；`AccountService`：账户增删选、设备码流程编排、启动前刷新链（refresh → Xbox → XSTS → Minecraft）、离线 UUID（Java 兼容，Notch 测试向量）。
+2. **契约与启动集成**：`AccountProfile/DeviceCodeInfo/MicrosoftTokenSet/XboxLiveToken/XstsToken/MinecraftSessionInfo/AccountAuthenticationException/AccountErrorCode` + `IAccountService` 等；`LauncherSettings.MicrosoftClientId`；实例启动时按选中账户构建会话（Microsoft → 刷新后的 Authenticated GameSession，含 XUID/client id；Offline → `OfflineProfile`），已删除 Core 里重复的旧 AccountProfile 记录。
+3. **账户页（WPF/MVVM）**：Client ID 输入、添加 Microsoft 账户（设备码区：浏览器地址/用户码/有效期/取消）、离线档案创建（≤16 字符）、账户列表（官方/离线标签、UUID/XUID）、选择/删除（确认）/刷新；Shell 启动初始化、App DI 注册全部认证服务。
+4. **配置说明**：真实 Microsoft 登录需在 Azure 应用注册（公共客户端/移动和桌面应用、允许公共客户端流、委托权限 XboxLive.signin + offline_access）后把 Application (client) ID 填入账户页；未填时离线档案完全可用。
+
+### 验证结果（本机实测）
+
+| 检查 | 结果 |
+|---|---|
+| `dotnet build -c Release` | **0 警告 / 0 错误** |
+| `dotnet test` | **220 通过 / 0 失败 / 0 跳过**（新增认证 HTTP 流 25+、DPAPI、账户服务、账户页 VM、导航等 68 个用例） |
+| 账户页 GUI（真实运行） | 8/8 关键控件；添加离线档案 **M4Tester** → 列表显示"离线档案 + UUID(d7a8b078-…)"；`accounts.json` 落盘；Client ID 为空时给出中文提示与对话框 |
+| 选中账户启动 | 选中离线档案后创建实例 → 启动 **Minecraft 1.21.1**（GLFW30）→ 主菜单；退出码 0；`settings.SelectedAccountId`/OfflinePlayerName 持久化；日志 0 Critical / 0 Error |
+| 真实 Microsoft 端点联通 | 用占位 Client ID 触发 `添加 Microsoft 账户` → 真实请求 `login.microsoftonline.com/consumers/oauth2/v2.0/devicecode`，返回 HTTP 400 → 账户页中文错误提示"Microsoft 或 Minecraft 服务返回了无效响应"（预期行为，证明 OAuth 请求/错误映射路径已接通；日志只记录错误码，不含任何令牌） |
+| DPAPI | 单元测试：Protect/Unprotect 往返、密文不含明文、坏密文抛错；AccountService 测试断言 refresh token 仅以加密形式交给 store |
+
+证据：`docs/evidence/m4/`（accounts-page.png、offline-account-added.png、microsoft-clientid-required.png、launch-with-offline-account-main-menu.png、accounts-e2e.log、oauth-error.log、build/test 日志）。
+
+### 说明与遗留
+
+- **真实 Microsoft 账户端到端登录未验证**（缺少有效的 Azure 公共客户端 Client ID）；Xbox/XSTS/Minecraft 链、DPAPI 存储、刷新逻辑由单元测试与真实端点错误路径覆盖，填入合法 Client ID 后即可走完设备码登录。若你提供 Client ID，我可以补真实登录 + 启动验收。
+- 存在性提示：Microsoft 登录失败时不会自动回退离线启动（避免以错误身份进多人游戏），会给出中文错误并中止。
+- legacy（<1.13）完整启动与 Fabric/Quilt/Forge/NeoForge 接入留 M5。

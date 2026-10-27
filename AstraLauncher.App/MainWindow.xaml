@@ -47,7 +47,90 @@
                 <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
             </Grid>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:AccountsPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="账户"/><TextBlock Margin="0,12,0,0" Text="Stage 4：官方 Microsoft 登录与离线档案。"/></StackPanel></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AccountsPageViewModel}">
+            <Grid>
+                <Grid.Resources><BooleanToVisibilityConverter x:Key="BooleanToVisibility"/></Grid.Resources>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock FontSize="24" Text="账户"/>
+                    <TextBlock Margin="0,6,0,10" Text="官方 Microsoft 登录需要 Azure 应用注册的公共客户端 ID；离线档案无需登录，仅用于单机游戏。" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1">
+                    <TextBlock FontWeight="SemiBold" Text="Microsoft 登录"/>
+                    <TextBlock Margin="0,4,0,8" Foreground="#475569" Text="登录时会显示设备码，请在浏览器中打开指定地址并输入代码完成授权；授权成功后账户会出现在下方列表。" TextWrapping="Wrap"/>
+                    <WrapPanel>
+                        <TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="Client ID"/>
+                        <TextBox Width="360" Margin="0,0,8,8" Text="{Binding MicrosoftClientId, UpdateSourceTrigger=PropertyChanged}" ToolTip="Azure 门户 → 应用注册 → 公共客户端（移动和桌面应用）→ 应用程序(客户端) ID"/>
+                        <Button Content="添加 Microsoft 账户" Command="{Binding AddMicrosoftCommand}" Margin="0,0,8,8" Padding="14,4"/>
+                        <Button Content="取消" Command="{Binding CancelMicrosoftCommand}" Margin="0,0,8,8" Padding="14,4" Visibility="{Binding HasPendingDeviceCode, Converter={StaticResource BooleanToVisibility}}"/>
+                    </WrapPanel>
+                    <Border Margin="0,4,0,8" Padding="10" Background="#F1F5F9" CornerRadius="4" Visibility="{Binding HasPendingDeviceCode, Converter={StaticResource BooleanToVisibility}}">
+                        <StackPanel>
+                            <TextBlock TextWrapping="Wrap"><Run Text="在浏览器打开 "/><Run FontWeight="SemiBold" Text="{Binding DeviceCodeVerificationUri, Mode=OneWay}"/></TextBlock>
+                            <TextBlock Margin="0,4,0,0" TextWrapping="Wrap"><Run Text="输入代码："/><Run FontSize="18" FontWeight="Bold" Text="{Binding DeviceCodeUserCode, Mode=OneWay}"/></TextBlock>
+                            <TextBlock Margin="0,4,0,0" Text="{Binding DeviceCodeMessage, Mode=OneWay}" TextWrapping="Wrap"/>
+                            <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="#64748B" Text="{Binding DeviceCodeExpiresAtText, Mode=OneWay}"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock FontWeight="SemiBold" Text="离线档案"/>
+                    <TextBlock Margin="0,4,0,8" Foreground="#475569" Text="离线档案不会连接 Microsoft 服务；玩家名长度为 1–16 个字符。" TextWrapping="Wrap"/>
+                    <WrapPanel>
+                        <TextBlock Margin="0,0,6,8" VerticalAlignment="Center" Text="玩家名"/>
+                        <TextBox Width="200" Margin="0,0,8,8" MaxLength="16" Text="{Binding AddOfflineName, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Content="添加离线档案" Command="{Binding AddOfflineCommand}" Margin="0,0,8,8" Padding="14,4"/>
+                    </WrapPanel>
+                </StackPanel>
+                <Grid Grid.Row="2" Margin="0,4,0,0">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <DockPanel Margin="0,0,0,4">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="删除账户" Command="{Binding RemoveAccountCommand}" Margin="8,0,0,0" Padding="14,2"/>
+                            <Button Content="刷新" Command="{Binding RefreshCommand}" Margin="8,0,0,0" Padding="14,2"/>
+                        </StackPanel>
+                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="账户列表"/>
+                    </DockPanel>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="2,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="{Binding PlayerName}"/>
+                                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="#475569">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="离线档案"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMicrosoft}" Value="True">
+                                                            <Setter Property="Text" Value="官方 Microsoft"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontSize="11" Foreground="#64748B" Text="{Binding Xuid, StringFormat='XUID：{0}   '}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMicrosoft}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock FontSize="11" Foreground="#64748B" Text="{Binding PlayerUuid, StringFormat='UUID：{0}'}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+                <TextBlock Grid.Row="3" Margin="0,8,0,0" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+            </Grid>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ServersPageViewModel}"><StackPanel><TextBlock FontSize="24" Text="服务器"/><TextBlock Margin="0,12,0,0" Text="Stage 7：服务器与联机基础设施。"/></StackPanel></DataTemplate>
         <DataTemplate DataType="{x:Type vm:SettingsPageViewModel}">
             <Grid>

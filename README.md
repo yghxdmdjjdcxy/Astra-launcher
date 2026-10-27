@@ -2,7 +2,7 @@
 
 Windows Minecraft Java Edition launcher (WPF, hand-written MVVM) built in verified stages.
 
-**Current status:** the launcher can download and install vanilla Minecraft versions (official source with BMCLAPI mirror and automatic fallback, per-file parallel segmented downloads), manage instances, select Java runtimes, launch the game offline, keep game logs, and persist settings. Real end-to-end verification passed with **Minecraft 1.21.1** (download + offline launch into the main menu). Official Microsoft sign-in, mod loaders (Fabric/Quilt/Forge/NeoForge) and the server list are the remaining milestones. No installer/auto-updater is included by design.
+**Current status:** the launcher can download and install vanilla Minecraft versions (official source with BMCLAPI mirror and automatic fallback, per-file parallel segmented downloads), manage instances, select Java runtimes, launch the game offline, keep game logs, persist settings, and manage accounts (offline profiles plus the complete official Microsoft → Xbox Live → XSTS → Minecraft authentication chain with DPAPI-protected tokens). Real end-to-end verification passed with **Minecraft 1.21.1** (download + offline launch into the main menu) and with an offline account selected. A real Microsoft sign-in additionally needs an Azure public-client id (see below). Mod loaders (Fabric/Quilt/Forge/NeoForge) and the server list are the remaining milestones. No installer/auto-updater is included by design.
 
 ## Requirements
 
@@ -34,10 +34,19 @@ Produces exactly one file: `artifacts/AstraLauncher-win-x64-single/AstraLauncher
 - `AstraLauncher.Infrastructure` — launcher paths, JSON settings, file logging, version manifest and download source resolution.
 - `AstraLauncher.Game` — version metadata parsing/inheritance, install planning, safe local instance management, Java discovery, command construction, process launching and offline profiles.
 - `AstraLauncher.Downloader` — asynchronous download queue with resume, retries, integrity checks and per-file HTTP Range segmented downloads.
-- `AstraLauncher.Authentication` — reserved for official Microsoft/Xbox/Minecraft authentication and offline profiles.
+- `AstraLauncher.Authentication` — device-code Microsoft OAuth, Xbox Live/XSTS, Minecraft services login, DPAPI token protection and the account service.
 - `AstraLauncher.Multiplayer` — reserved for the server list and later signalling/relay abstractions.
-- `AstraLauncher.Tests` — xUnit automated tests (144 currently passing).
+- `AstraLauncher.Tests` — xUnit automated tests (220 currently passing).
 - `scripts` — build and packaging helpers.
+
+### Accounts
+
+- **Offline profiles** work out of the box and derive the standard Java-compatible offline UUID from the player name.
+- **Official Microsoft sign-in** uses the OAuth 2.0 device-code flow (no client secret, tokens stored encrypted with Windows DPAPI for the current user). It requires an Azure app registration used as a public client:
+  1. In the Azure portal create an app registration, add a **mobile and desktop application** platform and enable public client flows,
+  2. Add the delegated permission **XboxLive.signin** (and `offline_access`) on Microsoft Graph,
+  3. Paste the application (client) id into the **Client ID** field on the Accounts page and click **添加 Microsoft 账户**; a device code and verification URL are shown and the account appears after sign-in.
+- The selected account is used by the launch pipeline: Microsoft accounts send a freshly refreshed Minecraft access token (with XUID/client id), offline accounts launch with their offline UUID.
 
 Runtime data is split on purpose:
 

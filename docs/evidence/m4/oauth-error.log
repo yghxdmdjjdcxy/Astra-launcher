@@ -1,0 +1,24 @@
+﻿22:11:36 OAUTH ERROR SMOKE START
+22:11:40 app window=True
+22:11:44 clientid readback=00000000-0000-0000-0000-000000000000
+22:11:45 clicked add microsoft
+22:11:46 dialog=True after=2s
+22:11:47 dialogText: 确定 | Microsoft 或 Minecraft 服务返回了无效响应，请稍后重试。
+22:11:48 SHOT <fail>
+22:11:48 ui: 官方 Microsoft 登录需要 Azure 应用注册的公共客户端 ID；离线档案无需登录，仅用于单机游戏。
+22:11:48 ui: Microsoft 登录
+22:11:48 ui: 登录时会显示设备码，请在浏览器中打开指定地址并输入代码完成授权；授权成功后账户会出现在下方列表。
+22:11:48 ui: Client ID
+22:11:48 ui: 添加 Microsoft 账户
+22:11:48 ui: 离线档案不会连接 Microsoft 服务；玩家名长度为 1–16 个字符。
+22:11:48 ui: UUID：d7a8b078-b268-38d2-9221-0066f671c361
+22:11:48 ui: Microsoft 或 Minecraft 服务返回了无效响应，请稍后重试。
+22:11:49 SHOT <fail>
+22:11:52 applog: 2026-10-27T14:11:46.0148536+00:00 [Error] AstraLauncher.App.ViewModels.AccountsPageViewModel: Microsoft 登录失败：InvalidResponse
+22:11:52 applog: AstraLauncher.Authentication.AccountAuthenticationException: Microsoft 设备代码请求失败（HTTP 400）。
+22:11:52 applog:    at AstraLauncher.Authentication.DeviceCodeOAuthClient.RequestDeviceCodeAsync(String clientId, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Authentication\DeviceCodeOAuthClient.cs:line 58
+22:11:52 applog:    at AstraLauncher.Authentication.AccountService.RunAuthenticationStepAsync[T](Func`1 action, String operation, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Authentication\AccountService.cs:line 438
+22:11:52 applog:    at AstraLauncher.Authentication.AccountService.AddMicrosoftAsync(String clientId, IProgress`1 prompt, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Authentication\AccountService.cs:line 163
+22:11:52 applog:    at AstraLauncher.App.ViewModels.AccountsPageViewModel.AddMicrosoftAsync() in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\ViewModels\AccountsPageViewModel.cs:line 194
+22:11:52 app log critical=0 error=1
+22:11:52 OAUTH ERROR SMOKE DONE
