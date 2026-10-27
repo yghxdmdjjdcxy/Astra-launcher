@@ -1,10 +1,11 @@
 Single-file executable: artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe
-Size bytes: 65125013
+Size bytes: 65129295
 Size MB: 62.1
 FileVersion: 1.0.0.0
-ProductVersion: 1.0.0+e52f6527fc33514834c4d196ff74f0f96e3b433e
-SHA256: 82D9A9248BD215AC1C9909BCA01CEAEE4DD20ED06A76DBB66BAAE60FC2F388DB
-Built: 2026-10-27T22:15:59.9045415+08:00
+ProductVersion: 1.0.0+5ec8c254109b04e092fb83bc9f8c6b3b9c5f7984
+SHA256: 5A50084ABF380342881541D26FA8D1F26AE9DC06C2A9E4D2A3BF94E659A603FF
+Built: 2026-10-27T22:26:33.4976820+08:00
 Command: scripts/publish-single-file.ps1
-Smoke: start 4s -> window; Accounts page shows persisted offline account (M4Tester) + Client ID/offline controls; Settings page shows Minecraft directory; exit code 0; no new errors
-Portable layout verified separately: versions/libraries/assets shared with other launchers (docs/evidence/minecraft-directory)
+Smoke: start 5s -> window; welcome 4/4 key texts; instances page OK; exit code 0; fresh log 0 Critical/0 Error
+UI screenshots: docs/evidence/ui-redesign/
+Portable layout: docs/evidence/minecraft-directory/
