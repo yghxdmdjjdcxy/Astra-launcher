@@ -576,8 +576,9 @@
                                              ToolTipService.ShowDuration="30000"/>
                                     <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="浏览…" Command="{Binding BrowseMinecraftDirectoryCommand}" Margin="8,0,0,0"/>
                                     <TextBlock Grid.Row="1" Style="{StaticResource FieldLabel}" Text="启动器数据"/>
-                                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" IsReadOnly="True" Text="{Binding LauncherDataDirectory}"
-                                             ToolTip="{Binding LauncherDataDirectory}" Background="#F8FAFC"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" IsReadOnly="True" Background="#F8FAFC"
+                                             Text="{Binding LauncherDataDirectory, Mode=OneWay}"
+                                             ToolTip="{Binding LauncherDataDirectory, Mode=OneWay}"/>
                                 </Grid>
                             </StackPanel>
                         </Border>

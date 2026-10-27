@@ -261,5 +261,11 @@
 - 升级迁移：首次启动发现旧数据在 `%LOCALAPPDATA%\AstraLauncher`（或 `<默认Minecraft>\AstraLauncher` 之外的显式目录）时，自动把整个数据目录移动到 `<MinecraftDirectory>\AstraLauncher`；`instances.json`/`.bak` 中的实例绝对路径同步改写；迁移成功后删除旧目录；若目标已有 settings.json 则跳过，迁移失败保留旧目录并记录 warning。
 - 启动流程调整：在创建 DI 宿主前完成「解析 Minecraft 目录 → 读取设置中的自定义目录 → 迁移旧数据 → 构造 LauncherPaths」，所以日志/账户/实例从第一次启动起就位于 `.minecraft\AstraLauncher`；设置页新增只读「启动器数据」路径展示，并说明修改 Minecraft 目录后启动器数据会在下次启动迁移到新目录下的 AstraLauncher。
 - 附带修复：实例「导入目录」为空时给出中文提示而不是抛异常对话框。
-- 验证：`dotnet build` 0/0；`dotnet test` **223/223**（新增 3 个 LauncherDataMigrator 用例：数据搬迁+实例路径改写、目标已存在跳过、源不存在无操作）；迁移逻辑另用真实用户数据（AppData → F:\MC\.minecraft\AstraLauncher）实测（见下）。
-- 证据：`docs/evidence/datadir-migration/`。
+- 验证：`dotnet build` 0/0；`dotnet test` **223/223**（新增 3 个 LauncherDataMigrator 用例：数据搬迁+实例路径改写、目标已存在跳过、源不存在无操作）。
+- **真实环境迁移实测（F:\MC，用户实际目录）**：
+  - 迁移前：`%LOCALAPPDATA%\AstraLauncher` 存在（17.3 MB：settings/accounts/logs/instances），`F:\MC\.minecraft\AstraLauncher` 不存在。
+  - 用新 exe 启动一次后：旧目录被移除；`F:\MC\.minecraft\AstraLauncher` 生成（settings.json、accounts.json、instances.json、logs、instances 及两个实例目录，共 17.6 MB）；`instances.json` 中实例路径已改写为 `F:\MC\.minecraft\AstraLauncher\instances\...`。
+  - 设置页显示：游戏目录 `F:\MC\.minecraft`、启动器数据 `F:\MC\.minecraft\AstraLauncher`。
+  - 实例列表正常（2 个实例，路径在 .minecraft 内），启动 1.21.1 → 游戏窗口出现（30 秒）→ 正常退出码 0；迁移后日志 0 Critical / 0 Error（此前的 Critical 均为修复前只读绑定导致，已修复：只读 TextBox 绑定加 `Mode=OneWay`）。
+  - 下载的版本文件确认在 `F:\MC\.minecraft\versions\1.21.1\1.21.1.jar+json`、`1.20.1`（以及 PCL 原有版本），没有写入 `%LOCALAPPDATA%`。
+- 证据：`docs/evidence/datadir-migration/`（verify.log、settings-datadir.png、game-from-migrated-data.png、layout.txt）。

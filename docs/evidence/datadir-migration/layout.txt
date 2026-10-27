@@ -1,0 +1,10 @@
+Real environment migration verification (F:\MC)
+==============================================
+Before: legacy %LOCALAPPDATA%\AstraLauncher exists; F:\MC\.minecraft\AstraLauncher absent.
+After first run of the new exe:
+  legacy directory removed: True
+  F:\MC\.minecraft\AstraLauncher exists with settings.json, accounts.json, instances.json, logs/
+  instances.json paths rewritten to F:\MC\.minecraft\AstraLauncher\instances\... (2 instances)
+  Settings page shows: Minecraft 目录 = F:\MC\.minecraft ; 启动器数据 = F:\MC\.minecraft\AstraLauncher
+  Launching existing instance works: Minecraft 1.21.1 window, exit code 0
+  Game/version files: F:\MC\.minecraft\versions\1.21.1 (jar+json), 1.20.1 installed

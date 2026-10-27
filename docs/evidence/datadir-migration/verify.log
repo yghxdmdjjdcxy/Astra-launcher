@@ -1,0 +1,17 @@
+﻿23:03:30 DATADIR MIGRATION VERIFY START
+23:03:30 before: legacyExists=False newDataExists=True portableMc=True
+23:03:35 window=True after=5s
+23:03:43 after: legacyExists=False newDataExists=True
+23:03:43 data files: settings=True accounts=True instancesJson=True logs=True
+23:03:44 instanceDirs=2 names=7cdfef7ba4f6416cbbc6024100712ece,c5e47254b7ab43429e5e6a46ac242765
+23:03:44 instancesPathsRewritten=True noLegacyPath=True
+23:03:46 settings values=F:\MC\.minecraft || F:\MC\.minecraft\AstraLauncher
+23:03:47 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\datadir-migration\shots\settings-datadir.png
+23:03:48 instances visible=2 labels=新实例版本：1.21.1   F:\MC\.minecraft\AstraLauncher\instances\7cdfef7ba4f6416cbbc6024100712ece | 新实例版本：1.20.1   F:\MC\.minecraft\AstraLauncher\instances\c5e47254b7ab43429e5e6a46ac242765
+23:04:19 gameWindow=True after=30s title='Minecraft 1.21.1'
+23:04:30 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\datadir-migration\shots\game-from-migrated-data.png
+23:04:35 gameExit='游戏已退出（退出码 0）。'
+23:04:41 applog: 2026-10-27T15:01:58.5841588+00:00 [Information] AstraLauncher.App.App: Minecraft directory resolved to F:\MC\.minecraft; launcher data directory is F:\MC\.minecraft\AstraLauncher.
+23:04:41 applog: 2026-10-27T15:03:33.0322741+00:00 [Information] AstraLauncher.App.App: Minecraft directory resolved to F:\MC\.minecraft; launcher data directory is F:\MC\.minecraft\AstraLauncher.
+23:04:41 app log critical=42 error=0
+23:04:41 DATADIR MIGRATION VERIFY DONE
