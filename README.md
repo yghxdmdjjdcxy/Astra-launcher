@@ -58,7 +58,7 @@ Runtime data is split on purpose:
   1. an existing `.minecraft` next to the executable wins (portable mode),
   2. otherwise an existing `%APPDATA%\.minecraft` (the official launcher/PCL layout) is reused,
   3. otherwise a new `.minecraft` folder is created next to the executable.
-  The directory is shown and can be changed (with a folder picker) on the Settings page. The layout is the standard Minecraft one, so other launchers (official launcher, PCL, …) see the same versions/libraries/assets; existing files are verified and reused, only missing files are downloaded. Data from older Astra Launcher versions (`%LOCALAPPDATA%\AstraLauncher\versions|libraries|assets`) is moved into the resolved `.minecraft` on first launch.
-- **Launcher-private data** — `settings.json`, logs, instance directories, Java runtimes and caches stay under `%LOCALAPPDATA%\AstraLauncher`.
+  The directory is shown and can be changed (with a folder picker) on the Settings page. The layout is the standard Minecraft one, so other launchers (official launcher, PCL, …) see the same versions/libraries/assets; existing files are verified and reused, only missing files are downloaded.
+- **Launcher data** — settings, accounts (DPAPI-protected tokens), logs, instance directories and caches are stored in **`<MinecraftDirectory>\AstraLauncher`**, so a portable `.minecraft` folder contains everything the launcher needs and can be moved as a whole. On the first start after upgrading, data from the legacy `%LOCALAPPDATA%\AstraLauncher` location is migrated automatically (instance paths are rewritten; the old directory is removed after a successful move).
 
 The single-file executable does not modify the folder it is started from (apart from creating the portable `.minecraft` when that default is chosen).

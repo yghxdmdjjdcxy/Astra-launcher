@@ -154,7 +154,14 @@ public sealed class InstancesPageViewModel : PageViewModel
 
     private async Task ImportAsync() => await RunAsync("导入实例", async () =>
     {
-        GameInstance imported = await _instances.ImportAsync(Name, VersionId, ImportPath);
+        string importPath = ImportPath?.Trim() ?? string.Empty;
+        if (importPath.Length == 0)
+        {
+            StatusMessage = "请先填写「导入路径」（已有游戏目录），再点击「导入目录」。";
+            return;
+        }
+
+        GameInstance imported = await _instances.ImportAsync(Name, VersionId, importPath);
         await RefreshAsync(imported.Id);
         StatusMessage = $"已导入实例：{imported.Name}";
     });

@@ -77,6 +77,9 @@ public sealed class SettingsPageViewModel : PageViewModel
     /// </summary>
     public string MinecraftDirectory { get => _minecraftDirectory; set => SetProperty(ref _minecraftDirectory, value); }
 
+    /// <summary>Gets the directory that stores launcher settings, accounts, logs and instances.</summary>
+    public string LauncherDataDirectory => _paths.ApplicationDataDirectory;
+
     public JavaRuntimeOption? SelectedJavaChoice
     {
         get => _selectedJavaChoice;
@@ -171,7 +174,7 @@ public sealed class SettingsPageViewModel : PageViewModel
             _paths.SetMinecraftDirectory(settings.MinecraftDirectory ?? LauncherPaths.ResolveDefaultMinecraftDirectory());
             _paths.EnsureCreated();
             MinecraftDirectory = _paths.MinecraftDirectory;
-            StatusMessage = $"设置已保存。Minecraft 目录：{_paths.MinecraftDirectory}";
+            StatusMessage = $"设置已保存。Minecraft 目录：{_paths.MinecraftDirectory}（版本文件立即生效；启动器数据将在下次启动时迁移到该目录下的 AstraLauncher）。";
         }
         catch (Exception exception)
         {

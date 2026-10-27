@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 using AstraLauncher.App.Services;
@@ -47,9 +48,20 @@ public partial class App : Application
 
         try
         {
-            _host = CreateHost();
+            LauncherBootstrapResult bootstrap = CreateLauncherPaths();
+            _host = CreateHost(bootstrap.Paths);
             _host.Start();
-            ApplyMinecraftDirectory();
+            ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
+            if (!string.IsNullOrWhiteSpace(bootstrap.MigrationWarning))
+            {
+                logger.LogWarning("Launcher data migration failed: {Error}. The legacy data directory is still in use.", bootstrap.MigrationWarning);
+            }
+
+            logger.LogInformation(
+                "Minecraft directory resolved to {MinecraftDirectory}; launcher data directory is {LauncherDataDirectory}.",
+                bootstrap.Paths.MinecraftDirectory,
+                bootstrap.Paths.ApplicationDataDirectory);
+            MinecraftDataMigrator.MigrateLegacyMinecraftData(bootstrap.Paths, logger);
             _host.Services.GetRequiredService<MainWindow>().Show();
         }
         catch (Exception exception)
@@ -81,14 +93,9 @@ public partial class App : Application
         base.OnExit(e);
     }
 
-    private static IHost CreateHost()
+    private static IHost CreateHost(LauncherPaths paths)
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
-        var paths = new LauncherPaths();
-        // Version/libraries/assets live in a shared .minecraft folder (portable next to the executable when available,
-        // otherwise the existing %APPDATA%\.minecraft) so other launchers can reuse the same installation.
-        paths.SetMinecraftDirectory(LauncherPaths.ResolveDefaultMinecraftDirectory());
-        paths.EnsureCreated();
         builder.Logging.ClearProviders();
         builder.Logging.AddDebug();
         builder.Logging.AddProvider(new FileLoggerProvider(paths.LogsDirectory));
@@ -133,37 +140,89 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Applies the configured Minecraft root directory (if any), creates its folders and migrates legacy launcher data
-    /// before any page starts using the paths.
+    /// Resolves the Minecraft root and the launcher data directory. Launcher-owned data (settings, accounts, logs,
+    /// instances, caches) lives in <c>&lt;MinecraftDirectory&gt;\AstraLauncher</c> so a portable <c>.minecraft</c> folder
+    /// contains everything; data from the legacy <c>%LOCALAPPDATA%\AstraLauncher</c> layout is moved on first start.
     /// </summary>
-    private void ApplyMinecraftDirectory()
+    private static LauncherBootstrapResult CreateLauncherPaths()
     {
-        if (_host is null)
-        {
-            return;
-        }
+        string defaultMinecraft = LauncherPaths.ResolveDefaultMinecraftDirectory();
+        string legacyData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AstraLauncher");
+        string defaultData = Path.Combine(defaultMinecraft, "AstraLauncher");
 
-        ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
-        ILauncherPaths paths = _host.Services.GetRequiredService<ILauncherPaths>();
-        try
+        string sourceData = File.Exists(Path.Combine(defaultData, "settings.json"))
+            ? defaultData
+            : (File.Exists(Path.Combine(legacyData, "settings.json")) ? legacyData : defaultData);
+
+        LauncherSettings? settings = TryReadSettings(Path.Combine(sourceData, "settings.json"));
+        string minecraft = defaultMinecraft;
+        if (!string.IsNullOrWhiteSpace(settings?.MinecraftDirectory))
         {
-            LauncherSettings settings = _host.Services.GetRequiredService<ISettingsService>().GetAsync().GetAwaiter().GetResult();
-            if (!string.IsNullOrWhiteSpace(settings.MinecraftDirectory))
+            try
             {
-                paths.SetMinecraftDirectory(settings.MinecraftDirectory);
+                minecraft = Path.GetFullPath(settings.MinecraftDirectory.Trim());
+            }
+            catch (Exception exception) when (exception is ArgumentException or NotSupportedException or IOException)
+            {
+                // Keep the resolved default when the configured path is unusable.
             }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+
+        string launcherData = Path.Combine(minecraft, "AstraLauncher");
+        string? migrationWarning = null;
+        bool targetHasSettings = File.Exists(Path.Combine(launcherData, "settings.json"));
+        if (!targetHasSettings && !AreSamePath(sourceData, launcherData) && Directory.Exists(sourceData))
         {
-            logger.LogWarning(exception, "Could not apply the configured Minecraft directory; using the default.");
+            if (!LauncherDataMigrator.MigrateIfNeeded(sourceData, launcherData, out string? error))
+            {
+                migrationWarning = error;
+            }
+        }
+        else if (!targetHasSettings && !Directory.Exists(sourceData) && Directory.Exists(legacyData) && !AreSamePath(legacyData, launcherData))
+        {
+            if (!LauncherDataMigrator.MigrateIfNeeded(legacyData, launcherData, out string? error))
+            {
+                migrationWarning = error;
+            }
         }
 
+        var paths = new LauncherPaths(launcherData, minecraft);
         paths.EnsureCreated();
-        MinecraftDataMigrator.MigrateLegacyMinecraftData(paths, logger);
-        logger.LogInformation("Minecraft directory resolved to {MinecraftDirectory}.", paths.MinecraftDirectory);
+        return new LauncherBootstrapResult(paths, migrationWarning);
     }
 
-    private static HttpClient CreateHttpClient()    {
+    private static LauncherSettings? TryReadSettings(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            return JsonSerializer.Deserialize<LauncherSettings>(File.ReadAllText(path), SettingsJsonOptions);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static bool AreSamePath(string left, string right) =>
+        string.Equals(
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)),
+            StringComparison.OrdinalIgnoreCase);
+
+    private static readonly JsonSerializerOptions SettingsJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
+    private sealed record LauncherBootstrapResult(LauncherPaths Paths, string? MigrationWarning);
+
+    private static HttpClient CreateHttpClient()
+    {
         var handler = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.All,

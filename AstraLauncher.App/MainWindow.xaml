@@ -156,7 +156,7 @@
                                     <TextBlock FontSize="13" TextWrapping="Wrap" Foreground="#0F172A"
                                                Text="{Binding DataContext.MinecraftDirectory, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                     <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0"
-                                               Text="可在「设置」中修改；该目录可与其他启动器共用。"/>
+                                               Text="版本/库/资源在 .minecraft（可与其他启动器共用）；设置、账户、日志、实例存档在 .minecraft\AstraLauncher。可在「设置」中查看或修改。"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Margin="0,0,16,0">
                                     <TextBlock Style="{StaticResource Hint}" Text="账户"/>
@@ -559,18 +559,25 @@
                             <StackPanel>
                                 <TextBlock Style="{StaticResource SectionTitle}" Text="Minecraft 目录"/>
                                 <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
-                                           Text="versions / libraries / assets 的存放位置。默认使用 exe 旁边的 .minecraft（其次 %APPDATA%\.minecraft）；可与其他启动器共用，已有文件会校验复用，缺失文件才下载。"/>
+                                           Text="versions / libraries / assets 的存放位置。默认使用 exe 旁边的 .minecraft（其次 %APPDATA%\.minecraft）；可与其他启动器共用，已有文件会校验复用，缺失文件才下载。启动器自身的设置、账户、日志、实例存档也保存在该目录下的 AstraLauncher 子目录中。"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="120"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Style="{StaticResource FieldLabel}" Text="目录路径"/>
-                                    <TextBox Grid.Column="1" Text="{Binding MinecraftDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Style="{StaticResource FieldLabel}" Text="游戏目录"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding MinecraftDirectory, UpdateSourceTrigger=PropertyChanged}"
                                              ToolTip="{Binding MinecraftDirectory}"
                                              ToolTipService.ShowDuration="30000"/>
-                                    <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="浏览…" Command="{Binding BrowseMinecraftDirectoryCommand}" Margin="8,0,0,0"/>
+                                    <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="浏览…" Command="{Binding BrowseMinecraftDirectoryCommand}" Margin="8,0,0,0"/>
+                                    <TextBlock Grid.Row="1" Style="{StaticResource FieldLabel}" Text="启动器数据"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" IsReadOnly="True" Text="{Binding LauncherDataDirectory}"
+                                             ToolTip="{Binding LauncherDataDirectory}" Background="#F8FAFC"/>
                                 </Grid>
                             </StackPanel>
                         </Border>

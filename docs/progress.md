@@ -254,3 +254,12 @@
 - 本次仅改 `MainWindow.xaml`、`ShellViewModel`（状态汇总属性）和下载页初始提示文案，不涉及引擎/认证逻辑。
 - 实例页 Java 列表仍以「检测 Java」按钮触发（设置页启动时会自动检测并显示数量）；为保持启动速度未在实例页初始化时重复探测。
 - 下一里程碑回到功能：M5 加载器（Fabric/Quilt/Forge/NeoForge）。
+
+### 数据目录统一到 .minecraft（2026-10-27 深夜，修复"数据还在默认目录"）
+
+- 新的完整布局：**游戏文件**在 `<MinecraftDirectory>`（versions/libraries/assets），**启动器数据**（settings.json、accounts.json[DPAPI]、logs、instances 及其中的存档/options、cache、temp、java-runtime）在 **`<MinecraftDirectory>\AstraLauncher`**；便携模式下整个 `.minecraft` 目录自包含，可整体搬移，其他启动器仍可直接使用 versions/libraries/assets。
+- 升级迁移：首次启动发现旧数据在 `%LOCALAPPDATA%\AstraLauncher`（或 `<默认Minecraft>\AstraLauncher` 之外的显式目录）时，自动把整个数据目录移动到 `<MinecraftDirectory>\AstraLauncher`；`instances.json`/`.bak` 中的实例绝对路径同步改写；迁移成功后删除旧目录；若目标已有 settings.json 则跳过，迁移失败保留旧目录并记录 warning。
+- 启动流程调整：在创建 DI 宿主前完成「解析 Minecraft 目录 → 读取设置中的自定义目录 → 迁移旧数据 → 构造 LauncherPaths」，所以日志/账户/实例从第一次启动起就位于 `.minecraft\AstraLauncher`；设置页新增只读「启动器数据」路径展示，并说明修改 Minecraft 目录后启动器数据会在下次启动迁移到新目录下的 AstraLauncher。
+- 附带修复：实例「导入目录」为空时给出中文提示而不是抛异常对话框。
+- 验证：`dotnet build` 0/0；`dotnet test` **223/223**（新增 3 个 LauncherDataMigrator 用例：数据搬迁+实例路径改写、目标已存在跳过、源不存在无操作）；迁移逻辑另用真实用户数据（AppData → F:\MC\.minecraft\AstraLauncher）实测（见下）。
+- 证据：`docs/evidence/datadir-migration/`。
