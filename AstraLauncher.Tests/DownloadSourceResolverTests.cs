@@ -130,6 +130,32 @@ public sealed class DownloadSourceResolverTests
         Assert.Equal(official, candidates[0]);
     }
 
+    [Fact]
+    public void GetCandidates_NeoForgeMaven_PrefersMirrorAndStripsReleasesPrefix()
+    {
+        var resolver = new DownloadSourceResolver(MirrorBaseUrl);
+        Uri official = new("https://maven.neoforged.net/releases/net/neoforged/neoforge/21.1.265/neoforge-21.1.265-universal.jar");
+
+        IReadOnlyList<Uri> candidates = resolver.GetCandidates(official, DownloadSourceMode.OfficialWithFallback);
+
+        Assert.Equal(2, candidates.Count);
+        Assert.Equal("https://mirror.example.com/maven/net/neoforged/neoforge/21.1.265/neoforge-21.1.265-universal.jar", candidates[0].AbsoluteUri);
+        Assert.Equal(official.AbsoluteUri, candidates[1].AbsoluteUri);
+    }
+
+    [Fact]
+    public void GetCandidates_ForgeMaven_PrefersMirror()
+    {
+        var resolver = new DownloadSourceResolver(MirrorBaseUrl);
+        Uri official = new("https://maven.minecraftforge.net/net/minecraftforge/forge/1.21.1-52.1.20/forge-1.21.1-52.1.20-installer.jar");
+
+        IReadOnlyList<Uri> candidates = resolver.GetCandidates(official, DownloadSourceMode.OfficialWithFallback);
+
+        Assert.Equal(2, candidates.Count);
+        Assert.Equal("https://mirror.example.com/maven/net/minecraftforge/forge/1.21.1-52.1.20/forge-1.21.1-52.1.20-installer.jar", candidates[0].AbsoluteUri);
+        Assert.Equal(official.AbsoluteUri, candidates[1].AbsoluteUri);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]

@@ -1,0 +1,26 @@
+﻿23:21:46 M5 FABRIC E2E START
+23:21:50 window=True after=3s
+23:21:57 versionsLoaded=True
+23:21:57 versionList=True
+23:22:01 selected text='已选版本：1.21.1'
+23:22:02 selected1211=True
+23:22:04 loaderCatalog='已加载 255 个 Fabric 版本。'
+23:22:05 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\m5-downloads-loader.png
+23:22:05 clicked install loader
+23:23:13 installResult='已安装 Fabric：版本 ID “fabric-loader-0.20.1-1.21.1”。可在「游戏实例」的版本列表中选择它启动。' failure='' elapsed=67s
+23:23:13 loaderVersionId='fabric-loader-0.20.1-1.21.1'
+23:23:13 versionDirFiles=fabric-loader-0.20.1-1.21.1.jar,fabric-loader-0.20.1-1.21.1.json json=True
+23:23:13 fabricLibs=163
+23:23:13 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\m5-loader-installed.png
+23:23:15 create='已创建实例：M5-Fabric'
+23:30:17 gameWindow=False after=422s title=''
+23:30:22 applog: 2026-10-27T15:22:06.3714785+00:00 [Information] AstraLauncher.Game.Install.VersionInstallService: Created install plan for version fabric-loader-0.20.1-1.21.1 with 3946 files (912221785 known bytes).
+23:30:22 applog: 2026-10-27T15:22:06.4870130+00:00 [Information] AstraLauncher.Game.Install.VersionInstallService: Version fabric-loader-0.20.1-1.21.1: 3944 of 3946 files are already present.
+23:30:22 applog: 2026-10-27T15:23:11.7893213+00:00 [Information] AstraLauncher.Game.Install.VersionInstallService: Version fabric-loader-0.20.1-1.21.1 installed: 3946 files (912221785 known bytes).
+23:30:22 applog: 2026-10-27T15:23:15.4480713+00:00 [Information] AstraLauncher.Game.Install.VersionInstallService: Created install plan for version fabric-loader-0.20.1-1.21.1 with 3946 files (912221785 known bytes).
+23:30:22 applog: 2026-10-27T15:23:15.4967045+00:00 [Information] AstraLauncher.Game.Install.VersionInstallService: Version fabric-loader-0.20.1-1.21.1: 3946 of 3946 files are already present.
+23:30:22 applog: 2026-10-27T15:23:15.4975131+00:00 [Information] AstraLauncher.Game.Install.VersionInstallService: Version fabric-loader-0.20.1-1.21.1 installed: 3946 files (912221785 known bytes).
+23:30:22 applog: 2026-10-27T15:23:16.6368047+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Selected Java 21 (21.0.12.1) at C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe for version fabric-loader-0.20.1-1.21.1.
+23:30:22 applog: 2026-10-27T15:23:16.6601298+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Started version fabric-loader-0.20.1-1.21.1 (PID 39688) with Java C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe, 4096 MiB, working directory E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\instances\33f129c1576c48e4ae09eb2ea5097d54.
+23:30:22 app log critical=0 error=1
+23:30:22 M5 FABRIC E2E DONE

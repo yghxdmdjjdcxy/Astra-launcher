@@ -46,7 +46,8 @@ public static class VersionMetadataParser
         if (!root.TryGetProperty("libraries", out JsonElement libraries)) return [];
         if (libraries.ValueKind != JsonValueKind.Array) throw new VersionMetadataException("'libraries' must be an array.", sourcePath);
         return libraries.EnumerateArray().Select(item => new LibraryDescriptor(
-            RequiredString(item, "name", sourcePath), ParseLibraryDownloads(item, sourcePath), ParseStringMap(item, "natives", sourcePath), ParseExtractExcludes(item, sourcePath), ParseRules(item, sourcePath))).ToArray();
+            RequiredString(item, "name", sourcePath), ParseLibraryDownloads(item, sourcePath), ParseStringMap(item, "natives", sourcePath), ParseExtractExcludes(item, sourcePath), ParseRules(item, sourcePath),
+            OptionalString(item, "url"))).ToArray();
     }
 
     private static LibraryDownloads? ParseLibraryDownloads(JsonElement library, string? sourcePath)
@@ -108,7 +109,7 @@ public static class VersionMetadataParser
     {
         if (!root.TryGetProperty("logging", out JsonElement logging) || logging.ValueKind == JsonValueKind.Null) return null;
         if (logging.ValueKind != JsonValueKind.Object) throw new VersionMetadataException("'logging' must be an object.", sourcePath);
-        if (!logging.TryGetProperty("client", out JsonElement client) || client.ValueKind == JsonValueKind.Null) throw new VersionMetadataException("'logging.client' is missing.", sourcePath);
+        if (!logging.TryGetProperty("client", out JsonElement client) || client.ValueKind == JsonValueKind.Null) return null;
         if (client.ValueKind != JsonValueKind.Object) throw new VersionMetadataException("'logging.client' must be an object.", sourcePath);
         if (!client.TryGetProperty("file", out JsonElement file) || file.ValueKind == JsonValueKind.Null) throw new VersionMetadataException("'logging.client.file' is missing.", sourcePath);
         if (file.ValueKind != JsonValueKind.Object) throw new VersionMetadataException("'logging.client.file' must be an object.", sourcePath);
@@ -143,5 +144,5 @@ public static class VersionMetadataParser
     private static string? OptionalString(JsonElement root, string name) => root.ValueKind == JsonValueKind.Object && root.TryGetProperty(name, out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
     private static int? OptionalInt(JsonElement root, string name) => root.ValueKind == JsonValueKind.Object && root.TryGetProperty(name, out JsonElement value) && value.TryGetInt32(out int result) ? result : null;
     private static long? OptionalInt64(JsonElement root, string name) => root.ValueKind == JsonValueKind.Object && root.TryGetProperty(name, out JsonElement value) && value.TryGetInt64(out long result) ? result : null;
-    private static Uri? OptionalUri(JsonElement root, string name, string? sourcePath) { string? text = OptionalString(root, name); if (text is null) return null; return Uri.TryCreate(text, UriKind.Absolute, out Uri? uri) ? uri : throw new VersionMetadataException($"'{name}' is not an absolute URI.", sourcePath); }
+    private static Uri? OptionalUri(JsonElement root, string name, string? sourcePath) { string? text = OptionalString(root, name); if (string.IsNullOrWhiteSpace(text)) return null; return Uri.TryCreate(text, UriKind.Absolute, out Uri? uri) ? uri : throw new VersionMetadataException($"'{name}' is not an absolute URI.", sourcePath); }
 }

@@ -1,0 +1,15 @@
+﻿08:26:41 window=True
+08:26:46 instanceCount=3
+08:26:47 after scroll items=4
+08:26:47 selected: GameInstance { Id = 4c9ca6c7-d1f5-44c4-b738-69fa58eca438, Name = M5-NeoForge, DirectoryPath = E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\instances\4c9ca6c7d1f544c4b73869fa58eca438, VersionId = neoforge-21.1.265, IsManagedDirectory = True }M5-NeoForge版本：neoforge-21.1.265   E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\instances\4c9ca6c7d1f544c4b73869fa58eca438
+08:26:48 launch clicked
+08:29:19 gameWindow=False after=362s title=''
+08:29:19 ui: 游戏已退出（退出码 1）。
+08:29:21 applog: 2026-10-29T00:26:49.8278907+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Launch classpath for neoforge-21.1.265: 107 entries, lwjglCore=True.
+08:29:21 applog: 2026-10-29T00:26:49.8344429+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Started version neoforge-21.1.265 (PID 15488) with Java C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe, 4096 MiB, working directory E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\instances\4c9ca6c7d1f544c4b73869fa58eca438.
+08:29:21 NEO LAUNCH2 DONE
+08:31:15 gameWindow=True after=267s title='Minecraft: NeoForge Loading...'
+08:31:34 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\neo-game-mainmenu.png
+08:31:41 applog: 2026-10-29T00:26:49.8278907+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Launch classpath for neoforge-21.1.265: 107 entries, lwjglCore=True.
+08:31:41 applog: 2026-10-29T00:26:49.8344429+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Started version neoforge-21.1.265 (PID 15488) with Java C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe, 4096 MiB, working directory E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\instances\4c9ca6c7d1f544c4b73869fa58eca438.
+08:31:41 NEO LAUNCH2 DONE

@@ -1,0 +1,24 @@
+﻿07:09:36 LOADER E2E START Forge
+07:09:40 window=True
+07:09:46 versionsLoaded=True
+07:09:50 selected='已选版本：1.21.1'
+07:09:51 combos=2
+07:09:54 catalog='已加载 1 个 Forge 版本。'
+07:09:55 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\loader-page-Forge.png
+07:09:55 install clicked
+07:10:08 installed='已安装 Forge：版本 ID “1.21.1-forge-52.1.20”。可在「游戏实例」的版本列表中选择它启动。' failure='' elapsed=13s
+07:10:08 loaderVersionId='1.21.1-forge-52.1.20'
+07:10:10 create='已创建实例：M5-Forge'
+07:10:21 gameWindow=True after=10s title='Minecraft* 1.21.1'
+07:10:38 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\loader-Forge-game.png
+07:10:43 gameExit='游戏已退出（退出码 0）。'
+07:10:48 applog: 2026-10-27T23:09:55.4269797+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Installing Forge 52.1.20 for Minecraft 1.21.1.
+07:10:48 applog: 2026-10-27T23:09:58.0640037+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Using Java 21.0.12.1 (21) at C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe for the loader installer.
+07:10:48 applog: 2026-10-27T23:09:59.0966364+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Reusing cached loader installer E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\temp\loader-installers\forge-1.21.1-52.1.20-installer.jar.
+07:10:48 applog: 2026-10-27T23:09:59.1330395+00:00 [Information] AstraLauncher.Game.Loaders.ExternalProcessRunner: Started external process C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft.
+07:10:48 applog: 2026-10-27T23:10:02.8908396+00:00 [Information] AstraLauncher.Game.Loaders.ExternalProcessRunner: External process C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot\bin\java.exe exited with code 0.
+07:10:48 applog: 2026-10-27T23:10:02.8919019+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: The Forge installer for Minecraft 1.21.1 with loader 52.1.20 exited with code 0.
+07:10:48 applog: 2026-10-27T23:10:02.9162548+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Detected installed loader profile 1.21.1-forge-52.1.20 at E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\versions\1.21.1-forge-52.1.20\1.21.1-forge-52.1.20.json.
+07:10:48 applog: 2026-10-27T23:10:07.9228595+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Installed Forge 52.1.20 for Minecraft 1.21.1 as version 1.21.1-forge-52.1.20.
+07:10:48 app log critical=0 error=6
+07:10:48 LOADER E2E DONE Forge

@@ -269,3 +269,18 @@
   - 实例列表正常（2 个实例，路径在 .minecraft 内），启动 1.21.1 → 游戏窗口出现（30 秒）→ 正常退出码 0；迁移后日志 0 Critical / 0 Error（此前的 Critical 均为修复前只读绑定导致，已修复：只读 TextBox 绑定加 `Mode=OneWay`）。
   - 下载的版本文件确认在 `F:\MC\.minecraft\versions\1.21.1\1.21.1.jar+json`、`1.20.1`（以及 PCL 原有版本），没有写入 `%LOCALAPPDATA%`。
 - 证据：`docs/evidence/datadir-migration/`（verify.log、settings-datadir.png、game-from-migrated-data.png、layout.txt）。
+
+### M5 加载器集成（2026-10-29）
+
+- **加载器目录**：新增 `ILoaderCatalog` / `LoaderCatalog`，支持 Fabric（Fabric Meta）、Quilt（Quilt Meta）、Forge（官方 promotions）、NeoForge（官方 Maven API，失败时回退 BMCLAPI `maven-metadata.xml`）；下载页新增「安装模组加载器（可选）」卡片：选择加载器 → 刷新版本（默认选推荐版）→ 安装/取消，进度与状态沿用下载页样式。
+- **安装实现**：Fabric/Quilt 通过 `profile/json` 生成 `versions/<loader>-<mc>/<id>.json` 后交给安装管线补齐库/资源；Forge/NeoForge 下载官方安装器（优先官方，失败回退 BMCLAPI 镜像）并以 Java 21/17 运行 `--installClient`；运行前自动创建最小 `launcher_profiles.json`（安装器要求）。NeoForge 安装器在官方 Maven 不可达时使用镜像补丁后的安装器；安装器内置 `version.json` 可直接落盘。
+- **本地版本检测**：启动时扫描 `<.minecraft>/versions/*/<id>.json`，把 PCL/其他启动器已安装的版本合并进「游戏实例」的版本下拉框；标题显示「… · N 个本地版本」。
+- **元数据/下载修复**：继承合并按 classifier 保留 natives 变体（此前仅按 group:artifact 去重会把 lwjgl base jar 覆盖成 natives 变体，导致 Fabric/Quilt 启动 `NoClassDefFoundError`）；安装计划对本地加载器版本跳过 Mojang manifest 下载；解析器容忍空 `url` 与空 `logging`（旧 Forge/新版 NeoForge 配置）；Forge/NeoForge Maven 主机映射到 BMCLAPI 镜像并在回退模式下优先镜像；下载页切换版本/加载器时的异步竞态用请求序号丢弃过期结果。
+- 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **266/266 通过**（新增 LoaderCatalog、FabricLike/ForgeLike 安装、ExternalProcessRunner、加载器继承 classifier 回归、Forge/NeoForge 镜像映射等用例）。
+- **真实 1.21.1 E2E（本机）**：
+  - Fabric Loader 0.20.1：下载页安装耗时 67 s（254 个 Fabric 版本列表），生成 `fabric-loader-0.20.1-1.21.1`；创建实例 M5-Fabric 启动 → 20 s 出现 `Minecraft* 1.21.1` 主菜单（左下角 `1.21.1/Fabric (Modded)`）→ 正常退出码 0。
+  - Quilt Loader 0.20.0-beta.9：版本列表 307 个，安装 6 s；实例 M5-Quilt 启动 → 32 s 主菜单 → 退出码 0。
+  - Forge 52.1.20：版本列表 1 个（promotions），安装器运行 3 s + 文件补齐；实例 M5-Forge 启动 → 10 s 主菜单 → 退出码 0。
+  - NeoForge 21.1.265：版本列表 260 个（BMCLAPI 镜像 XML），安装器/版本清单/库文件补齐成功；实例 M5-NeoForge 启动仍失败在 NeoForge `BootstrapLauncher` 构建 service module layer（`NoSuchElementException`，module `neoforge` 解析问题）——**已知限制**，安装链路已验证，启动参数待后续修复。
+- 证据：`docs/evidence/m5/`（m5-downloads-loader.png、m5-loader-installed.png、m5-fabric-main-menu.png、loader-Quilt-game.png、loader-Forge-game.png、loader-page-NeoForge.png，e2e.log、fabric-launch.log、loader-Quilt.log、loader-Forge.log、loader-NeoForge.log、neo-launch2.log）。
+- 下一步：M6 服务器列表（保存/编辑服务器，实例启动自动拼接 `--server/--port`，servers.dat 相关只读解析），随后 M7 最终端到端验收与文档收尾。

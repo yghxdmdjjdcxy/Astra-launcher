@@ -13,6 +13,8 @@ public sealed class DownloadSourceResolver : IDownloadSourceResolver
     private const string PistonDataHost = "piston-data.mojang.com";
     private const string LibrariesHost = "libraries.minecraft.net";
     private const string ResourcesHost = "resources.download.minecraft.net";
+    private const string ForgeMavenHost = "maven.minecraftforge.net";
+    private const string NeoForgeMavenHost = "maven.neoforged.net";
 
     private readonly Uri _officialVersionManifestUri = new(OfficialVersionManifestUrl, UriKind.Absolute);
     private readonly Uri _mirrorBaseUri;
@@ -52,11 +54,17 @@ public sealed class DownloadSourceResolver : IDownloadSourceResolver
         }
 
         Uri? mirrorUri = MapToMirror(officialUri);
+        bool forgeMaven = IsHost(officialUri.Host, ForgeMavenHost) || IsHost(officialUri.Host, NeoForgeMavenHost);
         return mode switch
         {
             DownloadSourceMode.Official => new[] { officialUri },
             DownloadSourceMode.Mirror => mirrorUri is null ? Array.Empty<Uri>() : new[] { mirrorUri },
-            _ => mirrorUri is null ? new[] { officialUri } : new[] { officialUri, mirrorUri },
+            // The vendor Maven hosts for Forge/NeoForge are unreachable on some networks; try the mirror first there.
+            _ => mirrorUri is null
+                ? new[] { officialUri }
+                : forgeMaven
+                    ? new[] { mirrorUri, officialUri }
+                    : new[] { officialUri, mirrorUri },
         };
     }
 
@@ -76,6 +84,19 @@ public sealed class DownloadSourceResolver : IDownloadSourceResolver
         if (IsHost(host, ResourcesHost))
         {
             return Combine(string.Concat("assets/", officialUri.AbsolutePath.TrimStart('/')));
+        }
+
+        if (IsHost(host, ForgeMavenHost) || IsHost(host, NeoForgeMavenHost))
+        {
+            string path = officialUri.AbsolutePath.TrimStart('/');
+            // NeoForge publishes under /releases/, while the BMCLAPI Maven mirror exposes the same artifacts without it.
+            const string releasesPrefix = "releases/";
+            if (path.StartsWith(releasesPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                path = path[releasesPrefix.Length..];
+            }
+
+            return Combine(string.Concat("maven/", path));
         }
 
         return null;

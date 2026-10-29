@@ -352,11 +352,12 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <StackPanel>
                     <TextBlock Style="{StaticResource PageTitle}" Text="下载"/>
                     <TextBlock Style="{StaticResource PageSubtitle}"
-                               Text="选择 Minecraft 版本并下载客户端、依赖库和资源文件。下载源可在「设置」切换：官方源 / BMCLAPI 镜像 / 自动回退。"/>
+                               Text="选择 Minecraft 版本并下载客户端、依赖库和资源文件。下载源可在「设置」切换：官方源 / BMCLAPI 镜像 / 自动回退。"/> 
                 </StackPanel>
                 <Border Grid.Row="1" Style="{StaticResource Card}">
                     <StackPanel>
@@ -393,13 +394,33 @@
                 </Border>
                 <Border Grid.Row="3" Style="{StaticResource Card}">
                     <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="安装模组加载器（可选）"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,-4,0,8"
+                                   Text="先在上方选择 Minecraft 版本，再选择加载器并安装；安装完成后可在「游戏实例」的版本列表中选择该加载器版本启动。"/>
+                        <WrapPanel>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="加载器"/>
+                            <ComboBox Width="140" Margin="0,0,12,8" ItemsSource="{Binding LoaderKinds}" SelectedItem="{Binding SelectedLoaderKind}" DisplayMemberPath="Display"/>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="加载器版本"/>
+                            <ComboBox Width="280" Margin="0,0,12,8" ItemsSource="{Binding LoaderVersions}" SelectedItem="{Binding SelectedLoaderVersion}" DisplayMemberPath="DisplayName"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="刷新加载器版本" Command="{Binding RefreshLoaderVersionsCommand}" Margin="0,0,8,8"/>
+                            <Button Style="{StaticResource PrimaryButton}" Content="安装加载器" Command="{Binding InstallLoaderCommand}" Margin="0,0,8,8"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="取消安装" Command="{Binding CancelLoaderCommand}" Margin="0,0,0,8"
+                                    Visibility="{Binding IsLoaderBusy, Converter={StaticResource BooleanToVisibility}}"/>
+                        </WrapPanel>
+                        <ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding LoaderProgressPercent, Mode=OneWay}"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{Binding LoaderProgressText}"/>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding LoaderStatus}"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Row="4" Style="{StaticResource Card}">
+                    <StackPanel>
                         <TextBlock FontWeight="SemiBold" Foreground="#0F172A"
                                    Text="{Binding SelectedVersion.Id, StringFormat='已选版本：{0}'}"/>
                         <ProgressBar Height="16" Margin="0,8,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{Binding ProgressText}"/>
                     </StackPanel>
                 </Border>
-                <TextBlock Grid.Row="4" Style="{StaticResource Hint}" Text="{Binding StatusMessage}"/>
+                <TextBlock Grid.Row="5" Style="{StaticResource Hint}" Text="{Binding StatusMessage}"/>
             </Grid>
         </DataTemplate>
 

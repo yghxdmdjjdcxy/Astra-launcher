@@ -135,6 +135,7 @@ public sealed class GameLaunchService : IGameLaunchService
         }
 
         GameLaunchCommand command = _commandBuilder.Build(metadata, request);
+        LogClassPathDiagnostics(instance.VersionId, command);
 
         // 5. Start the process unless the caller cancelled in the meantime.
         cancellationToken.ThrowIfCancellationRequested();
@@ -155,6 +156,31 @@ public sealed class GameLaunchService : IGameLaunchService
     /// Returns the Java executable to use. An explicit path is validated verbatim; otherwise the detected runtimes are
     /// filtered down to an exact major-version match first and to the smallest sufficient runtime second.
     /// </summary>
+    /// <summary>Logs the classpath size and whether the LWJGL core jar is on it, which helps diagnose loader launch issues.</summary>
+    private void LogClassPathDiagnostics(string versionId, GameLaunchCommand command)
+    {
+        int index = -1;
+        for (int i = 0; i < command.Arguments.Count - 1; i++)
+        {
+            if (string.Equals(command.Arguments[i], "-cp", StringComparison.Ordinal) || string.Equals(command.Arguments[i], "-classpath", StringComparison.Ordinal))
+            {
+                index = i;
+                break;
+            }
+        }
+
+        if (index < 0)
+        {
+            _logger.LogWarning("Launch command for {VersionId} has no classpath argument.", versionId);
+            return;
+        }
+
+        string classPath = command.Arguments[index + 1];
+        string[] entries = classPath.Split(System.IO.Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
+        bool hasLwjgl = entries.Any(entry => entry.Contains("lwjgl-3.3.3.jar", StringComparison.OrdinalIgnoreCase));
+        _logger.LogInformation("Launch classpath for {VersionId}: {EntryCount} entries, lwjglCore={HasLwjgl}.", versionId, entries.Length, hasLwjgl);
+    }
+
     private async Task<(string ExecutablePath, JavaRuntimeInfo? Runtime)> SelectJavaAsync(
         GameLaunchOptions options,
         MinecraftVersionMetadata metadata,

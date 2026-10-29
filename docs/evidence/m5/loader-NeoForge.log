@@ -1,0 +1,22 @@
+﻿21:51:07 LOADER E2E START NeoForge
+21:51:09 window=True
+21:51:15 versionsLoaded=True
+21:51:19 selected='已选版本：1.21.1'
+21:51:19 combos=2
+21:51:41 catalog='已加载 260 个 NeoForge 版本。'
+21:51:42 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\loader-page-NeoForge.png
+21:51:42 install clicked
+21:52:07 installed='已安装 NeoForge：版本 ID “neoforge-21.1.265”。可在「游戏实例」的版本列表中选择它启动。' failure='' elapsed=25s
+21:52:07 loaderVersionId='neoforge-21.1.265'
+21:52:09 create='已创建实例：M5-NeoForge'
+21:59:11 gameWindow=False after=422s title=''
+21:59:16 applog:    at AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller.EnsureInstallerAsyncSingle(LoaderKind kind, String minecraftVersion, String loaderVersion, Uri installerUri, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Game\Loaders\ForgeLikeLoaderInstaller.cs:line 302
+21:59:16 applog: 2026-10-28T13:52:03.5868760+00:00 [Warning] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Downloading the NeoForge installer from https://maven.neoforged.net/releases/net/neoforged/neoforge/21.1.265/neoforge-21.1.265-installer.jar failed; trying the next source.
+21:59:16 applog:    at AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller.EnsureInstallerAsyncSingle(LoaderKind kind, String minecraftVersion, String loaderVersion, Uri installerUri, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Game\Loaders\ForgeLikeLoaderInstaller.cs:line 302
+21:59:16 applog:    at AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller.EnsureInstallerAsyncSingle(LoaderKind kind, String minecraftVersion, String loaderVersion, Uri installerUri, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Game\Loaders\ForgeLikeLoaderInstaller.cs:line 311
+21:59:16 applog:    at AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller.EnsureInstallerAsync(LoaderKind kind, String minecraftVersion, String loaderVersion, IReadOnlyList`1 installerUris, CancellationToken cancellationToken) in E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.Game\Loaders\ForgeLikeLoaderInstaller.cs:line 268
+21:59:16 applog: 2026-10-28T13:52:04.4479571+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Reusing cached loader installer E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\temp\loader-installers\neoforge-21.1.265-installer.jar.
+21:59:16 applog: 2026-10-28T13:52:04.4540633+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Installed NeoForge profile neoforge-21.1.265 from the embedded installer metadata.
+21:59:16 applog: 2026-10-28T13:52:05.2607222+00:00 [Information] AstraLauncher.Game.Loaders.ForgeLikeLoaderInstaller: Installed NeoForge 21.1.265 for Minecraft 1.21.1 as version neoforge-21.1.265.
+21:59:16 app log critical=0 error=2
+21:59:16 LOADER E2E DONE NeoForge

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Reflection;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -17,6 +18,7 @@ public sealed class ShellViewModel : ObservableObject
     private readonly SettingsPageViewModel _settings;
     private readonly AccountsPageViewModel _accounts;
     private readonly IAccountService _accountService;
+    private readonly ILauncherPaths _paths;
     private readonly IVersionManifestService _manifest;
     private readonly ILogger<ShellViewModel> _logger;
     private string _accountSummary = "正在加载账户…";
@@ -50,11 +52,13 @@ public sealed class ShellViewModel : ObservableObject
         _settings = settings;
         _accounts = accounts;
         _accountService = accountService;
+        _paths = paths;
         _manifest = manifest;
         _logger = logger;
         _minecraftDirectory = paths.MinecraftDirectory;
         AppVersion = ResolveVersion();
         NavigateCommand = new RelayCommand(Navigate);
+        _downloads.LoaderInstalled += OnLoaderInstalled;
     }
 
     public INavigationService Navigation { get; }
@@ -135,14 +139,72 @@ public sealed class ShellViewModel : ObservableObject
         try
         {
             IReadOnlyList<VersionSummary> versions = await _manifest.GetVersionsAsync(includeSnapshots: false);
-            _instances.SetAvailableVersions(versions.Select(version => version.Id));
-            VersionSummary = $"已加载 {versions.Count} 个正式版本";
+            var versionIds = versions.Select(version => version.Id).ToList();
+            int localVersionCount = AddLocalVersions(versionIds);
+            _instances.SetAvailableVersions(versionIds);
+            VersionSummary = localVersionCount > 0
+                ? $"已加载 {versions.Count} 个正式版本 · {localVersionCount} 个本地版本"
+                : $"已加载 {versions.Count} 个正式版本";
         }
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "版本列表加载失败；实例页仍可手动输入版本号。");
             VersionSummary = "加载失败（检查网络后可在下载页刷新）";
         }
+    }
+
+    /// <summary>
+    /// Adds versions that already exist under <c>.minecraft\versions</c> (for example PCL-installed or freshly installed
+    /// loader profiles) to the instance version picker, so they can be launched without being re-downloaded.
+    /// </summary>
+    private int AddLocalVersions(List<string> versionIds)
+    {
+        int added = 0;
+        try
+        {
+            if (!Directory.Exists(_paths.VersionsDirectory))
+            {
+                return 0;
+            }
+
+            var known = new HashSet<string>(versionIds, StringComparer.Ordinal);
+            foreach (string directory in Directory.EnumerateDirectories(_paths.VersionsDirectory))
+            {
+                string versionId = Path.GetFileName(directory);
+                if (string.IsNullOrWhiteSpace(versionId) || known.Contains(versionId))
+                {
+                    continue;
+                }
+
+                if (!File.Exists(Path.Combine(directory, versionId + ".json")))
+                {
+                    continue;
+                }
+
+                versionIds.Add(versionId);
+                known.Add(versionId);
+                added++;
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(exception, "读取本地版本目录失败；实例版本列表只显示在线版本。");
+        }
+
+        if (added > 0)
+        {
+            _logger.LogInformation("Added {LocalVersionCount} local version(s) from {VersionsDirectory} to the instance version picker.", added, _paths.VersionsDirectory);
+        }
+
+        return added;
+    }
+
+    private void OnLoaderInstalled(string versionId)
+    {
+        _instances.AddAvailableVersion(versionId);
+        VersionSummary = string.IsNullOrWhiteSpace(VersionSummary)
+            ? $"已使用本地版本 {versionId}"
+            : $"{VersionSummary} · 新增本地版本 {versionId}";
     }
 
     private void Navigate(object? parameter)

@@ -124,6 +124,13 @@ public sealed class InstancesPageViewModel : PageViewModel
         }
     }
 
+    /// <summary>Adds a locally installed version (for example a freshly installed loader) to the version picker.</summary>
+    public void AddAvailableVersion(string versionId)
+    {
+        if (string.IsNullOrWhiteSpace(versionId) || AvailableVersions.Contains(versionId)) return;
+        AvailableVersions.Add(versionId);
+    }
+
     private async Task RefreshAsync(Guid? keepId)
     {
         IReadOnlyList<GameInstance> values = await _instances.ListAsync();

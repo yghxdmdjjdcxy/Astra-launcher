@@ -1,0 +1,11 @@
+﻿06:51:27 FABRIC LAUNCH E2E START
+06:51:30 window=True
+06:51:36 instanceCount=1
+06:51:36 selected M5-Fabric
+06:51:37 launch clicked
+06:51:57 gameWindow=True after=20s title='Minecraft* 1.21.1'
+06:52:14 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\m5-fabric-main-menu.png
+06:52:21 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\m5-fabric-main-menu-after-continue.png
+06:52:27 gameExit='游戏已退出（退出码 0）。'
+06:52:32 app log critical=0 error=1
+06:52:32 FABRIC LAUNCH E2E DONE

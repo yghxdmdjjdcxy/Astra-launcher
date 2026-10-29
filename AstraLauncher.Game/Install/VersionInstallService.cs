@@ -237,8 +237,23 @@ public sealed class VersionInstallService : IVersionInstallService
                 throw new InvalidOperationException($"The metadata file of version '{current}' is missing after resolution.");
             }
 
-            VersionSummary summary = await _manifest.GetVersionSummaryAsync(current, cancellationToken).ConfigureAwait(false);
-            add(new InstallFile(summary.Url, metadataPath, summary.Sha1, null, VersionJsonCategory));
+            // Loader profiles (Fabric/Quilt/Forge) and PCL-installed versions are not part of the Mojang manifest,
+            // so their JSON cannot be re-downloaded from there; the local file is already complete.
+            VersionSummary? summary = null;
+            try
+            {
+                summary = await _manifest.GetVersionSummaryAsync(current, cancellationToken).ConfigureAwait(false);
+            }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogDebug("Version {VersionId} is local-only and not in the version manifest; keeping its JSON as is.", current);
+            }
+
+            if (summary is not null)
+            {
+                add(new InstallFile(summary.Url, metadataPath, summary.Sha1, null, VersionJsonCategory));
+            }
+
             current = await ReadInheritsFromAsync(metadataPath, cancellationToken).ConfigureAwait(false);
         }
     }
@@ -267,6 +282,11 @@ public sealed class VersionInstallService : IVersionInstallService
             {
                 add(artifactFile);
             }
+            else if (!nativeLibrary && TryCreateUrlFallback(library, classifier: null, out InstallFile urlArtifact))
+            {
+                // Modern loader profiles (Fabric/Quilt) list a Maven repository base URL instead of downloads blocks.
+                add(urlArtifact);
+            }
             else if (!nativeLibrary && TryCreateMavenFallback(library.Name, classifier: null, out InstallFile fallbackArtifact))
             {
                 // Legacy metadata has no downloads block at all; the official Maven repository is the only source.
@@ -286,6 +306,10 @@ public sealed class VersionInstallService : IVersionInstallService
             {
                 add(nativeFile);
             }
+            else if (TryCreateUrlFallback(library, classifier, out InstallFile urlNative))
+            {
+                add(urlNative);
+            }
             else if (TryCreateMavenFallback(library.Name, classifier, out InstallFile fallbackNative))
             {
                 // Legacy natives-only entries reference their archive only through the Maven classifier.
@@ -297,30 +321,76 @@ public sealed class VersionInstallService : IVersionInstallService
     private bool TryAddArtifact(LibraryDescriptor library, out InstallFile file)
     {
         file = null!;
-        if (library.Downloads?.Artifact is { } artifact
-            && artifact.Url is Uri artifactUri
-            && TryResolveLibraryPath(artifact.Path, library.Name, classifier: null, out string relativePath))
+        if (library.Downloads?.Artifact is not { } artifact
+            || !TryResolveLibraryPath(artifact.Path, library.Name, classifier: null, out string relativePath))
         {
-            file = new InstallFile(artifactUri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, relativePath), artifact.Sha1, artifact.Size, LibraryCategory);
-            return true;
+            return false;
         }
 
-        return false;
+        Uri uri = artifact.Url ?? CreateInferredLibraryUri(library.Name, relativePath);
+        file = new InstallFile(uri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, relativePath), artifact.Sha1, artifact.Size, LibraryCategory);
+        return true;
     }
 
     private bool TryAddNativeArtifact(LibraryDescriptor library, string classifier, out InstallFile file)
     {
         file = null!;
-        if (library.Downloads is { } downloads
-            && downloads.Classifiers.TryGetValue(classifier, out DownloadArtifact? artifact)
-            && artifact.Url is Uri artifactUri
-            && TryResolveLibraryPath(artifact.Path, library.Name, classifier, out string relativePath))
+        if (library.Downloads is not { } downloads
+            || !downloads.Classifiers.TryGetValue(classifier, out DownloadArtifact? artifact)
+            || !TryResolveLibraryPath(artifact.Path, library.Name, classifier, out string relativePath))
         {
-            file = new InstallFile(artifactUri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, relativePath), artifact.Sha1, artifact.Size, LibraryCategory);
-            return true;
+            return false;
         }
 
-        return false;
+        Uri uri = artifact.Url ?? CreateInferredLibraryUri(library.Name, relativePath);
+        file = new InstallFile(uri.AbsoluteUri, Path.Combine(_paths.LibrariesDirectory, relativePath), artifact.Sha1, artifact.Size, LibraryCategory);
+        return true;
+    }
+
+    /// <summary>
+    /// Some loader-generated metadata (notably Forge) omits the download URL for artifacts that the installer generated
+    /// locally. Infer the repository from the coordinate so the file can still be verified/downloaded when needed.
+    /// </summary>
+    private static Uri CreateInferredLibraryUri(string coordinate, string relativePath)
+    {
+        string group = coordinate.Split(':')[0];
+        string baseUrl = group switch
+        {
+            "net.minecraftforge" => "https://maven.minecraftforge.net/",
+            "net.neoforged" => "https://maven.neoforged.net/releases/",
+            _ => "https://libraries.minecraft.net/",
+        };
+        return new Uri(new Uri(baseUrl), relativePath.Replace(Path.DirectorySeparatorChar, '/'));
+    }
+
+    /// <summary>
+    /// Builds a download for modern loader metadata that names a Maven coordinate plus a repository base URL
+    /// (for example Fabric/Quilt profiles); no size or SHA-1 is available, so only the presence of the file is verified.
+    /// </summary>
+    private bool TryCreateUrlFallback(LibraryDescriptor library, string? classifier, out InstallFile file)
+    {
+        file = null!;
+        if (string.IsNullOrWhiteSpace(library.Url)
+            || !TryGetMavenPath(library.Name, classifier, out string mavenPath)
+            || !TryResolveLibraryPath(mavenPath, library.Name, classifier, out string relativePath))
+        {
+            return false;
+        }
+
+        string baseUrl = library.Url.Trim();
+        if (!baseUrl.EndsWith('/'))
+        {
+            baseUrl += "/";
+        }
+
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? repository) || repository.Scheme is not ("https" or "http"))
+        {
+            return false;
+        }
+
+        string url = new Uri(repository, relativePath.Replace(Path.DirectorySeparatorChar, '/')).AbsoluteUri;
+        file = new InstallFile(url, Path.Combine(_paths.LibrariesDirectory, relativePath), null, null, LibraryCategory);
+        return true;
     }
 
     /// <summary>

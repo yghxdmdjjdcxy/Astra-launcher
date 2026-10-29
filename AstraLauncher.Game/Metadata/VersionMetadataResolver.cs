@@ -58,6 +58,14 @@ public sealed class VersionMetadataResolver(string minecraftDirectory)
     private static string LibraryIdentity(string coordinate)
     {
         string[] segments = coordinate.Split(':');
+        // Include the classifier: modern versions list base and natives variants with the same group:artifact
+        // (for example org.lwjgl:lwjgl:3.3.3 and org.lwjgl:lwjgl:3.3.3:natives-windows-x86). Deduplicating only by
+        // group:artifact would drop every variant but the last one and break inherited loader launches.
+        if (segments.Length >= 4)
+        {
+            return $"{segments[0]}:{segments[1]}:{segments[3]}";
+        }
+
         return segments.Length >= 2 ? $"{segments[0]}:{segments[1]}" : coordinate;
     }
 

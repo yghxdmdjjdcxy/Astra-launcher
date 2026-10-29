@@ -39,6 +39,48 @@ public sealed class VersionMetadataResolverTests : IDisposable
         Assert.Contains("cycle", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task ResolveAsync_KeepsAllNativeVariantsWhenMergingInheritedVersions()
+    {
+        await WriteVersionAsync("vanilla", """
+        {"id":"vanilla","libraries":[
+            {"name":"org.lwjgl:lwjgl:3.3.3"},
+            {"name":"org.lwjgl:lwjgl:3.3.3:natives-windows"},
+            {"name":"org.lwjgl:lwjgl:3.3.3:natives-windows-arm64"}
+        ]}
+        """);
+        await WriteVersionAsync("loader", """
+        {"id":"loader","inheritsFrom":"vanilla","libraries":[{"name":"net.fabricmc:fabric-loader:0.16.9"}]}
+        """);
+
+        MinecraftVersionMetadata metadata = await new VersionMetadataResolver(_root).ResolveAsync("loader");
+
+        Assert.Equal(4, metadata.Libraries.Count);
+        Assert.Contains(metadata.Libraries, library => library.Name == "org.lwjgl:lwjgl:3.3.3");
+        Assert.Contains(metadata.Libraries, library => library.Name == "org.lwjgl:lwjgl:3.3.3:natives-windows");
+        Assert.Contains(metadata.Libraries, library => library.Name == "org.lwjgl:lwjgl:3.3.3:natives-windows-arm64");
+    }
+
+    [Fact]
+    public async Task ResolveAsync_ChildBaseArtifactDoesNotDropParentClassifiers()
+    {
+        await WriteVersionAsync("vanilla", """
+        {"id":"vanilla","libraries":[
+            {"name":"com.example:library:1.0"},
+            {"name":"com.example:library:1.0:natives-windows"}
+        ]}
+        """);
+        await WriteVersionAsync("loader", """
+        {"id":"loader","inheritsFrom":"vanilla","libraries":[{"name":"com.example:library:2.0"}]}
+        """);
+
+        MinecraftVersionMetadata metadata = await new VersionMetadataResolver(_root).ResolveAsync("loader");
+
+        Assert.Equal(2, metadata.Libraries.Count);
+        Assert.Contains(metadata.Libraries, library => library.Name == "com.example:library:2.0");
+        Assert.Contains(metadata.Libraries, library => library.Name == "com.example:library:1.0:natives-windows");
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
