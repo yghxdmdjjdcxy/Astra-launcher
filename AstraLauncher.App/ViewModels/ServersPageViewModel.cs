@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -102,7 +102,7 @@ public sealed class ServersPageViewModel : PageViewModel
 
     public async Task InitializeAsync()
     {
-        await RefreshAsync().ConfigureAwait(false);
+        await RefreshAsync();
     }
 
     /// <summary>Lets the shell report why a join request could not be started.</summary>
@@ -118,7 +118,7 @@ public sealed class ServersPageViewModel : PageViewModel
         IsBusy = true;
         try
         {
-            IReadOnlyList<SavedServer> values = await _servers.ListAsync().ConfigureAwait(false);
+            IReadOnlyList<SavedServer> values = await _servers.ListAsync();
             Guid? selectedId = SelectedServer?.Id;
 
             // Merge instead of Clear(): clearing the bound list would push a null selection back through the
@@ -195,8 +195,8 @@ public sealed class ServersPageViewModel : PageViewModel
             (string name, string address, int? port) = ValidateEditor();
             IsBusy = true;
             var server = new SavedServer(SelectedServer?.Id ?? Guid.NewGuid(), name, address, port);
-            await _servers.SaveAsync(server).ConfigureAwait(false);
-            await RefreshAsync().ConfigureAwait(false);
+            await _servers.SaveAsync(server);
+            await RefreshAsync();
             SelectedServer = Servers.FirstOrDefault(value => value.Id == server.Id);
             StatusMessage = $"已保存服务器：{server.Name}（{server.DisplayAddress}）。";
         }
@@ -227,8 +227,8 @@ public sealed class ServersPageViewModel : PageViewModel
         IsBusy = true;
         try
         {
-            await _servers.DeleteAsync(selected.Id).ConfigureAwait(false);
-            await RefreshAsync().ConfigureAwait(false);
+            await _servers.DeleteAsync(selected.Id);
+            await RefreshAsync();
             StartNew();
             StatusMessage = $"已删除服务器：{selected.Name}。";
         }
@@ -260,7 +260,7 @@ public sealed class ServersPageViewModel : PageViewModel
             try
             {
                 IsBusy = true;
-                IReadOnlyList<SavedServer> values = await _servers.ListAsync().ConfigureAwait(false);
+                IReadOnlyList<SavedServer> values = await _servers.ListAsync();
                 selected = values.FirstOrDefault();
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
