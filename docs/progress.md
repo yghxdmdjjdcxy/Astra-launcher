@@ -328,3 +328,4 @@
   - 真实验证：导入 `changed&机械动力`（Forge 1.20.1）副本并启动，游戏崩溃后自动弹出崩溃分析窗口，识别「缺少前置 MOD create（由 create_dragons_plus / create_hypertube 要求）」；选择手动处理后保留现场，未修改任何 MOD。
 - 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **295/295 通过**。
 - 证据：`docs/evidence/m8/`（m8-mods-list.png、m8-mods-toggled.png、m8-modrinth-results.png、m8-install-result.png、m8-smoke.log、m8-install.log）与 `docs/evidence/m9/`（m9-crash2-dialog.png、m9-crash2-after.png、m9-crash2.log）。
+- **最终单文件 exe（M8/M9 收尾）**：`artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe`，版本 `1.0.0+fc1175f`，65,219,085 字节，SHA256 `FC621AB55EA507F58A822DE9E633F475769DB2CDB09406BB88E751D891C569C3`；已部署为 `F:\MC\AstraLauncher.exe`。F:\MC 冒烟：启动正常，模组页正确加载并显示当前实例 MOD 状态；应用日志 0 Error（1 条 Critical 为 2026-10-29 01:01 修复前历史记录）。M9 验收使用的导入实例「M9崩溃测试」指向 `%TEMP%\astra-audit\m9\game` 副本，可在游戏实例页删除（不会修改 PCL 原目录）。
