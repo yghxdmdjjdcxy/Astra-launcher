@@ -5,6 +5,7 @@ using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Instances;
 using AstraLauncher.Game.Java;
+using AstraLauncher.Game.Mods;
 using AstraLauncher.Infrastructure.FileSystem;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.IO;
@@ -32,14 +33,42 @@ public sealed class NavigationServiceTests
     private static NavigationService CreateNavigation()
     {
         var dialogs = new NoopDialogService();
+        var paths = new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N")));
         return new NavigationService(
             new WelcomePageViewModel(),
-            new InstancesPageViewModel(new GameInstanceRepository(new LauncherPaths(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))), new FakeJavaRuntimeDetector(), NullLogger<InstancesPageViewModel>.Instance, dialogs),
+            new InstancesPageViewModel(new GameInstanceRepository(paths), new FakeJavaRuntimeDetector(), NullLogger<InstancesPageViewModel>.Instance, dialogs),
             new DownloadsPageViewModel(new EmptyManifestService(), new NoopInstallService(), NullLogger<DownloadsPageViewModel>.Instance, dialogs),
+            new ModsPageViewModel(new GameInstanceRepository(paths), new EmptyLocalModService(), new EmptyModrinthClient(), new EmptyFilePicker(), paths, dialogs, NullLogger<ModsPageViewModel>.Instance),
             new AccountsPageViewModel(new FakeSettingsService(), new FakeAccountService(), NullLogger<AccountsPageViewModel>.Instance, dialogs),
             new ServersPageViewModel(new EmptyServerRepository(), NullLogger<ServersPageViewModel>.Instance),
             new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N"))), NullLogger<SettingsPageViewModel>.Instance, dialogs),
             NullLogger<NavigationService>.Instance);
+    }
+
+    private sealed class EmptyLocalModService : ILocalModService
+    {
+        public string GetModsDirectory(GameInstance instance) => Path.Combine(instance.DirectoryPath, "mods");
+        public Task<IReadOnlyList<LocalMod>> ListAsync(GameInstance instance, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<LocalMod>>([]);
+        public Task<ModImportResult> ImportAsync(GameInstance instance, IReadOnlyList<string> sourceFilePaths, CancellationToken cancellationToken = default) => Task.FromResult(new ModImportResult([], []));
+        public Task<LocalMod> SetEnabledAsync(GameInstance instance, LocalMod mod, bool enabled, CancellationToken cancellationToken = default) => Task.FromResult(mod);
+        public Task DeleteAsync(GameInstance instance, LocalMod mod, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class EmptyModrinthClient : IModrinthClient
+    {
+        public Task<ModrinthSearchResult> SearchAsync(string query, string gameVersion, string loader, int offset = 0, int limit = 20, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ModrinthSearchResult([], 0));
+
+        public Task<IReadOnlyList<ModrinthVersion>> GetVersionsAsync(string projectId, string gameVersion, string loader, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ModrinthVersion>>([]);
+
+        public Task<string> DownloadAsync(ModrinthVersion version, string modsDirectory, IProgress<ModrinthDownloadProgress>? progress = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Path.Combine(modsDirectory, version.Name));
+    }
+
+    private sealed class EmptyFilePicker : IFilePickerService
+    {
+        public IReadOnlyList<string> PickModFiles() => [];
     }
 
     private sealed class NoopDialogService : IDialogService

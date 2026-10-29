@@ -542,6 +542,104 @@
             </Grid>
         </DataTemplate>
 
+        <!-- ============================ Mods ============================ -->
+        <DataTemplate DataType="{x:Type vm:ModsPageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PageTitle}" Text="模组"/>
+                    <TextBlock Style="{StaticResource PageSubtitle}"
+                               Text="管理所选实例 mods 目录中的本地 MOD，或按当前实例的 Minecraft 版本与加载器从 Modrinth 搜索并安装。"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="实例与已安装 MOD"/>
+                            <Grid Margin="0,6,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="实例" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding Instances}" SelectedItem="{Binding SelectedInstance}"
+                                          DisplayMemberPath="Name" Margin="0,0,10,0"/>
+                                <Button Grid.Column="2" Style="{StaticResource SecondaryButton}" Content="刷新实例" Command="{Binding RefreshInstancesCommand}"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Style="{StaticResource PrimaryButton}" Content="导入本地 MOD" Command="{Binding ImportCommand}"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="启用 / 禁用" Command="{Binding ToggleCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="打开 MOD 目录" Command="{Binding OpenFolderCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="刷新列表" Command="{Binding RefreshModsCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource DangerButton}" Content="删除" Command="{Binding DeleteCommand}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <ListBox ItemsSource="{Binding Mods}" SelectedItem="{Binding SelectedMod}" Height="150"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2,3">
+                                            <TextBlock FontWeight="SemiBold">
+                                                <Run Text="{Binding DisplayName, Mode=OneWay}"/>
+                                                <Run Text="{Binding Version, Mode=OneWay}" Foreground="#64748B"/>
+                                            </TextBlock>
+                                            <TextBlock Style="{StaticResource Hint}">
+                                                <Run Text="{Binding Platform, Mode=OneWay}"/>
+                                                <Run Text=" · "/>
+                                                <Run Text="{Binding ModId, Mode=OneWay}"/>
+                                                <Run Text=" · "/>
+                                                <Run Text="{Binding IsEnabled, Mode=OneWay}" FontWeight="SemiBold"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Hint}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="从 Modrinth 搜索安装"/>
+                            <Grid Margin="0,6,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="150"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" ToolTip="输入 MOD 名称或关键词"/>
+                                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="搜索" Command="{Binding SearchCommand}" Margin="8,0,0,0"/>
+                                <TextBlock Grid.Column="2" Text="游戏版本" VerticalAlignment="Center" Margin="12,0,8,0"/>
+                                <TextBox Grid.Column="3" Text="{Binding GameVersion, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
+                                <ComboBox Grid.Column="4" ItemsSource="{Binding LoaderOptions}" SelectedItem="{Binding SelectedLoader}"
+                                          DisplayMemberPath="Display" Margin="12,0,0,0"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+                                <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}" Height="160"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="2,3">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource Hint}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <TextBlock Text="兼容版本" Style="{StaticResource Hint}"/>
+                                    <ComboBox ItemsSource="{Binding ModVersions}" SelectedItem="{Binding SelectedModVersion}" DisplayMemberPath="VersionNumber" Margin="0,4,0,8"/>
+                                    <Button Style="{StaticResource PrimaryButton}" Content="安装所选版本" Command="{Binding InstallCommand}" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding SearchStatus}" Style="{StaticResource Hint}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+
         <!-- ============================ Servers ============================ -->
         <DataTemplate DataType="{x:Type vm:ServersPageViewModel}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -765,6 +863,7 @@
                     <Button Style="{StaticResource NavButton}" Content="首页" Command="{Binding NavigateCommand}" CommandParameter="Welcome"/>
                     <Button Style="{StaticResource NavButton}" Content="游戏实例" Command="{Binding NavigateCommand}" CommandParameter="Instances"/>
                     <Button Style="{StaticResource NavButton}" Content="下载" Command="{Binding NavigateCommand}" CommandParameter="Downloads"/>
+                    <Button Style="{StaticResource NavButton}" Content="模组" Command="{Binding NavigateCommand}" CommandParameter="Mods"/>
                     <Button Style="{StaticResource NavButton}" Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts"/>
                     <Button Style="{StaticResource NavButton}" Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers"/>
                     <TextBlock Style="{StaticResource NavSection}" Text="配置"/>

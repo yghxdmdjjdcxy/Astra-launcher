@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -15,6 +15,7 @@ public sealed class ShellViewModel : ObservableObject
 {
     private readonly InstancesPageViewModel _instances;
     private readonly DownloadsPageViewModel _downloads;
+    private readonly ModsPageViewModel _mods;
     private readonly SettingsPageViewModel _settings;
     private readonly AccountsPageViewModel _accounts;
     private readonly ServersPageViewModel _servers;
@@ -37,7 +38,8 @@ public sealed class ShellViewModel : ObservableObject
         ILauncherPaths paths,
         IVersionManifestService manifest,
         ILogger<ShellViewModel> logger,
-        ServersPageViewModel servers)
+        ServersPageViewModel servers,
+        ModsPageViewModel mods)
     {
         ArgumentNullException.ThrowIfNull(navigation);
         ArgumentNullException.ThrowIfNull(instances);
@@ -51,6 +53,7 @@ public sealed class ShellViewModel : ObservableObject
         Navigation = navigation;
         _instances = instances;
         _downloads = downloads;
+        _mods = mods;
         _settings = settings;
         _accounts = accounts;
         _servers = servers;
@@ -108,6 +111,7 @@ public sealed class ShellViewModel : ObservableObject
     public async Task InitializeAsync()
     {
         await _instances.InitializeAsync();
+        await _mods.InitializeAsync();
         await _servers.InitializeAsync();
         JavaSummary = _instances.JavaRuntimes.Count == 0
             ? "正在检测 Java…"
