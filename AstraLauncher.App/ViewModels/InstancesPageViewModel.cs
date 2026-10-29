@@ -63,6 +63,11 @@ public sealed class InstancesPageViewModel : PageViewModel
         _crashAnalyzer = crashAnalyzer;
         _crashDialog = crashDialog;
         _crashRepair = crashRepair;
+        _logger.LogInformation(
+            "Crash analysis services: analyzer={Analyzer}, dialog={Dialog}, repair={Repair}.",
+            crashAnalyzer is not null,
+            crashDialog is not null,
+            crashRepair is not null);
         RefreshCommand = new AsyncRelayCommand(() => RunAsync("刷新实例列表", () => RefreshAsync(_selectedInstanceId)));
         CreateCommand = new AsyncRelayCommand(CreateAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync);
@@ -288,7 +293,7 @@ public sealed class InstancesPageViewModel : PageViewModel
             GameExitInfo exitInfo = await process.Exited;
             AppendLog($"[launcher] 游戏进程已退出，退出码 {exitInfo.ExitCode}");
             StatusMessage = $"游戏已退出（退出码 {exitInfo.ExitCode}）。";
-            if (exitInfo.ExitCode != 0)
+            if (_crashAnalyzer is not null)
             {
                 await AnalyzeAndOfferRepairAsync(selected, exitInfo.ExitCode, cancellation.Token);
             }
@@ -324,15 +329,22 @@ public sealed class InstancesPageViewModel : PageViewModel
             return;
         }
 
-        StatusMessage = "游戏异常退出，正在分析崩溃原因…";
+        StatusMessage = "正在检查游戏退出原因…";
+        _logger.LogInformation("Starting crash analysis for {Instance} (exit code {ExitCode}).", instance.Name, exitCode);
         try
         {
             CrashAnalysisResult? analysis = await _crashAnalyzer.AnalyzeAsync(instance, exitCode, cancellationToken);
             if (analysis is null)
             {
+                StatusMessage = $"游戏已退出（退出码 {exitCode}）。";
                 return;
             }
 
+            _logger.LogInformation(
+                "Crash analysis for {Instance}: {Summary}; issues={IssueCount}.",
+                instance.Name,
+                analysis.Summary,
+                analysis.Issues.Count);
             AppendLog($"[launcher] 崩溃分析：{analysis.Summary}");
             foreach (CrashIssue issue in analysis.Issues)
             {
@@ -341,6 +353,7 @@ public sealed class InstancesPageViewModel : PageViewModel
 
             StatusMessage = $"崩溃分析：{analysis.Summary}";
             CrashRepairChoice choice = _crashDialog.Show(analysis);
+            _logger.LogInformation("Crash dialog choice for {Instance}: {Choice}.", instance.Name, choice);
             if (choice != CrashRepairChoice.AutoRepair)
             {
                 if (choice == CrashRepairChoice.Manual)

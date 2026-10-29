@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using AstraLauncher.Core.Models;
 using AstraLauncher.Game.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -75,6 +75,44 @@ public sealed class CrashAnalyzerTests : IDisposable
 
         Assert.NotNull(result);
         Assert.Contains(result!.Issues, issue => issue.Kind == CrashIssueKind.SuspectedMod && issue.ModId == "examplemod" && issue.CanAutoFix);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_SuspectedModsNone_DoesNotProduceFalsePositives()
+    {
+        string crashReports = Path.Combine(_root, "crash-reports");
+        Directory.CreateDirectory(crashReports);
+        await File.WriteAllTextAsync(Path.Combine(crashReports, "crash-none.txt"), """
+        Minecraft has crashed!
+        Suspected Mods: NONE
+        Stacktrace:
+        	at net.minecraftforge.logging.CrashReportExtender.dumpModLoadingCrashReport(CrashReportExtender.java:63)
+        """);
+
+        CrashAnalysisResult? result = await _analyzer.AnalyzeAsync(_instance, 1);
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain(result!.Issues, issue => issue.Kind == CrashIssueKind.SuspectedMod);
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_SuspectedModsLine_IsParsedWithoutStackFrames()
+    {
+        string crashReports = Path.Combine(_root, "crash-reports");
+        Directory.CreateDirectory(crashReports);
+        await File.WriteAllTextAsync(Path.Combine(crashReports, "crash-suspect.txt"), """
+        Minecraft has crashed!
+        Suspected Mods: examplemod (Example Mod), othermod (Other Mod)
+        Stacktrace:
+        	at net.minecraftforge.logging.CrashReportExtender.dumpModLoadingCrashReport(CrashReportExtender.java:63)
+        """);
+
+        CrashAnalysisResult? result = await _analyzer.AnalyzeAsync(_instance, 1);
+
+        Assert.NotNull(result);
+        Assert.Contains(result!.Issues, issue => issue.Kind == CrashIssueKind.SuspectedMod && issue.ModId == "examplemod");
+        Assert.Contains(result.Issues, issue => issue.Kind == CrashIssueKind.SuspectedMod && issue.ModId == "othermod");
+        Assert.DoesNotContain(result.Issues, issue => issue.ModId is not null && issue.ModId.Contains("CrashReportExtender", StringComparison.Ordinal));
     }
 
     [Fact]

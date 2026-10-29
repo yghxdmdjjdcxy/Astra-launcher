@@ -313,3 +313,18 @@
 - 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **276/276 通过**。
 - 证据：`docs/evidence/m7/`（final2.log、final2-home.png、final2-servers.png、final2-game.png、app-join.log、servers.json、final2.ps1）。
 - 结论：M1–M6 功能完成；真实 1.21.1 下载/离线启动到主菜单、Fabric/Quilt/Forge 安装与启动、服务器列表与 `--server/--port` 一键加入均通过端到端验收；NeoForge 启动作为已知限制记录。
+
+### M8 MOD 管理与 M9 崩溃自动分析/修复（2026-10-29）
+
+- **M8 MOD 管理**：
+  - `LocalModService`：扫描实例 `mods` 目录，解析 Fabric/Quilt/Forge/NeoForge 元数据（含依赖），本地 jar 批量导入（SHA-256 去重）、启用/禁用（`.jar` ↔ `.jar.disabled`）、删除；4 个仓储/服务用例。
+  - `ModrinthClient`：公开 API 搜索、按游戏版本+加载器筛选版本、下载 primary 文件并校验 SHA-1，`.part` 临时文件。
+  - 新增「模组」页（实例选择、本地列表与导入/启停/删除/打开目录、Modrinth 搜索与安装、自动识别实例版本/加载器）；导航、DI、Shell 初始化接入。
+  - 真实验证：本地测试 MOD 识别与禁用；Modrinth `fabric api` 搜索 48 条结果；安装小体积 MOD `thegodgenutility-0.1.jar`（66,230 字节）到 M5-Fabric 实例成功。
+- **M9 崩溃自动分析/修复**：
+  - `CrashAnalyzer` 读取 `logs/latest.log` 与最新 `crash-reports/*.txt`，识别缺失前置依赖（Forge/NeoForge `MISSING`、Fabric missing 行）、重复 MOD、`Suspected Mods`、Java 版本、OOM、显卡/OpenGL、加载器/Mixin 等；过滤堆栈帧避免把类名误判为 MOD。
+  - `CrashRepairService` 仅执行可逆修复：从 Modrinth 安装缺失前置、禁用可疑/重复 MOD、内存 +1 GiB；`CrashAnalysisDialogService` 展示 PCL 风格详情/建议与「自动修复 / 手动处理 / 查看日志」，修复前先询问。
+  - 游戏退出后（含 exit code 0 但存在崩溃标记的情况）自动分析；实例页记录分析/选择/修复到游戏日志。
+  - 真实验证：导入 `changed&机械动力`（Forge 1.20.1）副本并启动，游戏崩溃后自动弹出崩溃分析窗口，识别「缺少前置 MOD create（由 create_dragons_plus / create_hypertube 要求）」；选择手动处理后保留现场，未修改任何 MOD。
+- 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **295/295 通过**。
+- 证据：`docs/evidence/m8/`（m8-mods-list.png、m8-mods-toggled.png、m8-modrinth-results.png、m8-install-result.png、m8-smoke.log、m8-install.log）与 `docs/evidence/m9/`（m9-crash2-dialog.png、m9-crash2-after.png、m9-crash2.log）。

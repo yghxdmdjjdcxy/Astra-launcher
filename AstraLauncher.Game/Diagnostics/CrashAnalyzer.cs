@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AstraLauncher.Core.Models;
@@ -27,11 +27,6 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
     public Task<CrashAnalysisResult?> AnalyzeAsync(GameInstance instance, int exitCode, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(instance);
-        if (exitCode == 0)
-        {
-            return Task.FromResult<CrashAnalysisResult?>(null);
-        }
-
         if (string.IsNullOrWhiteSpace(instance.DirectoryPath) || !Directory.Exists(instance.DirectoryPath))
         {
             return Task.FromResult<CrashAnalysisResult?>(null);
@@ -51,6 +46,13 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
             string reportText = crashReportPath is null ? string.Empty : ReadTail(crashReportPath);
             string combined = logText + "\n" + reportText;
             if (string.IsNullOrWhiteSpace(combined))
+            {
+                return Task.FromResult<CrashAnalysisResult?>(null);
+            }
+
+            // A clean run without crash evidence should stay silent. The game can exit with code 0 after showing a
+            // mod-loading crash screen, so crash markers (or a crash report) also count when the exit code is zero.
+            if (exitCode == 0 && crashReportPath is null && !ContainsCrashEvidence(combined))
             {
                 return Task.FromResult<CrashAnalysisResult?>(null);
             }
@@ -168,29 +170,50 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
 
     private static void DetectSuspectedMods(string text, List<CrashIssue> issues)
     {
-        int index = text.IndexOf("Suspected Mods", StringComparison.OrdinalIgnoreCase);
+        const string marker = "Suspected Mods:";
+        int index = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
         if (index < 0)
         {
             return;
         }
 
-        string section = text.Substring(index, Math.Min(1200, text.Length - index));
-        foreach (Match match in SuspectedModRegex().Matches(section))
+        string[] lines = text[(index + marker.Length)..].Split('\n');
+        for (int lineIndex = 0; lineIndex < Math.Min(lines.Length, 8); lineIndex++)
         {
-            string modId = match.Groups[1].Value.Trim();
-            string name = match.Groups[2].Value.Trim();
-            if (issues.Any(issue => issue.Kind is CrashIssueKind.MissingDependency && issue.ModId == modId))
+            string line = lines[lineIndex].Trim();
+            if (line.Length == 0 || line.StartsWith("--", StringComparison.Ordinal) || line.StartsWith("Stacktrace", StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+
+            if (line.StartsWith("at ", StringComparison.OrdinalIgnoreCase) || line.StartsWith("NONE", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            issues.Add(new CrashIssue(
-                CrashIssueKind.SuspectedMod,
-                $"可疑 MOD：{name}",
-                $"崩溃报告将 MOD「{name}」({modId}) 列为疑似导致崩溃的 MOD。",
-                $"尝试禁用 MOD「{name}」后重新启动；若问题消失，再检查该 MOD 的版本或依赖。",
-                ModId: modId,
-                CanAutoFix: true));
+            foreach (string entry in line.Split(','))
+            {
+                Match match = SuspectedModRegex().Match(entry.Trim());
+                if (!match.Success)
+                {
+                    continue;
+                }
+
+                string modId = match.Groups[1].Value.Trim();
+                string name = match.Groups[2].Value.Trim();
+                if (issues.Any(issue => issue.Kind is CrashIssueKind.MissingDependency && issue.ModId == modId))
+                {
+                    continue;
+                }
+
+                issues.Add(new CrashIssue(
+                    CrashIssueKind.SuspectedMod,
+                    $"可疑 MOD：{name}",
+                    $"崩溃报告将 MOD「{name}」({modId}) 列为疑似导致崩溃的 MOD。",
+                    $"尝试禁用 MOD「{name}」后重新启动；若问题消失，再检查该 MOD 的版本或依赖。",
+                    ModId: modId,
+                    CanAutoFix: true));
+            }
         }
     }
 
@@ -284,6 +307,15 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
             : $"{first.Title}（共检测到 {issues.Count} 个问题，退出码 {exitCode}）";
     }
 
+    private static bool ContainsCrashEvidence(string text) =>
+        text.Contains("Minecraft has crashed", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("Mod Loading has failed", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("Crash report saved to", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("Missing or unsupported mandatory dependencies", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("OutOfMemoryError", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("UnsupportedClassVersionError", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("A fatal error has been detected by the Java Runtime Environment", StringComparison.OrdinalIgnoreCase);
+
     private static string BuildExcerpt(string reportText, string logText)
     {
         string source = reportText.Length > 0 ? reportText : logText;
@@ -351,7 +383,7 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
     [GeneratedRegex(@"(?:mod(?:ule)? id|mod id)\s*['""]([^'""]+)['""][^\n]*duplicate", RegexOptions.IgnoreCase)]
     private static partial Regex DuplicateModIdRegex();
 
-    [GeneratedRegex(@"([a-z0-9_.-]+)\s*\(([^)]+)\)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^([a-z][a-z0-9_-]{1,63})\s*\(([^)]+)\)$", RegexOptions.IgnoreCase)]
     private static partial Regex SuspectedModRegex();
 
     [GeneratedRegex(@"requires (?:at least )?Java\s*(\d+)", RegexOptions.IgnoreCase)]

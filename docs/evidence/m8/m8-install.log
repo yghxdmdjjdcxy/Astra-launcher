@@ -1,0 +1,12 @@
+﻿11:16:04 M8 INSTALL E2E START
+11:16:07 window=True
+11:16:15 page=从 Modrinth 搜索安装
+11:16:15 edits=2
+11:16:16 search=True
+11:16:18 searchStatus=找到 1 个结果（显示 1 个，1.21.1 / Fabric）。
+11:16:18 install=True
+11:16:50 installStatus=已安装 thegodgenutility-0.1.jar 到实例「M5-Fabric」。
+11:16:51 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m8\shots\m8-install-result.png
+11:16:54 modsDir=True
+11:16:54 modfile: thegodgenutility-0.1.jar size=66230
+11:16:54 M8 INSTALL E2E DONE

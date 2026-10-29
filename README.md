@@ -2,7 +2,7 @@
 
 Windows Minecraft Java Edition launcher (WPF, hand-written MVVM) built in verified stages.
 
-**Current status:** the launcher can download and install vanilla Minecraft versions (official source with BMCLAPI mirror and automatic fallback, per-file parallel segmented downloads), manage instances, detect locally installed versions (including PCL/other-launcher profiles), install mod loaders (Fabric/Quilt via Meta profiles, Forge/NeoForge via their official installers), select Java runtimes, launch the game offline, keep game logs, persist settings, and manage accounts (offline profiles plus the complete official Microsoft → Xbox Live → XSTS → Minecraft authentication chain with DPAPI-protected tokens). Real end-to-end verification passed with **Minecraft 1.21.1** (download + offline launch into the main menu) and with an offline account selected, and with **Fabric, Quilt and Forge** 1.21.1 profiles installed through the launcher and launched to the main menu. NeoForge installation works, but its 1.21.1 launch currently stops inside the NeoForge BootstrapLauncher (known limitation, see below). A real Microsoft sign-in additionally needs an Azure public-client id (see below). The server list with one-click `--server/--port` join is implemented as well. No installer/auto-updater is included by design.
+**Current status:** the launcher can download and install vanilla Minecraft versions (official source with BMCLAPI mirror and automatic fallback, per-file parallel segmented downloads), manage instances, detect locally installed versions (including PCL/other-launcher profiles), install mod loaders (Fabric/Quilt via Meta profiles, Forge/NeoForge via their official installers), select Java runtimes, launch the game offline, keep game logs, persist settings, and manage accounts (offline profiles plus the complete official Microsoft → Xbox Live → XSTS → Minecraft authentication chain with DPAPI-protected tokens). Real end-to-end verification passed with **Minecraft 1.21.1** (download + offline launch into the main menu) and with an offline account selected, and with **Fabric, Quilt and Forge** 1.21.1 profiles installed through the launcher and launched to the main menu. NeoForge installation works, but its 1.21.1 launch currently stops inside the NeoForge BootstrapLauncher (known limitation, see below). A real Microsoft sign-in additionally needs an Azure public-client id (see below). The server list with one-click `--server/--port` join is implemented as well, and a **Mods page** manages local jars and installs compatible mods from Modrinth. A **crash analyzer** inspects `latest.log`/`crash-reports` after a failed run and offers PCL-style explanations plus reversible auto-repair or manual handling. No installer/auto-updater is included by design.
 
 ## Requirements
 
@@ -41,9 +41,26 @@ The Downloads page has a loader card below the version list: choose a Minecraft 
 
 Loader metadata is merged with the vanilla parent profile; library deduplication keeps classifier (natives) variants, which is required for inherited loader launches (a regression test covers this).
 
+## Mods
+
+The Mods page manages the selected instance's `mods` directory:
+
+- **Local jars** — import one or more `.jar` files (file picker), list installed mods with name/version/platform/id, enable or disable them (renames between `.jar` and `.jar.disabled`), delete them, or open the folder. Fabric, Quilt, Forge and NeoForge metadata inside the jar (`fabric.mod.json`, `quilt.mod.json`, `META-INF/mods.toml`) is parsed, including declared dependencies.
+- **Modrinth** — search the public Modrinth API with the instance's Minecraft version and loader automatically detected from its version profile (inheritance chains are followed), pick a compatible version and install its primary file into the instance's mods directory. Downloads are written to a temporary `.part` file and verified against the expected SHA-1 before being moved into place.
+- Verified end-to-end on a real Fabric 1.21.1 instance: local import/enable/disable, live Modrinth search (48 results for "fabric api"), and installation of a small mod (`thegodgenutility-0.1.jar`, 66,230 bytes) into the instance mods folder.
+
 ## Servers
 
 The Servers page keeps a saved multiplayer server list (`servers.json` in the launcher-data directory, separate from the Minecraft files). A server has a name, host and optional port; the address field also accepts `host:port`, pasted URLs and bracketed IPv6 addresses. **启动并加入** launches the instance currently selected on the Instances page and appends the vanilla quick-join arguments `--server <host>` and, when a port is set, `--port <port>`, so the game connects directly and skips the multiplayer menu. The list can be refreshed, added to, edited and deleted from the same page; the join progress and game log are shown on the Instances page. A read-only `servers.dat` import is a possible future addition and is not implemented yet. This flow was verified end-to-end on a real 1.21.1 instance in `F:\MC`: the launcher saved a server, launched 1.21.1 with `--server/--port`, and the game opened and exited with code 0.
+
+## Crash analysis
+
+After a game process exits (including exit code 0 when the game showed a crash screen), the launcher analyzes the instance's `logs/latest.log` and newest `crash-reports/*.txt`:
+
+- **Detected causes** — missing mandatory dependencies (Forge/NeoForge `Mod ID: 'x', Requested by: 'y', Actual version: '[MISSING]'` and Fabric missing-mod lines), duplicate mods, mods listed under `Suspected Mods`, Java version mismatches, `OutOfMemoryError`, graphics/OpenGL initialization failures and loader/Mixin errors.
+- **Dialog** — shows a PCL-style summary with per-issue details and suggestions, plus buttons **自动修复 / 手动处理 / 查看日志/崩溃报告**. Nothing is modified until the user chooses automatic repair.
+- **Reversible auto-repair** — installs a missing dependency from Modrinth (when a compatible project/version exists), disables suspected or duplicate mods by renaming them to `.jar.disabled`, and raises the configured memory by 1 GiB for out-of-memory crashes. Each action is listed as success/failure; disabled mods can be re-enabled, downloaded mods deleted, and memory changed back in Settings. Java/driver problems are reported as manual suggestions only.
+- Verified against a real crashed Forge 1.20.1 modpack (`changed&机械动力`): the analyzer identified the missing `create` dependency required by `create_dragons_plus` and `create_hypertube`, showed the dialog, and the Manual choice preserved the files.
 
 ## Project layout
 
@@ -54,7 +71,7 @@ The Servers page keeps a saved multiplayer server list (`servers.json` in the la
 - `AstraLauncher.Downloader` — asynchronous download queue with resume, retries, integrity checks and per-file HTTP Range segmented downloads.
 - `AstraLauncher.Authentication` — device-code Microsoft OAuth, Xbox Live/XSTS, Minecraft services login, DPAPI token protection and the account service.
 - `AstraLauncher.Multiplayer` — reserved for later signalling/relay abstractions.
-- `AstraLauncher.Tests` — xUnit automated tests (276 currently passing).
+- `AstraLauncher.Tests` — xUnit automated tests (295 currently passing).
 - `scripts` — build and packaging helpers.
 
 ### Accounts
