@@ -1,0 +1,19 @@
+﻿09:11:02 FINAL2 START
+09:11:06 window=True after=3s
+09:11:12 home=已加载 103 个正式版本 · 9 个本地版本
+09:11:13 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m7\shots\final2-home.png
+09:11:14 servers=服务器列表
+09:11:15 edits=3
+09:11:15 save=True
+09:11:15 saveStatus=已保存服务器：本地测试服（127.0.0.1:25565）。
+09:11:16 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m7\shots\final2-servers.png
+09:11:19 instances=2
+09:11:19 selected=GameInstance { Id = 7cdfef7b-a4f6-416c-bbc6-024100712ece, Name = 新实例, DirectoryPath = F:\MC\.minecraft\AstraLauncher\instances\7cdfef7ba4f6416cbbc6024100712ece, VersionId = 1.21.1, IsManagedDirectory = True }
+09:11:21 join=True
+09:11:23 post=启动游戏 || [launcher] 加入服务器：127.0.0.1:25565
+09:11:47 game=True after=24s title='Minecraft 1.21.1'
+09:12:03 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m7\shots\final2-game.png
+09:12:07 exit=游戏已退出（退出码 0）。
+09:12:12 applog: 2026-10-29T01:11:24.5861836+00:00 [Information] AstraLauncher.Game.Launch.GameLaunchService: Joining server 127.0.0.1:25565 directly when launching version 1.21.1.
+09:12:12 applog critical=1 error=0
+09:12:12 FINAL2 DONE

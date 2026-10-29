@@ -296,3 +296,20 @@
 - 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **276/276 通过**（新增 4 个 JSON 仓储用例、4 个命令构建器服务器参数用例）。
 - **GUI + 真实启动验证（dev 构建）**：服务器页保存「本地测试服 / 127.0.0.1:25565」→ `servers.json` 落盘；在游戏实例页选中 M5-Fabric 后回到服务器页点「启动并加入」→ 应用日志记录 `Joining server 127.0.0.1:25565 directly when launching version fabric-loader-0.20.1-1.21.1.`，Fabric 1.21.1 游戏窗口/主菜单出现；截图与日志见 `docs/evidence/m6/`（m6-servers-empty.png、m6-servers-saved.png、m6-join-game.png、m6-smoke.log、m6-join.log、servers.json）。
 - 说明：`servers.dat` 只读导入为可选项，本轮未实现（服务器页以独立 `servers.json` 管理）；下一步 M7：NeoForge 启动问题尽量修复、README/docs 收尾、重新发布单文件 exe 并在 F:\MC 做最终验收。
+
+### M7 收尾与最终验收（2026-10-29）
+
+- **M6 后续修复**：
+  - 服务器/实例选择在页面切换后可能被 WPF `SelectedItem` TwoWay 绑定清空：加入「最后一次选中 ID + 列表首项 + 重新读取 servers.json」多级回退（`69de28b`）。
+  - 一键加入把启动任务抛到后台线程，导致 `InstancesPageViewModel` 从非 UI 线程更新 ObservableCollection（Unobserved `NotSupportedException` / 启动卡在「准备启动」）：服务器 ViewModel 的异步续体不再 `ConfigureAwait(false)`，启动始终在 UI 线程开始（`5ec665c`）。
+  - Shell 对服务器页依赖改为必需注入，避免 JoinRequested 未订阅（`69de28b`）。
+- **最终单文件 exe**：`artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe`，版本 `1.0.0+5ec665c`，65,171,309 字节，SHA256 `FEEFAFB00B750B9DF1ED3E4502BBBB137B1CE017620764E553C2D5966EBF49D6`；已部署到 `F:\MC\AstraLauncher.exe`。
+- **F:\MC 最终验收（运行部署的 exe）**：
+  - 首页：「已加载 103 个正式版本 · 9 个本地版本」。
+  - 服务器页：保存「本地测试服 / 127.0.0.1:25565」，`servers.json` 落盘。
+  - 游戏实例页选中 1.21.1 实例 → 服务器页点「启动并加入」→ 实例页显示 `[launcher] 加入服务器：127.0.0.1:25565`，应用日志记录 `Joining server 127.0.0.1:25565 directly when launching version 1.21.1.`；24 s 后出现 `Minecraft 1.21.1` 窗口，正常关闭后退出码 0。
+  - 本次运行日志无新增 Critical / Error（日志中唯一 Critical 是 01:01 修复前的 Unobserved task exception 历史记录）。
+- **NeoForge 启动（已知限制，尽力修复但未完成）**：分析了其 `BootstrapLauncher`/`DisplayWindow.updateModuleReads` 对 service module layer 中 `neoforge` 模块的要求，尝试了 universal jar 加入 `-p`、`-DlegacyClassPath`、模块去重等方案；可复现的失败依次为 `NoSuchElementException` 与 `ResolutionException: reads more than one module named neoforge`，未找到与官方启动器一致的参数组合，故不并入默认启动路径；安装链路（目录/安装器/版本清单/库文件补齐）已验证，README 中保留已知限制说明。
+- 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **276/276 通过**。
+- 证据：`docs/evidence/m7/`（final2.log、final2-home.png、final2-servers.png、final2-game.png、app-join.log、servers.json、final2.ps1）。
+- 结论：M1–M6 功能完成；真实 1.21.1 下载/离线启动到主菜单、Fabric/Quilt/Forge 安装与启动、服务器列表与 `--server/--port` 一键加入均通过端到端验收；NeoForge 启动作为已知限制记录。
