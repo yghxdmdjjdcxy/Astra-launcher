@@ -303,7 +303,7 @@
   - 服务器/实例选择在页面切换后可能被 WPF `SelectedItem` TwoWay 绑定清空：加入「最后一次选中 ID + 列表首项 + 重新读取 servers.json」多级回退（`69de28b`）。
   - 一键加入把启动任务抛到后台线程，导致 `InstancesPageViewModel` 从非 UI 线程更新 ObservableCollection（Unobserved `NotSupportedException` / 启动卡在「准备启动」）：服务器 ViewModel 的异步续体不再 `ConfigureAwait(false)`，启动始终在 UI 线程开始（`5ec665c`）。
   - Shell 对服务器页依赖改为必需注入，避免 JoinRequested 未订阅（`69de28b`）。
-- **最终单文件 exe**：`artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe`，版本 `1.0.0+5ec665c`，65,171,309 字节，SHA256 `FEEFAFB00B750B9DF1ED3E4502BBBB137B1CE017620764E553C2D5966EBF49D6`；已部署到 `F:\MC\AstraLauncher.exe`。
+- **最终单文件 exe**：`artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe`，版本 `1.0.0+5ec665c`，65,171,141 字节，SHA256 `FEEFAFB00B750B9DF1ED3E4502BBBB137B1CE017620764E553C2D5966EBF49D6`；已部署到 `F:\MC\AstraLauncher.exe`。
 - **F:\MC 最终验收（运行部署的 exe）**：
   - 首页：「已加载 103 个正式版本 · 9 个本地版本」。
   - 服务器页：保存「本地测试服 / 127.0.0.1:25565」，`servers.json` 落盘。
