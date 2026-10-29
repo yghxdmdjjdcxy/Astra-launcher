@@ -1,5 +1,5 @@
+﻿using System.IO;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
 using AstraLauncher.App.Services;
@@ -28,6 +28,10 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly ICrashDialogService? _crashDialog;
     private readonly ICrashRepairService? _crashRepair;
     private readonly RelayCommand _stopCommand;
+    private GameInstance? _launchingInstance;
+    private DateTimeOffset? _launchStartedAt;
+    private bool _crashDialogShown;
+    private bool _crashDetectionQueued;
     private GameInstance? _selectedInstance;
     private Guid? _selectedInstanceId;
     private string _name = "新实例";
@@ -265,6 +269,10 @@ public sealed class InstancesPageViewModel : PageViewModel
         LaunchPercent = 0;
         LaunchStage = "准备启动";
         GameLogs.Clear();
+        _launchingInstance = selected;
+        _launchStartedAt = DateTimeOffset.Now;
+        _crashDialogShown = false;
+        _crashDetectionQueued = false;
         AppendLog($"[launcher] 启动实例：{selected.Name}（版本 {selected.VersionId}）");
         if (joinServer is not null)
         {
@@ -288,12 +296,15 @@ public sealed class InstancesPageViewModel : PageViewModel
             IGameProcess process = await _launchService.LaunchAsync(selected, session, options, progress, cancellation.Token);
             _runningProcess = process;
             process.OutputReceived += OnGameOutput;
+            using var crashPollCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token);
+            _ = PollCrashLogAsync(selected, crashPollCancellation.Token);
             StatusMessage = $"游戏已启动（PID {process.Id}），正在等待退出…";
             AppendLog($"[launcher] 游戏进程已启动，PID {process.Id}");
             GameExitInfo exitInfo = await process.Exited;
+            crashPollCancellation.Cancel();
             AppendLog($"[launcher] 游戏进程已退出，退出码 {exitInfo.ExitCode}");
             StatusMessage = $"游戏已退出（退出码 {exitInfo.ExitCode}）。";
-            if (_crashAnalyzer is not null)
+            if (_crashAnalyzer is not null && !_crashDialogShown)
             {
                 await AnalyzeAndOfferRepairAsync(selected, exitInfo.ExitCode, cancellation.Token);
             }
@@ -333,7 +344,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         _logger.LogInformation("Starting crash analysis for {Instance} (exit code {ExitCode}).", instance.Name, exitCode);
         try
         {
-            CrashAnalysisResult? analysis = await _crashAnalyzer.AnalyzeAsync(instance, exitCode, cancellationToken);
+            CrashAnalysisResult? analysis = await _crashAnalyzer.AnalyzeAsync(instance, exitCode, _launchStartedAt, cancellationToken);
             if (analysis is null)
             {
                 StatusMessage = $"游戏已退出（退出码 {exitCode}）。";
@@ -429,6 +440,57 @@ public sealed class InstancesPageViewModel : PageViewModel
         if (progress.Percent is double percent) LaunchPercent = Math.Clamp(percent, 0, 100);
     }
 
+    /// <summary>
+    /// Polls the instance's latest.log while the game runs, because the Forge/Minecraft crash screen can stay open for a
+    /// long time and its console output is not always forwarded to the launcher. Detection is delegated to the UI thread.
+    /// </summary>
+    private async Task PollCrashLogAsync(GameInstance instance, CancellationToken cancellationToken)
+    {
+        string logPath = Path.Combine(instance.DirectoryPath, "logs", "latest.log");
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested && !_crashDialogShown)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+                if (_crashDialogShown || _crashDetectionQueued)
+                {
+                    continue;
+                }
+
+                if (!File.Exists(logPath))
+                {
+                    continue;
+                }
+
+                string tail;
+                try
+                {
+                    using FileStream stream = new(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 8192, FileOptions.SequentialScan);
+                    long start = Math.Max(0, stream.Length - 16384);
+                    stream.Seek(start, SeekOrigin.Begin);
+                    using var reader = new StreamReader(stream, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+                    tail = reader.ReadToEnd();
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    continue;
+                }
+
+                if (!IsCrashMarker(tail))
+                {
+                    continue;
+                }
+
+                _crashDetectionQueued = true;
+                _uiContext?.Post(_ => _ = AnalyzeLiveCrashAsync(), null);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Normal end of the launch (game exited or launcher closed).
+        }
+    }
+
     private void OnGameOutput(object? sender, string line)
     {
         SynchronizationContext? context = _uiContext;
@@ -438,7 +500,103 @@ public sealed class InstancesPageViewModel : PageViewModel
         }
 
         context.Post(_ => AppendLog(line), null);
+        if (!_crashDialogShown && !_crashDetectionQueued && IsCrashMarker(line))
+        {
+            _crashDetectionQueued = true;
+            context.Post(_ => _ = AnalyzeLiveCrashAsync(), null);
+        }
     }
+
+    /// <summary>
+    /// Forge/Minecraft keeps its own crash screen open, so users may not close the game window immediately. As soon as the
+    /// game output contains a crash marker, analyze in the background and show the same PCL-style dialog above the game.
+    /// </summary>
+    private async Task AnalyzeLiveCrashAsync()
+    {
+        GameInstance? instance = _launchingInstance;
+        if (instance is null || _crashDialogShown || _crashAnalyzer is null || _crashDialog is null)
+        {
+            _crashDetectionQueued = false;
+            return;
+        }
+
+        try
+        {
+            // Give the crash handler a moment to flush latest.log/crash-reports.
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            if (_crashDialogShown)
+            {
+                return;
+            }
+
+            CrashAnalysisResult? analysis = await _crashAnalyzer.AnalyzeAsync(instance, 1, _launchStartedAt, CancellationToken.None);
+            if (analysis is null)
+            {
+                _crashDetectionQueued = false;
+                return;
+            }
+
+            _crashDialogShown = true;
+            StatusMessage = $"崩溃分析：{analysis.Summary}";
+            AppendLog($"[launcher] 检测到游戏崩溃：{analysis.Summary}");
+            _logger.LogInformation("Live crash analysis for {Instance}: {Summary}.", instance.Name, analysis.Summary);
+            CrashRepairChoice choice = _crashDialog.Show(analysis);
+            _logger.LogInformation("Live crash dialog choice for {Instance}: {Choice}.", instance.Name, choice);
+            if (choice != CrashRepairChoice.AutoRepair)
+            {
+                if (choice == CrashRepairChoice.Manual)
+                {
+                    StatusMessage = "已保留崩溃现场，请关闭游戏后按分析建议手动处理。";
+                    AppendLog("[launcher] 用户选择手动处理崩溃。");
+                }
+
+                return;
+            }
+
+            if (_crashRepair is null)
+            {
+                StatusMessage = "自动修复服务不可用，请按建议手动处理。";
+                return;
+            }
+
+            // Stop the crashed game first so mod jars are no longer locked, then apply the reversible repairs.
+            try
+            {
+                _runningProcess?.Kill();
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or IOException)
+            {
+                _logger.LogWarning(exception, "结束崩溃中的游戏进程失败。");
+            }
+
+            StatusMessage = "正在应用自动修复…";
+            AppendLog("[launcher] 用户选择自动修复，正在应用可逆修复…");
+            var repairProgress = new Progress<string>(message => AppendLog($"[launcher] {message}"));
+            CrashRepairResult repair = await _crashRepair.RepairAsync(instance, analysis, repairProgress, CancellationToken.None);
+            foreach (CrashRepairAction action in repair.Actions)
+            {
+                AppendLog($"[launcher] 修复：{action.Description} — {(action.Success ? "成功" : "失败")}{(action.Detail is null ? string.Empty : "：" + action.Detail)}");
+            }
+
+            StatusMessage = repair.Summary;
+            AppendLog($"[launcher] {repair.Summary}");
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "实时崩溃分析失败：{Instance}", instance.Name);
+        }
+    }
+
+    private static bool IsCrashMarker(string line) =>
+        line.Contains("Crash report saved to", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("Missing or unsupported mandatory dependencies", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("Mod Loading has failed", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("Minecraft has crashed", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("Error loading mods", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("errors have occurred during loading", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("Actual version: '[MISSING]'", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("A fatal error has been detected by the Java Runtime Environment", StringComparison.OrdinalIgnoreCase)
+        || line.Contains("OutOfMemoryError", StringComparison.OrdinalIgnoreCase);
 
     private void AppendLog(string line)
     {

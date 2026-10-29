@@ -24,7 +24,11 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
         _logger = logger;
     }
 
-    public Task<CrashAnalysisResult?> AnalyzeAsync(GameInstance instance, int exitCode, CancellationToken cancellationToken = default)
+    public Task<CrashAnalysisResult?> AnalyzeAsync(
+        GameInstance instance,
+        int exitCode,
+        DateTimeOffset? notBefore = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(instance);
         if (string.IsNullOrWhiteSpace(instance.DirectoryPath) || !Directory.Exists(instance.DirectoryPath))
@@ -36,12 +40,17 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
         {
             cancellationToken.ThrowIfCancellationRequested();
             string? latestLogPath = Path.Combine(instance.DirectoryPath, "logs", "latest.log");
-            if (!File.Exists(latestLogPath))
+            if (!File.Exists(latestLogPath) || (notBefore is DateTimeOffset threshold && File.GetLastWriteTimeUtc(latestLogPath) < threshold.UtcDateTime))
             {
                 latestLogPath = null;
             }
 
-            string? crashReportPath = FindNewestCrashReport(instance.DirectoryPath);
+            string? crashReportPath = FindNewestCrashReport(instance.DirectoryPath, notBefore);
+            if (latestLogPath is null && crashReportPath is null)
+            {
+                return Task.FromResult<CrashAnalysisResult?>(null);
+            }
+
             string logText = latestLogPath is null ? string.Empty : ReadTail(latestLogPath);
             string reportText = crashReportPath is null ? string.Empty : ReadTail(crashReportPath);
             string combined = logText + "\n" + reportText;
@@ -220,9 +229,7 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
     private static void DetectJavaVersion(string text, List<CrashIssue> issues)
     {
         if (!text.Contains("UnsupportedClassVersionError", StringComparison.OrdinalIgnoreCase)
-            && !text.Contains("compiled by a more recent version of the Java Runtime", StringComparison.OrdinalIgnoreCase)
-            && !text.Contains("requires Java", StringComparison.OrdinalIgnoreCase)
-            && !text.Contains("Java version", StringComparison.OrdinalIgnoreCase))
+            && !text.Contains("compiled by a more recent version of the Java Runtime", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -335,7 +342,7 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
         return source.Substring(start, length);
     }
 
-    private static string? FindNewestCrashReport(string gameDirectory)
+    private static string? FindNewestCrashReport(string gameDirectory, DateTimeOffset? notBefore)
     {
         string directory = Path.Combine(gameDirectory, "crash-reports");
         if (!Directory.Exists(directory))
@@ -346,6 +353,7 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
         try
         {
             return Directory.EnumerateFiles(directory, "*.txt")
+                .Where(path => notBefore is not DateTimeOffset threshold || File.GetLastWriteTimeUtc(path) >= threshold.UtcDateTime)
                 .OrderByDescending(File.GetLastWriteTimeUtc)
                 .FirstOrDefault();
         }

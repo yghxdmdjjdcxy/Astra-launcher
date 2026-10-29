@@ -325,7 +325,7 @@
   - `CrashAnalyzer` 读取 `logs/latest.log` 与最新 `crash-reports/*.txt`，识别缺失前置依赖（Forge/NeoForge `MISSING`、Fabric missing 行）、重复 MOD、`Suspected Mods`、Java 版本、OOM、显卡/OpenGL、加载器/Mixin 等；过滤堆栈帧避免把类名误判为 MOD。
   - `CrashRepairService` 仅执行可逆修复：从 Modrinth 安装缺失前置、禁用可疑/重复 MOD、内存 +1 GiB；`CrashAnalysisDialogService` 展示 PCL 风格详情/建议与「自动修复 / 手动处理 / 查看日志」，修复前先询问。
   - 游戏退出后（含 exit code 0 但存在崩溃标记的情况）自动分析；实例页记录分析/选择/修复到游戏日志。
-  - 真实验证：导入 `changed&机械动力`（Forge 1.20.1）副本并启动，游戏崩溃后自动弹出崩溃分析窗口，识别「缺少前置 MOD create（由 create_dragons_plus / create_hypertube 要求）」；选择手动处理后保留现场，未修改任何 MOD。
+  - 真实验证：导入 `changed&机械动力`（Forge 1.20.1）副本并启动，游戏崩溃后 **无需先关闭游戏**，崩溃分析窗口会在游戏错误画面上方自动弹出（18 s 内），识别「缺少前置 MOD create（由 create_dragons_plus / create_hypertube 要求）」；选择手动处理后保留现场，未修改任何 MOD。实时检测通过轮询实例 latest.log 与日志时间戳过滤上一次运行的旧崩溃报告，避免误报；窗口设为 Topmost 并激活，避免被游戏窗口挡住。
 - 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **295/295 通过**。
 - 证据：`docs/evidence/m8/`（m8-mods-list.png、m8-mods-toggled.png、m8-modrinth-results.png、m8-install-result.png、m8-smoke.log、m8-install.log）与 `docs/evidence/m9/`（m9-crash2-dialog.png、m9-crash2-after.png、m9-crash2.log）。
 - **最终单文件 exe（M8/M9 收尾）**：`artifacts/AstraLauncher-win-x64-single/AstraLauncher.exe`，版本 `1.0.0+fc1175f`，65,219,085 字节，SHA256 `FC621AB55EA507F58A822DE9E633F475769DB2CDB09406BB88E751D891C569C3`；已部署为 `F:\MC\AstraLauncher.exe`。F:\MC 冒烟：启动正常，模组页正确加载并显示当前实例 MOD 状态；应用日志 0 Error（1 条 Critical 为 2026-10-29 01:01 修复前历史记录）。M9 验收使用的导入实例「M9崩溃测试」指向 `%TEMP%\astra-audit\m9\game` 副本，可在游戏实例页删除（不会修改 PCL 原目录）。

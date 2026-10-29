@@ -116,6 +116,17 @@ public sealed class CrashAnalyzerTests : IDisposable
     }
 
     [Fact]
+    public async Task AnalyzeAsync_StaleLogsBeforeNotBefore_ReturnsNull()
+    {
+        await WriteLogAsync("Minecraft has crashed!");
+        DateTimeOffset threshold = DateTimeOffset.UtcNow.AddMinutes(5);
+
+        CrashAnalysisResult? result = await _analyzer.AnalyzeAsync(_instance, 1, threshold);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
     public async Task AnalyzeAsync_ZeroExitCode_ReturnsNull()
     {
         await WriteLogAsync("normal shutdown");

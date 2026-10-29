@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -39,6 +39,8 @@ public sealed class CrashAnalysisDialogService : ICrashDialogService
             MinHeight = 420,
             Owner = Application.Current?.MainWindow,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            ShowInTaskbar = true,
+            Topmost = true,
             Background = new SolidColorBrush(Color.FromRgb(241, 245, 249)),
         };
 
@@ -60,7 +62,7 @@ public sealed class CrashAnalysisDialogService : ICrashDialogService
 
         var note = new TextBlock
         {
-            Text = "自动修复只会执行可逆操作：下载缺失的前置 MOD、禁用可疑/重复的 MOD、调大内存。修复前不会删除任何文件。",
+            Text = "自动修复只会执行可逆操作：下载缺失的前置 MOD、禁用可疑/重复的 MOD、调大内存。修复前不会删除任何文件；若崩溃的游戏窗口仍开着，选择自动修复会先结束该游戏进程。",
             Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(0, 0, 0, 10),
@@ -142,6 +144,12 @@ public sealed class CrashAnalysisDialogService : ICrashDialogService
         };
         root.Children.Add(scroll);
         window.Content = root;
+        window.Loaded += (_, _) =>
+        {
+            // The game's own crash screen is a separate top-level window; make sure the analysis dialog appears above it.
+            window.Activate();
+            window.Topmost = true;
+        };
         window.ShowDialog();
         return choice;
     }

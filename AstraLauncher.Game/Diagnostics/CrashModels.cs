@@ -42,8 +42,15 @@ public sealed record CrashAnalysisResult(
 /// <summary>Analyzes the latest game log / crash report of an instance after a non-zero exit code.</summary>
 public interface ICrashAnalyzer
 {
-    /// <summary>Returns <see langword="null"/> when the exit code is zero or no log evidence exists.</summary>
-    Task<CrashAnalysisResult?> AnalyzeAsync(GameInstance instance, int exitCode, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Returns <see langword="null"/> when there is no fresh log evidence. <paramref name="notBefore"/> can be used to
+    /// ignore stale crash reports/logs from earlier runs (for example when analyzing a crash while the game still runs).
+    /// </summary>
+    Task<CrashAnalysisResult?> AnalyzeAsync(
+        GameInstance instance,
+        int exitCode,
+        DateTimeOffset? notBefore = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Outcome of one reversible repair action.</summary>

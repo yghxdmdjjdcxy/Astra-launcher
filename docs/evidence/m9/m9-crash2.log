@@ -1,42 +1,41 @@
-﻿11:13:57 M9 CRASH2 START
-11:14:01 window=True
-11:14:07 instances=3
-11:14:08 selected=GameInstance { Id = 85668d86-a5ed-4bba-a907-d1d8bac6e7b8, Name = M9崩溃测试, DirectoryPath = C:\Users\admin\AppData\Local\Temp\astra-audit\m9\game, VersionId = changed&机械动力, IsManagedDirectory = False }
-11:14:08 launch=True
-11:14:10 win: wetype.statusbar.window | StatusBarWnd
-11:14:10 win: HwndWrapper[AstraLauncher.App;;8ce6ef5c-9862-448c-b181-eb1f71e56ebe] | Astra Launcher
-11:14:10 win: Chrome_WidgetWin_1 | Astra Launcher 现有工程审计 — DeepSeek Harness
-11:14:10 win: TaskManagerWindow | 任务管理器
-11:14:10 win: Windows.UI.Core.CoreWindow | 设置
-11:14:10 win: Chrome_WidgetWin_1 | QQ
-11:14:10 win: Tauri Window | Clash Verge
-11:14:10 win: Chrome_WidgetWin_1 | Skype for Business 帮助 | Microsoft Support - Google Chrome
-11:14:10 win: CabinetWClass | DVD 驱动器 (H:) 15.0.4569.1506
-11:14:10 win: CabinetWClass | MC
-11:14:10 win: HwndWrapper[Plain Craft Launcher 2plus.exe;;cd05c336-a707-4340-9098-b874db2ac0d6] | Plain Craft Launcher　
-11:14:10 win: Chrome_WidgetWin_1 | 123云盘
-11:14:10 win: CEF-OSC-WIDGET | NVIDIA GeForce Overlay
-11:14:10 win: Windows.UI.Core.CoreWindow | Microsoft Text Input Application
-11:14:10 win: HwndWrapper[AirDeck;;454e0fa9-66ed-4c09-bb41-04ec6fe8f250] | AirDeck Desktop Dock
-11:14:10 win: Progman | Program Manager
-11:14:20 win: GLFW30 | Minecraft* 1.20.1
-11:14:26 win: Ghost | Minecraft* 1.20.1 (未响应)
-11:14:45 win: GLFW30 | Minecraft* Forge 1.20.1
-11:15:09 killed game to end crash screen
-11:15:11 win: HwndWrapper[AstraLauncher.App;;15d55e5d-cd73-4888-9e61-779257eb4764] | 游戏崩溃分析 - Astra Launcher
-11:15:11 dialog=True gameSeen=True after=63s
-11:15:12 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m9\shots\m9-crash2-dialog.png
-11:15:12 dialogTexts=游戏崩溃分析 || 缺少前置 MOD「create」（由「create_dragons_plus」要求） || 自动修复只会执行可逆操作：下载缺失的前置 MOD、禁用可疑/重复的 MOD、调大内存。修复前不会删除任何文件。 || 查看日志/崩溃报告 || 手动处理 || 自动修复 || 关闭 || 缺少前置 MOD：create || MOD「create_dragons_plus」要求安装「create」（版本范围 [6.0.8,6.1.0)），但 MOD 目录中缺少它。 || 建议：安装「create」后重试；也可以先禁用需要它的 MOD「create_dragons_plus」。 || 缺少前置 MOD：create || MOD「create_hypertube」要求安装「create」（版本范围 [6.0.4,6.1.0)），但 MOD 目录中缺少它。 || 建议：安装「create」后重试；也可以先禁用需要它的 MOD「create_hypertube」。 || Java 版本不兼容 || 日志中出现 Java 版本不兼容（UnsupportedClassVersionError / requires Java）。 || 建议：在「设置」中切换到匹配的 Java（例如 1.21.1 使用 Java 21），或安装对应版本的 Java 后重试。
-11:15:12 manual=True
-11:15:15 status=[launcher] 崩溃原因：缺少前置 MOD：create — MOD「create_dragons_plus」要求安装「create」（版本范围 [6.0.8,6.1.0)），但 MOD 目录中缺少它。 || [launcher] 崩溃分析：缺少前置 MOD「create」（由「create_dragons_plus」要求） || 已保留崩溃现场，请按分析建议手动处理。
-11:15:16 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m9\shots\m9-crash2-after.png
-11:15:19 applog: 2026-10-29T03:05:55.6492590+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
-11:15:19 applog: 2026-10-29T03:11:16.5444929+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
-11:15:19 applog: 2026-10-29T03:12:26.8304085+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Starting crash analysis for M9崩溃测试 (exit code -1).
-11:15:19 applog: 2026-10-29T03:12:26.8685252+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis for M9崩溃测试: 缺少前置 MOD「create」（由「create_dragons_plus」要求）; issues=7.
-11:15:19 applog: 2026-10-29T03:12:29.4065019+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash dialog choice for M9崩溃测试: Manual.
-11:15:19 applog: 2026-10-29T03:13:59.5318150+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
-11:15:19 applog: 2026-10-29T03:15:09.7431009+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Starting crash analysis for M9崩溃测试 (exit code -1).
-11:15:19 applog: 2026-10-29T03:15:09.7859491+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis for M9崩溃测试: 缺少前置 MOD「create」（由「create_dragons_plus」要求）; issues=3.
-11:15:19 applog: 2026-10-29T03:15:12.3171170+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash dialog choice for M9崩溃测试: Manual.
-11:15:19 M9 CRASH2 DONE
+﻿11:24:59 M9 CRASH2 START
+11:25:03 window=True
+11:25:09 instances=3
+11:25:10 selected=GameInstance { Id = 85668d86-a5ed-4bba-a907-d1d8bac6e7b8, Name = M9崩溃测试, DirectoryPath = C:\Users\admin\AppData\Local\Temp\astra-audit\m9\game, VersionId = changed&机械动力, IsManagedDirectory = False }
+11:25:11 launch=True
+11:25:13 win: wetype.statusbar.window | StatusBarWnd
+11:25:13 win: HwndWrapper[AstraLauncher.App;;86f44623-a4a6-45f7-ae7f-e3eb9a597896] | Astra Launcher
+11:25:13 win: Chrome_WidgetWin_1 | Astra Launcher 现有工程审计 — DeepSeek Harness
+11:25:13 win: HwndWrapper[Plain Craft Launcher 2plus.exe;;6de8622f-13a3-4247-9e19-6c04ee9180e7] | Plain Craft Launcher　
+11:25:13 win: CabinetWClass | MC
+11:25:13 win: CabinetWClass | artifacts
+11:25:13 win: TaskManagerWindow | 任务管理器
+11:25:13 win: Windows.UI.Core.CoreWindow | 设置
+11:25:13 win: Chrome_WidgetWin_1 | QQ
+11:25:13 win: Tauri Window | Clash Verge
+11:25:13 win: Chrome_WidgetWin_1 | Skype for Business 帮助 | Microsoft Support - Google Chrome
+11:25:13 win: CabinetWClass | DVD 驱动器 (H:) 15.0.4569.1506
+11:25:13 win: Chrome_WidgetWin_1 | 123云盘
+11:25:13 win: CEF-OSC-WIDGET | NVIDIA GeForce Overlay
+11:25:13 win: Windows.UI.Core.CoreWindow | Microsoft Text Input Application
+11:25:13 win: HwndWrapper[AirDeck;;454e0fa9-66ed-4c09-bb41-04ec6fe8f250] | AirDeck Desktop Dock
+11:25:13 win: Progman | Program Manager
+11:25:21 win: GLFW30 | Minecraft* 1.20.1
+11:25:29 win: HwndWrapper[AstraLauncher.App;;7b199f1d-4379-4baa-9439-f9bd09c82a1c] | 游戏崩溃分析 - Astra Launcher
+11:25:29 dialog=True gameSeen=True after=18s
+11:25:30 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m9\shots\m9-crash2-dialog.png
+11:25:30 dialogTexts=游戏崩溃分析 || 缺少前置 MOD「create」（由「create_dragons_plus」要求） || 自动修复只会执行可逆操作：下载缺失的前置 MOD、禁用可疑/重复的 MOD、调大内存。修复前不会删除任何文件；若崩溃的游戏窗口仍开着，选择自动修复会先结束该游戏进程。 || 查看日志/崩溃报告 || 手动处理 || 自动修复 || 关闭 || 缺少前置 MOD：create || MOD「create_dragons_plus」要求安装「create」（版本范围 [6.0.8,6.1.0)），但 MOD 目录中缺少它。 || 建议：安装「create」后重试；也可以先禁用需要它的 MOD「create_dragons_plus」。 || 缺少前置 MOD：create || MOD「create_hypertube」要求安装「create」（版本范围 [6.0.4,6.1.0)），但 MOD 目录中缺少它。 || 建议：安装「create」后重试；也可以先禁用需要它的 MOD「create_hypertube」。
+11:25:30 manual=True
+11:25:34 status=[launcher] 用户选择手动处理崩溃。 || [launcher] 检测到游戏崩溃：缺少前置 MOD「create」（由「create_dragons_plus」要求） || 已保留崩溃现场，请关闭游戏后按分析建议手动处理。
+11:25:35 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m9\shots\m9-crash2-after.png
+11:25:38 applog: 2026-10-29T03:18:02.9008179+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
+11:25:38 applog: 2026-10-29T03:19:56.9826032+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
+11:25:38 applog: 2026-10-29T03:21:27.8610579+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Starting crash analysis for M9崩溃测试 (exit code 0).
+11:25:38 applog: 2026-10-29T03:21:27.8863170+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis for M9崩溃测试: 缺少前置 MOD「create」（由「create_dragons_plus」要求）; issues=3.
+11:25:38 applog: 2026-10-29T03:23:04.6894914+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
+11:25:38 applog: 2026-10-29T03:23:21.4086625+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Live crash analysis for M9崩溃测试: Java 版本不兼容.
+11:25:38 applog: 2026-10-29T03:23:22.9230236+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Live crash dialog choice for M9崩溃测试: Manual.
+11:25:38 applog: 2026-10-29T03:25:02.0485573+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Crash analysis services: analyzer=True, dialog=True, repair=True.
+11:25:38 applog: 2026-10-29T03:25:28.8024867+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Live crash analysis for M9崩溃测试: 缺少前置 MOD「create」（由「create_dragons_plus」要求）.
+11:25:38 applog: 2026-10-29T03:25:30.6946723+00:00 [Information] AstraLauncher.App.ViewModels.InstancesPageViewModel: Live crash dialog choice for M9崩溃测试: Manual.
+11:25:38 M9 CRASH2 DONE
