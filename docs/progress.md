@@ -283,4 +283,5 @@
   - Forge 52.1.20：版本列表 1 个（promotions），安装器运行 3 s + 文件补齐；实例 M5-Forge 启动 → 10 s 主菜单 → 退出码 0。
   - NeoForge 21.1.265：版本列表 260 个（BMCLAPI 镜像 XML），安装器/版本清单/库文件补齐成功；实例 M5-NeoForge 启动仍失败在 NeoForge `BootstrapLauncher` 构建 service module layer（`NoSuchElementException`，module `neoforge` 解析问题）——**已知限制**，安装链路已验证，启动参数待后续修复。
 - 证据：`docs/evidence/m5/`（m5-downloads-loader.png、m5-loader-installed.png、m5-fabric-main-menu.png、loader-Quilt-game.png、loader-Forge-game.png、loader-page-NeoForge.png，e2e.log、fabric-launch.log、loader-Quilt.log、loader-Forge.log、loader-NeoForge.log、neo-launch2.log）。
+- **F:\MC 真实环境最终验收（单文件 exe，M5 提交 1428edb，2026-10-29）**：首页显示「已加载 103 个正式版本 · 9 个本地版本」；下载页加载器卡片正常；实例列表 2 个；启动 1.21.1 → 10 s 主菜单 → 退出码 0；日志记录 `Added 9 local version(s) from F:\MC\.minecraft\versions`，0 Critical / 0 Error。证据：`docs/evidence/m5/final-home.png`、`final-downloads-loader.png`、`final-instances.png`、`final-game-main-menu.png`、`final-smoke.log`。
 - 下一步：M6 服务器列表（保存/编辑服务器，实例启动自动拼接 `--server/--port`，servers.dat 相关只读解析），随后 M7 最终端到端验收与文档收尾。

@@ -1,0 +1,18 @@
+﻿08:37:02 FINAL SMOKE START
+08:37:04 window=True after=1s
+08:37:10 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\final-home.png
+08:37:11 home local text: 已加载 103 个正式版本 · 9 个本地版本
+08:37:15 downloads loader card=安装模组加载器（可选）
+08:37:15 downloads versions=已加载 103 个正式版本。
+08:37:16 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\final-downloads-loader.png
+08:37:18 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\final-instances.png
+08:37:18 instanceCount=2
+08:37:18 selected 1.21.1 instance
+08:37:19 launch clicked
+08:37:29 gameWindow=True after=10s title='Minecraft 1.21.1'
+08:37:46 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m5\shots\final-game-main-menu.png
+08:37:50 gameExit=游戏已退出（退出码 0）。
+08:37:54 applog=F:\MC\.minecraft\AstraLauncher\logs\astra-2026-10-29.log
+08:37:54 applog-local: 2026-10-29T00:37:06.2169160+00:00 [Information] AstraLauncher.App.ViewModels.ShellViewModel: Added 9 local version(s) from F:\MC\.minecraft\versions to the instance version picker.
+08:37:54 app log critical=0 error=0
+08:37:54 FINAL SMOKE DONE
