@@ -285,3 +285,14 @@
 - 证据：`docs/evidence/m5/`（m5-downloads-loader.png、m5-loader-installed.png、m5-fabric-main-menu.png、loader-Quilt-game.png、loader-Forge-game.png、loader-page-NeoForge.png，e2e.log、fabric-launch.log、loader-Quilt.log、loader-Forge.log、loader-NeoForge.log、neo-launch2.log）。
 - **F:\MC 真实环境最终验收（单文件 exe，M5 提交 1428edb，2026-10-29）**：首页显示「已加载 103 个正式版本 · 9 个本地版本」；下载页加载器卡片正常；实例列表 2 个；启动 1.21.1 → 10 s 主菜单 → 退出码 0；日志记录 `Added 9 local version(s) from F:\MC\.minecraft\versions`，0 Critical / 0 Error。证据：`docs/evidence/m5/final-home.png`、`final-downloads-loader.png`、`final-instances.png`、`final-game-main-menu.png`、`final-smoke.log`。
 - 下一步：M6 服务器列表（保存/编辑服务器，实例启动自动拼接 `--server/--port`，servers.dat 相关只读解析），随后 M7 最终端到端验收与文档收尾。
+
+### M6 服务器列表与一键加入（2026-10-29）
+
+- **数据层**：新增 `SavedServer`（Id / 名称 / 地址 / 可选端口 / DisplayAddress）与 `IServerRepository`；`JsonServerRepository` 把列表保存到启动器数据目录的 `servers.json`（临时文件原子替换；损坏 JSON 只记 warning 并回退为空列表），新增 4 个仓储测试。
+- **启动链路**：`GameLaunchOptions`/`GameLaunchRequest` 增加 `ServerAddress`/`ServerPort`；命令构建器在普通游戏参数之后追加 `--server <host> [--port <port>]`，并校验地址非空/无空白/长度与端口 1–65535；`GameLaunchService` 记录 "Joining server …" 日志。
+- **服务器页**：由占位说明改为可用界面——服务器列表（名称 + host:port）、刷新/新增/删除/「启动并加入」、名称/地址/端口编辑与保存、状态提示；地址支持 `host`、`host:port`、粘贴 URL 和 `[IPv6]:port`，端口留空使用默认。
+- **一键加入**：Shell 订阅服务器页 JoinRequested，使用「游戏实例」页当前选中实例启动，并自动切到实例页显示进度/游戏日志；未选择实例时给出中文提示。
+- **修复**：服务器列表刷新改用合并而非 `Clear()`，避免 WPF `SelectedItem` TwoWay 绑定把刚选中的服务器清空（smoke 中曾导致「请先选择一个服务器」）。
+- 验证：`dotnet build -c Release` **0 警告 / 0 错误**；`dotnet test` **276/276 通过**（新增 4 个 JSON 仓储用例、4 个命令构建器服务器参数用例）。
+- **GUI + 真实启动验证（dev 构建）**：服务器页保存「本地测试服 / 127.0.0.1:25565」→ `servers.json` 落盘；在游戏实例页选中 M5-Fabric 后回到服务器页点「启动并加入」→ 应用日志记录 `Joining server 127.0.0.1:25565 directly when launching version fabric-loader-0.20.1-1.21.1.`，Fabric 1.21.1 游戏窗口/主菜单出现；截图与日志见 `docs/evidence/m6/`（m6-servers-empty.png、m6-servers-saved.png、m6-join-game.png、m6-smoke.log、m6-join.log、servers.json）。
+- 说明：`servers.dat` 只读导入为可选项，本轮未实现（服务器页以独立 `servers.json` 管理）；下一步 M7：NeoForge 启动问题尽量修复、README/docs 收尾、重新发布单文件 exe 并在 F:\MC 做最终验收。

@@ -548,13 +548,64 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource PageTitle}" Text="服务器"/>
                     <TextBlock Style="{StaticResource PageSubtitle}"
-                               Text="服务器列表与「一键加入」将在 M6 提供；当前可以先启动游戏，在游戏内「多人游戏」中手动添加服务器。"/>
+                               Text="保存常用服务器；在「游戏实例」页选中实例后，回到这里点击「启动并加入」，启动参数会自动拼接 --server / --port。"/>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource SectionTitle}" Text="计划中的功能"/>
-                            <TextBlock Style="{StaticResource Hint}" Text="• 保存服务器地址与备注，双击直接启动并加入。"/>
-                            <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="• 启动参数 --server / --port 自动拼接，跳过游戏内手动输入。"/>
-                            <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="• 从 .minecraft/servers.dat 导入已有服务器列表。"/>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="服务器列表"/>
+                            <TextBlock Style="{StaticResource Hint}" Text="地址可写成 host 或 host:port；端口留空时使用游戏默认端口。"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                <Button Style="{StaticResource SecondaryButton}" Content="刷新" Command="{Binding RefreshCommand}"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="新增服务器" Command="{Binding NewCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource PrimaryButton}" Content="启动并加入" Command="{Binding JoinCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource DangerButton}" Content="删除" Command="{Binding DeleteCommand}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <ListBox ItemsSource="{Binding Servers}" SelectedItem="{Binding SelectedServer}" MinHeight="120" MaxHeight="220"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2,4">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding DisplayAddress}" Style="{StaticResource Hint}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="添加 / 编辑服务器"/>
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="名称" VerticalAlignment="Center" Margin="0,0,10,8"/>
+                                <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,20,8"/>
+                                <TextBlock Grid.Column="2" Text="端口" VerticalAlignment="Center" Margin="0,0,10,8"/>
+                                <TextBox Grid.Column="3" Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="1" Text="地址" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Style="{StaticResource PrimaryButton}" Content="保存服务器" Command="{Binding SaveCommand}"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="清空编辑" Command="{Binding NewCommand}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Hint}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="说明"/>
+                            <TextBlock Style="{StaticResource Hint}" Text="• 「启动并加入」使用「游戏实例」页当前选中的实例；没有选中实例时会提示先选择。"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="• 一键加入通过官方启动参数 --server / --port 实现，适用于原版与 Fabric/Quilt/Forge 等加载器版本。"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="• 服务器列表保存在启动器数据目录（servers.json），与 .minecraft 游戏文件分离。"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

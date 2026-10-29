@@ -1,0 +1,10 @@
+﻿08:45:57 M6 SMOKE START
+08:45:59 window=True after=2s
+08:46:05 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m6\shots\m6-servers-empty.png
+08:46:06 editCount=3
+08:46:06 fields filled
+08:46:06 saveStatus=已保存服务器：本地测试服（127.0.0.1:25565）。
+08:46:07 SHOT C:\Users\admin\AppData\Local\Temp\astra-audit\m6\shots\m6-servers-saved.png
+08:46:09 selected instance: GameInstance { Id = 33f129c1-576c-48e4-ae09-eb2ea5097d54, Name = M5-Fabric, DirectoryPath = E:\Astra Launcher of Deepseek\Astra Launcher\Astra Launcher\AstraLauncher.App\bin\Release\net10.0-windows\.minecraft\AstraLauncher\instances\33f129c1576c48e4ae09eb2ea5097d54, VersionId = fabric-loader-0.20.1-1.21.1, IsManagedDirectory = True }
+08:46:11 join clicked
+08:46:19 gameWindow=True after=223s title='Minecraft* 1.21.1'

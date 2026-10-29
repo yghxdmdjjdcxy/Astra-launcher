@@ -123,7 +123,17 @@ public sealed class GameLaunchService : IGameLaunchService
             session,
             options.VersionType,
             extraJvmArguments,
-            extraGameArguments);
+            extraGameArguments,
+            options.ServerAddress,
+            options.ServerPort);
+        if (!string.IsNullOrWhiteSpace(options.ServerAddress))
+        {
+            _logger.LogInformation(
+                "Joining server {ServerAddress}:{ServerPort} directly when launching version {VersionId}.",
+                options.ServerAddress,
+                options.ServerPort?.ToString(CultureInfo.InvariantCulture) ?? "(default)",
+                instance.VersionId);
+        }
         if (extraJvmArguments.Count > 0 || extraGameArguments.Count > 0)
         {
             // Only the counts are logged: extra arguments may contain access tokens or other secrets.

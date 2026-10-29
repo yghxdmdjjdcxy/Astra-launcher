@@ -60,7 +60,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         DuplicateCommand = new AsyncRelayCommand(DuplicateAsync);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         DetectJavaCommand = new AsyncRelayCommand(DetectJavaAsync);
-        LaunchCommand = new AsyncRelayCommand(LaunchAsync);
+        LaunchCommand = new AsyncRelayCommand(() => LaunchAsync());
         _stopCommand = new RelayCommand(_ => StopGame(), _ => IsLaunching);
         StopCommand = _stopCommand;
     }
@@ -210,7 +210,14 @@ public sealed class InstancesPageViewModel : PageViewModel
         StatusMessage = values.Count == 0 ? "未检测到 Java。" : $"检测到 {values.Count} 个 Java 运行时。";
     });
 
-    private async Task LaunchAsync()
+    /// <summary>Starts the selected instance and connects directly to a saved server when the game supports --server/--port.</summary>
+    public Task StartWithServerAsync(SavedServer server)
+    {
+        ArgumentNullException.ThrowIfNull(server);
+        return LaunchAsync(server);
+    }
+
+    private async Task LaunchAsync(SavedServer? joinServer = null)
     {
         if (IsLaunching) return;
         GameInstance? selected = SelectedInstance;
@@ -234,11 +241,21 @@ public sealed class InstancesPageViewModel : PageViewModel
         LaunchStage = "准备启动";
         GameLogs.Clear();
         AppendLog($"[launcher] 启动实例：{selected.Name}（版本 {selected.VersionId}）");
+        if (joinServer is not null)
+        {
+            AppendLog($"[launcher] 加入服务器：{joinServer.DisplayAddress}");
+        }
         try
         {
             LauncherSettings settings = await _settings.GetAsync(cancellation.Token);
             GameSession session = await BuildSessionAsync(settings, cancellation.Token);
-            var options = new GameLaunchOptions(settings.MemoryMiB, settings.JavaExecutablePath, settings.GameArguments, settings.JvmArguments);
+            var options = new GameLaunchOptions(
+                settings.MemoryMiB,
+                settings.JavaExecutablePath,
+                settings.GameArguments,
+                settings.JvmArguments,
+                ServerAddress: joinServer?.Address,
+                ServerPort: joinServer?.Port);
             var progress = new Progress<LaunchProgress>(OnLaunchProgress);
             AppendLog(session.Kind == GameSessionKind.Authenticated
                 ? $"[launcher] 官方账户：{session.PlayerName}（{session.PlayerUuid}）"

@@ -37,7 +37,7 @@ public sealed class NavigationServiceTests
             new InstancesPageViewModel(new GameInstanceRepository(new LauncherPaths(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))), new FakeJavaRuntimeDetector(), NullLogger<InstancesPageViewModel>.Instance, dialogs),
             new DownloadsPageViewModel(new EmptyManifestService(), new NoopInstallService(), NullLogger<DownloadsPageViewModel>.Instance, dialogs),
             new AccountsPageViewModel(new FakeSettingsService(), new FakeAccountService(), NullLogger<AccountsPageViewModel>.Instance, dialogs),
-            new ServersPageViewModel(),
+            new ServersPageViewModel(new EmptyServerRepository(), NullLogger<ServersPageViewModel>.Instance),
             new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N"))), NullLogger<SettingsPageViewModel>.Instance, dialogs),
             NullLogger<NavigationService>.Instance);
     }
@@ -46,6 +46,13 @@ public sealed class NavigationServiceTests
     {
         public bool Confirm(string message, string title = "Astra Launcher") => true;
         public void ShowError(string message, string title = "Astra Launcher") { }
+    }
+
+    private sealed class EmptyServerRepository : IServerRepository
+    {
+        public Task<IReadOnlyList<SavedServer>> ListAsync(CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<SavedServer>>([]);
+        public Task SaveAsync(SavedServer server, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class FakeSettingsService : ISettingsService

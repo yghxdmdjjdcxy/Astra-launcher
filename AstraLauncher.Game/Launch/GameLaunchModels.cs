@@ -15,12 +15,21 @@ public sealed record GameLaunchRequest(
     GameSession Session,
     string VersionType = "release",
     IReadOnlyList<string>? ExtraJvmArguments = null,
-    IReadOnlyList<string>? ExtraGameArguments = null);
+    IReadOnlyList<string>? ExtraGameArguments = null,
+    string? ServerAddress = null,
+    int? ServerPort = null);
 public sealed record GameLaunchCommand(string ExecutablePath, IReadOnlyList<string> Arguments, string WorkingDirectory);
 public sealed record GameExitInfo(int ExitCode, DateTimeOffset StartedAt, DateTimeOffset ExitedAt);
 
 /// <summary>User-selectable options used when launching an instance.</summary>
-public sealed record GameLaunchOptions(int MemoryMiB = 4096, string? JavaExecutablePath = null, string? ExtraGameArguments = null, string? ExtraJvmArguments = null, string VersionType = "release");
+public sealed record GameLaunchOptions(
+    int MemoryMiB = 4096,
+    string? JavaExecutablePath = null,
+    string? ExtraGameArguments = null,
+    string? ExtraJvmArguments = null,
+    string VersionType = "release",
+    string? ServerAddress = null,
+    int? ServerPort = null);
 
 /// <summary>Progress information reported while preparing and starting a game process.</summary>
 public sealed record LaunchProgress(string Stage, string Message, double? Percent = null);

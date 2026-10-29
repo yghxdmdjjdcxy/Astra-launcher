@@ -44,8 +44,26 @@ public sealed class GameCommandBuilder
         arguments.AddRange(metadata.Arguments.Game.Count > 0
             ? SelectArguments(metadata.Arguments.Game, variables)
             : SplitLegacyArguments(metadata.LegacyMinecraftArguments, variables));
+        AddServerArguments(arguments, request);
         AddExtraArguments(arguments, request.ExtraGameArguments, "game");
         return new GameLaunchCommand(Path.GetFullPath(request.JavaExecutablePath), arguments, gameDirectory);
+    }
+
+    /// <summary>Appends the vanilla <c>--server/--port</c> quick-join arguments after the regular game arguments.</summary>
+    private static void AddServerArguments(List<string> arguments, GameLaunchRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ServerAddress))
+        {
+            return;
+        }
+
+        arguments.Add("--server");
+        arguments.Add(request.ServerAddress.Trim());
+        if (request.ServerPort is int port)
+        {
+            arguments.Add("--port");
+            arguments.Add(port.ToString(CultureInfo.InvariantCulture));
+        }
     }
 
     private static void ValidateMetadata(MinecraftVersionMetadata metadata)
@@ -61,6 +79,31 @@ public sealed class GameCommandBuilder
         if (string.IsNullOrWhiteSpace(request.Session.PlayerName) || string.IsNullOrWhiteSpace(request.Session.PlayerUuid)) throw new GameLaunchValidationException("A player name and UUID are required.");
         if (request.Session.Kind == GameSessionKind.Authenticated && string.IsNullOrWhiteSpace(request.Session.AccessToken)) throw new GameLaunchValidationException("An authenticated session requires an access token.");
         if (request.Session.Kind == GameSessionKind.Offline && request.Session.AccessToken is not null) throw new GameLaunchValidationException("Offline profiles must not carry an access token.");
+        ValidateServerJoin(request.ServerAddress, request.ServerPort);
+    }
+
+    private static void ValidateServerJoin(string? serverAddress, int? serverPort)
+    {
+        if (serverPort is int port && (port is < 1 or > 65535))
+        {
+            throw new GameLaunchValidationException($"Server port must be between 1 and 65535, but was {port}.");
+        }
+
+        if (string.IsNullOrWhiteSpace(serverAddress))
+        {
+            if (serverPort is not null)
+            {
+                throw new GameLaunchValidationException("A server port requires a server address.");
+            }
+
+            return;
+        }
+
+        string address = serverAddress.Trim();
+        if (address.Length > 253 || address.Any(character => char.IsWhiteSpace(character) || char.IsControl(character)))
+        {
+            throw new GameLaunchValidationException("Server address must not contain whitespace or control characters and must be at most 253 characters long.");
+        }
     }
 
     /// <summary>

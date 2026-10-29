@@ -319,6 +319,64 @@ public sealed class GameCommandBuilderTests : IDisposable
         Assert.DoesNotContain(command.Arguments, argument => string.IsNullOrWhiteSpace(argument));
     }
 
+    [Fact]
+    public void Build_AppendsServerJoinArgumentsAfterGameArguments()
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(versionId);
+
+        GameLaunchCommand command = _builder.Build(
+            metadata,
+            CreateRequest(Authenticated(), serverAddress: "mc.example.com", serverPort: 25566));
+
+        int serverIndex = IndexOf(command.Arguments, "--server");
+        Assert.True(serverIndex > IndexOf(command.Arguments, metadata.MainClass!));
+        Assert.Equal("mc.example.com", command.Arguments[serverIndex + 1]);
+        Assert.Equal("--port", command.Arguments[serverIndex + 2]);
+        Assert.Equal("25566", command.Arguments[serverIndex + 3]);
+    }
+
+    [Fact]
+    public void Build_ServerAddressWithoutPort_OmitsPortArgument()
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(versionId);
+
+        GameLaunchCommand command = _builder.Build(metadata, CreateRequest(Authenticated(), serverAddress: "mc.example.com"));
+
+        Assert.Contains("--server", command.Arguments);
+        Assert.DoesNotContain("--port", command.Arguments);
+    }
+
+    [Fact]
+    public void Build_WithoutServerJoin_OmitsServerArguments()
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(versionId);
+
+        GameLaunchCommand command = _builder.Build(metadata, CreateRequest(Authenticated()));
+
+        Assert.DoesNotContain("--server", command.Arguments);
+        Assert.DoesNotContain("--port", command.Arguments);
+    }
+
+    [Theory]
+    [InlineData("bad address", null)]
+    [InlineData("ok.example.com", 0)]
+    [InlineData("ok.example.com", 70000)]
+    public void Build_InvalidServerJoinArguments_Throw(string? serverAddress, int? serverPort)
+    {
+        const string versionId = "1.20.6";
+        WriteVersionJar(versionId);
+        MinecraftVersionMetadata metadata = CreateMetadata(versionId);
+
+        Assert.Throws<GameLaunchValidationException>(() =>
+            _builder.Build(metadata, CreateRequest(Authenticated(), serverAddress: serverAddress, serverPort: serverPort)));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
@@ -361,7 +419,9 @@ public sealed class GameCommandBuilderTests : IDisposable
     private GameLaunchRequest CreateRequest(
         GameSession session,
         IReadOnlyList<string>? extraJvmArguments = null,
-        IReadOnlyList<string>? extraGameArguments = null) =>
+        IReadOnlyList<string>? extraGameArguments = null,
+        string? serverAddress = null,
+        int? serverPort = null) =>
         new(
             _root,
             _gameDirectory,
@@ -370,7 +430,9 @@ public sealed class GameCommandBuilderTests : IDisposable
             session,
             VersionType,
             extraJvmArguments,
-            extraGameArguments);
+            extraGameArguments,
+            serverAddress,
+            serverPort);
 
     private string WriteVersionJar(string versionId) =>
         WriteFile(Path.Combine(_root, "versions", versionId, versionId + ".jar"), "client-jar");

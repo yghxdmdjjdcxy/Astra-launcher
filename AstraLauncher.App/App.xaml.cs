@@ -19,6 +19,7 @@ using AstraLauncher.Game.Metadata;
 using AstraLauncher.Infrastructure.FileSystem;
 using AstraLauncher.Infrastructure.Logging;
 using AstraLauncher.Infrastructure.Net;
+using AstraLauncher.Infrastructure.Servers;
 using AstraLauncher.Infrastructure.Settings;
 using AstraLauncher.Infrastructure.Versioning;
 using Microsoft.Extensions.DependencyInjection;
@@ -133,6 +134,7 @@ public partial class App : Application
         builder.Services.AddSingleton<IXboxLiveAuthenticator, XboxLiveAuthenticator>();
         builder.Services.AddSingleton<IMinecraftAuthenticator, MinecraftAuthenticator>();
         builder.Services.AddSingleton<IAccountService, AccountService>();
+        builder.Services.AddSingleton<IServerRepository, JsonServerRepository>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();

@@ -2,7 +2,7 @@
 
 Windows Minecraft Java Edition launcher (WPF, hand-written MVVM) built in verified stages.
 
-**Current status:** the launcher can download and install vanilla Minecraft versions (official source with BMCLAPI mirror and automatic fallback, per-file parallel segmented downloads), manage instances, detect locally installed versions (including PCL/other-launcher profiles), install mod loaders (Fabric/Quilt via Meta profiles, Forge/NeoForge via their official installers), select Java runtimes, launch the game offline, keep game logs, persist settings, and manage accounts (offline profiles plus the complete official Microsoft → Xbox Live → XSTS → Minecraft authentication chain with DPAPI-protected tokens). Real end-to-end verification passed with **Minecraft 1.21.1** (download + offline launch into the main menu) and with an offline account selected, and with **Fabric, Quilt and Forge** 1.21.1 profiles installed through the launcher and launched to the main menu. NeoForge installation works, but its 1.21.1 launch currently stops inside the NeoForge BootstrapLauncher (known limitation, see below). A real Microsoft sign-in additionally needs an Azure public-client id (see below). The server list is the remaining milestone. No installer/auto-updater is included by design.
+**Current status:** the launcher can download and install vanilla Minecraft versions (official source with BMCLAPI mirror and automatic fallback, per-file parallel segmented downloads), manage instances, detect locally installed versions (including PCL/other-launcher profiles), install mod loaders (Fabric/Quilt via Meta profiles, Forge/NeoForge via their official installers), select Java runtimes, launch the game offline, keep game logs, persist settings, and manage accounts (offline profiles plus the complete official Microsoft → Xbox Live → XSTS → Minecraft authentication chain with DPAPI-protected tokens). Real end-to-end verification passed with **Minecraft 1.21.1** (download + offline launch into the main menu) and with an offline account selected, and with **Fabric, Quilt and Forge** 1.21.1 profiles installed through the launcher and launched to the main menu. NeoForge installation works, but its 1.21.1 launch currently stops inside the NeoForge BootstrapLauncher (known limitation, see below). A real Microsoft sign-in additionally needs an Azure public-client id (see below). The server list with one-click `--server/--port` join is implemented as well. No installer/auto-updater is included by design.
 
 ## Requirements
 
@@ -29,7 +29,7 @@ Produces exactly one file: `artifacts/AstraLauncher-win-x64-single/AstraLauncher
 
 ## User interface
 
-The WPF shell uses a clear navigation sidebar, a header with the current account and a footer with the recommended start flow. Every page follows the same card layout with Chinese labels and short explanations: the welcome page guides through the three steps (download → create instance → launch) and summarizes the Minecraft directory, account, Java and version status; instances, downloads, accounts and settings are grouped into clearly labelled sections; the server page explains the planned M6 features. Screenshots are kept under `docs/evidence/ui-redesign/` and `docs/evidence/m5/`.
+The WPF shell uses a clear navigation sidebar, a header with the current account and a footer with the recommended start flow. Every page follows the same card layout with Chinese labels and short explanations: the welcome page guides through the three steps (download → create instance → launch) and summarizes the Minecraft directory, account, Java and version status; instances, downloads, accounts, servers and settings are grouped into clearly labelled sections. The servers page stores a reusable multiplayer list and launches the selected instance with `--server/--port`. Screenshots are kept under `docs/evidence/ui-redesign/`, `docs/evidence/m5/` and `docs/evidence/m6/`.
 
 ## Mod loaders
 
@@ -41,6 +41,10 @@ The Downloads page has a loader card below the version list: choose a Minecraft 
 
 Loader metadata is merged with the vanilla parent profile; library deduplication keeps classifier (natives) variants, which is required for inherited loader launches (a regression test covers this).
 
+## Servers
+
+The Servers page keeps a saved multiplayer server list (`servers.json` in the launcher-data directory, separate from the Minecraft files). A server has a name, host and optional port; the address field also accepts `host:port`, pasted URLs and bracketed IPv6 addresses. **启动并加入** launches the instance currently selected on the Instances page and appends the vanilla quick-join arguments `--server <host>` and, when a port is set, `--port <port>`, so the game connects directly and skips the multiplayer menu. The list can be refreshed, added to, edited and deleted from the same page; the join progress and game log are shown on the Instances page. A read-only `servers.dat` import is a possible future addition and is not implemented yet.
+
 ## Project layout
 
 - `AstraLauncher.App` — WPF entry point, DI composition root, MVVM shell/navigation, settings and instance/download pages.
@@ -49,8 +53,8 @@ Loader metadata is merged with the vanilla parent profile; library deduplication
 - `AstraLauncher.Game` — version metadata parsing/inheritance, install planning, safe local instance management, Java discovery, command construction, process launching and offline profiles.
 - `AstraLauncher.Downloader` — asynchronous download queue with resume, retries, integrity checks and per-file HTTP Range segmented downloads.
 - `AstraLauncher.Authentication` — device-code Microsoft OAuth, Xbox Live/XSTS, Minecraft services login, DPAPI token protection and the account service.
-- `AstraLauncher.Multiplayer` — reserved for the server list and later signalling/relay abstractions.
-- `AstraLauncher.Tests` — xUnit automated tests (266 currently passing).
+- `AstraLauncher.Multiplayer` — reserved for later signalling/relay abstractions.
+- `AstraLauncher.Tests` — xUnit automated tests (276 currently passing).
 - `scripts` — build and packaging helpers.
 
 ### Accounts
