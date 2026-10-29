@@ -17,6 +17,7 @@ public sealed class ServersPageViewModel : PageViewModel
     private readonly IServerRepository _servers;
     private readonly ILogger<ServersPageViewModel> _logger;
     private SavedServer? _selectedServer;
+    private Guid? _lastSelectedServerId;
     private string _name = string.Empty;
     private string _address = string.Empty;
     private string _port = string.Empty;
@@ -33,7 +34,7 @@ public sealed class ServersPageViewModel : PageViewModel
         NewCommand = new RelayCommand(_ => StartNew());
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
-        JoinCommand = new RelayCommand(_ => RequestJoin());
+        JoinCommand = new AsyncRelayCommand(JoinAsync);
     }
 
     /// <summary>Raised when the user asks to launch the selected instance and join the selected server.</summary>
@@ -62,6 +63,7 @@ public sealed class ServersPageViewModel : PageViewModel
                 return;
             }
 
+            _lastSelectedServerId = value.Id;
             Name = value.Name;
             Address = value.Address;
             Port = value.Port?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
@@ -241,15 +243,44 @@ public sealed class ServersPageViewModel : PageViewModel
         }
     }
 
-    private void RequestJoin()
+    private async Task JoinAsync()
     {
-        SavedServer? selected = SelectedServer;
-        if (selected is null)
+        if (IsBusy)
         {
-            StatusMessage = "请先选择一个服务器。";
             return;
         }
 
+        // Navigating away from the servers page can make the ListBox push a null SelectedItem through the TwoWay
+        // binding; fall back to the last selected id, then to a fresh read of the saved list.
+        SavedServer? selected = SelectedServer
+            ?? (_lastSelectedServerId is Guid id ? Servers.FirstOrDefault(server => server.Id == id) : null)
+            ?? Servers.FirstOrDefault();
+        if (selected is null)
+        {
+            try
+            {
+                IsBusy = true;
+                IReadOnlyList<SavedServer> values = await _servers.ListAsync().ConfigureAwait(false);
+                selected = values.FirstOrDefault();
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(exception, "读取服务器列表失败，无法加入服务器。");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        if (selected is null)
+        {
+            StatusMessage = "请先选择一个服务器（或先保存一个服务器地址）。";
+            return;
+        }
+
+        _logger.LogInformation("Join requested for server {ServerAddress}.", selected.DisplayAddress);
+        SelectedServer = selected;
         JoinRequested?.Invoke(selected);
     }
 

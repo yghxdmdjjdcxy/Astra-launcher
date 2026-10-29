@@ -80,9 +80,17 @@ public sealed class InstancesPageViewModel : PageViewModel
         get => _selectedInstance;
         set
         {
-            if (SetProperty(ref _selectedInstance, value)) _selectedInstanceId = value?.Id;
+            if (SetProperty(ref _selectedInstance, value) && value is not null) _selectedInstanceId = value.Id;
         }
     }
+
+    /// <summary>
+    /// Resolves the instance to launch even when the ListBox has pushed a null selection after page navigation.
+    /// </summary>
+    public GameInstance? ResolveSelectedInstanceForLaunch() =>
+        SelectedInstance
+        ?? (_selectedInstanceId is Guid id ? Instances.FirstOrDefault(instance => instance.Id == id) : null)
+        ?? Instances.FirstOrDefault();
 
     public string Name { get => _name; set => SetProperty(ref _name, value); }
     public string VersionId { get => _versionId; set => SetProperty(ref _versionId, value); }
@@ -220,12 +228,14 @@ public sealed class InstancesPageViewModel : PageViewModel
     private async Task LaunchAsync(SavedServer? joinServer = null)
     {
         if (IsLaunching) return;
-        GameInstance? selected = SelectedInstance;
+        GameInstance? selected = ResolveSelectedInstanceForLaunch();
         if (selected is null)
         {
             StatusMessage = "请先选择要启动的实例。";
             return;
         }
+
+        SelectedInstance = selected;
 
         if (_launchService is null || _settings is null)
         {

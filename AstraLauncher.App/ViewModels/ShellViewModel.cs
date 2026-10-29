@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -17,7 +17,7 @@ public sealed class ShellViewModel : ObservableObject
     private readonly DownloadsPageViewModel _downloads;
     private readonly SettingsPageViewModel _settings;
     private readonly AccountsPageViewModel _accounts;
-    private readonly ServersPageViewModel? _servers;
+    private readonly ServersPageViewModel _servers;
     private readonly IAccountService _accountService;
     private readonly ILauncherPaths _paths;
     private readonly IVersionManifestService _manifest;
@@ -37,7 +37,7 @@ public sealed class ShellViewModel : ObservableObject
         ILauncherPaths paths,
         IVersionManifestService manifest,
         ILogger<ShellViewModel> logger,
-        ServersPageViewModel? servers = null)
+        ServersPageViewModel servers)
     {
         ArgumentNullException.ThrowIfNull(navigation);
         ArgumentNullException.ThrowIfNull(instances);
@@ -54,6 +54,7 @@ public sealed class ShellViewModel : ObservableObject
         _settings = settings;
         _accounts = accounts;
         _servers = servers;
+        ArgumentNullException.ThrowIfNull(servers);
         _accountService = accountService;
         _paths = paths;
         _manifest = manifest;
@@ -62,10 +63,7 @@ public sealed class ShellViewModel : ObservableObject
         AppVersion = ResolveVersion();
         NavigateCommand = new RelayCommand(Navigate);
         _downloads.LoaderInstalled += OnLoaderInstalled;
-        if (_servers is not null)
-        {
-            _servers.JoinRequested += OnServerJoinRequested;
-        }
+        _servers.JoinRequested += OnServerJoinRequested;
     }
 
     public INavigationService Navigation { get; }
@@ -110,10 +108,7 @@ public sealed class ShellViewModel : ObservableObject
     public async Task InitializeAsync()
     {
         await _instances.InitializeAsync();
-        if (_servers is not null)
-        {
-            await _servers.InitializeAsync();
-        }
+        await _servers.InitializeAsync();
         JavaSummary = _instances.JavaRuntimes.Count == 0
             ? "正在检测 Java…"
             : $"已检测到 {_instances.JavaRuntimes.Count} 个 Java";
@@ -224,9 +219,9 @@ public sealed class ShellViewModel : ObservableObject
     /// </summary>
     private void OnServerJoinRequested(SavedServer server)
     {
-        if (_instances.SelectedInstance is null)
+        if (_instances.ResolveSelectedInstanceForLaunch() is null)
         {
-            _servers?.ReportStatus("请先在「游戏实例」页选择要启动的实例，再回来点击「启动并加入」。");
+            _servers.ReportStatus("请先在「游戏实例」页选择要启动的实例，再回来点击「启动并加入」。");
             return;
         }
 
