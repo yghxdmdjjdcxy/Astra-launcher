@@ -8,6 +8,7 @@ using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Instances;
 using AstraLauncher.Game.Java;
 using AstraLauncher.Game.Launch;
+using AstraLauncher.Game.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.ViewModels;
@@ -23,6 +24,9 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly ISettingsService? _settings;
     private readonly IGameLaunchService? _launchService;
     private readonly AstraLauncher.Authentication.IAccountService? _accounts;
+    private readonly ICrashAnalyzer? _crashAnalyzer;
+    private readonly ICrashDialogService? _crashDialog;
+    private readonly ICrashRepairService? _crashRepair;
     private readonly RelayCommand _stopCommand;
     private GameInstance? _selectedInstance;
     private Guid? _selectedInstanceId;
@@ -44,7 +48,10 @@ public sealed class InstancesPageViewModel : PageViewModel
         IDialogService dialogs,
         ISettingsService? settings = null,
         IGameLaunchService? launchService = null,
-        AstraLauncher.Authentication.IAccountService? accounts = null) : base("游戏实例")
+        AstraLauncher.Authentication.IAccountService? accounts = null,
+        ICrashAnalyzer? crashAnalyzer = null,
+        ICrashDialogService? crashDialog = null,
+        ICrashRepairService? crashRepair = null) : base("游戏实例")
     {
         _instances = instances;
         _java = java;
@@ -53,6 +60,9 @@ public sealed class InstancesPageViewModel : PageViewModel
         _settings = settings;
         _launchService = launchService;
         _accounts = accounts;
+        _crashAnalyzer = crashAnalyzer;
+        _crashDialog = crashDialog;
+        _crashRepair = crashRepair;
         RefreshCommand = new AsyncRelayCommand(() => RunAsync("刷新实例列表", () => RefreshAsync(_selectedInstanceId)));
         CreateCommand = new AsyncRelayCommand(CreateAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync);
@@ -278,6 +288,10 @@ public sealed class InstancesPageViewModel : PageViewModel
             GameExitInfo exitInfo = await process.Exited;
             AppendLog($"[launcher] 游戏进程已退出，退出码 {exitInfo.ExitCode}");
             StatusMessage = $"游戏已退出（退出码 {exitInfo.ExitCode}）。";
+            if (exitInfo.ExitCode != 0)
+            {
+                await AnalyzeAndOfferRepairAsync(selected, exitInfo.ExitCode, cancellation.Token);
+            }
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
@@ -296,6 +310,74 @@ public sealed class InstancesPageViewModel : PageViewModel
             _launchCancellation = null;
             IsLaunching = false;
             LaunchStage = string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// After a non-zero exit code, analyzes latest.log/crash-reports, shows the PCL-style explanation dialog and applies
+    /// reversible repairs only when the user explicitly chooses automatic repair.
+    /// </summary>
+    private async Task AnalyzeAndOfferRepairAsync(GameInstance instance, int exitCode, CancellationToken cancellationToken)
+    {
+        if (_crashAnalyzer is null || _crashDialog is null)
+        {
+            return;
+        }
+
+        StatusMessage = "游戏异常退出，正在分析崩溃原因…";
+        try
+        {
+            CrashAnalysisResult? analysis = await _crashAnalyzer.AnalyzeAsync(instance, exitCode, cancellationToken);
+            if (analysis is null)
+            {
+                return;
+            }
+
+            AppendLog($"[launcher] 崩溃分析：{analysis.Summary}");
+            foreach (CrashIssue issue in analysis.Issues)
+            {
+                AppendLog($"[launcher] 崩溃原因：{issue.Title} — {issue.Details}");
+            }
+
+            StatusMessage = $"崩溃分析：{analysis.Summary}";
+            CrashRepairChoice choice = _crashDialog.Show(analysis);
+            if (choice != CrashRepairChoice.AutoRepair)
+            {
+                if (choice == CrashRepairChoice.Manual)
+                {
+                    StatusMessage = "已保留崩溃现场，请按分析建议手动处理。";
+                    AppendLog("[launcher] 用户选择手动处理崩溃。");
+                }
+
+                return;
+            }
+
+            if (_crashRepair is null)
+            {
+                StatusMessage = "自动修复服务不可用，请按建议手动处理。";
+                return;
+            }
+
+            StatusMessage = "正在应用自动修复…";
+            AppendLog("[launcher] 用户选择自动修复，正在应用可逆修复…");
+            var repairProgress = new Progress<string>(message => AppendLog($"[launcher] {message}"));
+            CrashRepairResult repair = await _crashRepair.RepairAsync(instance, analysis, repairProgress, cancellationToken);
+            foreach (CrashRepairAction action in repair.Actions)
+            {
+                AppendLog($"[launcher] 修复：{action.Description} — {(action.Success ? "成功" : "失败")}{(action.Detail is null ? string.Empty : "：" + action.Detail)}");
+            }
+
+            StatusMessage = repair.Summary;
+            AppendLog($"[launcher] {repair.Summary}");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The user closed the launcher while the dialog/repair was running.
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "崩溃分析/自动修复失败：{Instance}", instance.Name);
+            StatusMessage = "崩溃分析失败：" + exception.Message;
         }
     }
 

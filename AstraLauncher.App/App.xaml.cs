@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -17,6 +17,7 @@ using AstraLauncher.Game.Launch;
 using AstraLauncher.Game.Loaders;
 using AstraLauncher.Game.Metadata;
 using AstraLauncher.Game.Mods;
+using AstraLauncher.Game.Diagnostics;
 using AstraLauncher.Infrastructure.FileSystem;
 using AstraLauncher.Infrastructure.Logging;
 using AstraLauncher.Infrastructure.Net;
@@ -139,6 +140,9 @@ public partial class App : Application
         builder.Services.AddSingleton<ILocalModService, LocalModService>();
         builder.Services.AddSingleton<IModrinthClient, ModrinthClient>();
         builder.Services.AddSingleton<IFilePickerService, OpenFileDialogService>();
+        builder.Services.AddSingleton<ICrashAnalyzer, CrashAnalyzer>();
+        builder.Services.AddSingleton<ICrashRepairService, CrashRepairService>();
+        builder.Services.AddSingleton<ICrashDialogService, CrashAnalysisDialogService>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();
