@@ -30,6 +30,7 @@ public sealed class DownloadsPageViewModel : PageViewModel
     private double _progressPercent;
     private string _progressText = "尚未开始下载。选择版本后点击「下载所选版本」。";
     private CancellationTokenSource? _installCancellation;
+    private int _installGeneration;
     private LoaderKindOption _selectedLoaderKind;
     private LoaderVersion? _selectedLoaderVersion;
     private bool _isLoaderBusy;
@@ -289,13 +290,14 @@ public sealed class DownloadsPageViewModel : PageViewModel
         VersionSummary version = SelectedVersion ?? throw new InvalidOperationException("请先在列表中选择要下载的版本。");
         using var cancellation = new CancellationTokenSource();
         _installCancellation = cancellation;
+        int generation = ++_installGeneration;
         IsBusy = true;
         _ignoreProgressCallbacks = false;
         ProgressPercent = 0;
         ProgressText = "准备下载计划…";
         try
         {
-            var progress = new Progress<VersionInstallProgress>(UpdateProgress);
+            var progress = new Progress<VersionInstallProgress>(value => UpdateProgress(generation, value));
             await _install.InstallAsync(version.Id, progress, cancellation.Token);
             _ignoreProgressCallbacks = true;
             ProgressPercent = 100;
@@ -307,16 +309,17 @@ public sealed class DownloadsPageViewModel : PageViewModel
         }
         finally
         {
+            _installGeneration++;
             _installCancellation = null;
             IsBusy = false;
         }
     });
 
-    private void UpdateProgress(VersionInstallProgress progress)
+    private void UpdateProgress(int generation, VersionInstallProgress progress)
     {
         // Late callbacks can arrive after the install task completed (Progress<T> marshals asynchronously);
         // never let them overwrite the final 100% state.
-        if (!IsBusy || _ignoreProgressCallbacks) return;
+        if (generation != _installGeneration || !IsBusy || _ignoreProgressCallbacks) return;
         ProgressPercent = CalculatePercent(progress);
         string downloaded = FormatBytes(progress.DownloadedBytes);
         string total = progress.TotalBytes > 0 ? FormatBytes(progress.TotalBytes) : "未知";
