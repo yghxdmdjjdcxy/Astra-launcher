@@ -16,3 +16,40 @@ coverage*.xml
 .vs/
 *.user
 *.suo
+
+# ---- IDE / editor files ----
+.vscode/
+*.swp
+*.swo
+
+# ---- OS files ----
+Thumbs.db
+.DS_Store
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Temp ----
+temp/
+Temp/
+*.tmp
+
+# ---- Publish output ----
+publish/
+dist/
+
+# ---- Astra Launcher specific ----
+*.pfx
+*.snk
+
+# ---- Vibe hosting ----
+.thevibehosting_key
+
+# ---- Local secrets ----
+appsettings.*.json
+!appsettings.json
+
+# ---- Build cache ----
+.nuget/
+packages/

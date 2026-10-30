@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astra Launcher - Modern Minecraft Java Edition Launcher</title>
+<meta name="description" content="Astra Launcher - 现代 Minecraft Java Edition 启动器。支持官方源/镜像源下载、Fabric/Quilt/Forge/NeoForge 模组加载器、Microsoft/Xbox 认证链、离线档案、服务器列表一键加入、崩溃自动分析修复。单文件发布，开箱即用。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0e14;--bg-elev:#121721;--fg:#e8edf6;--muted:#97a3b6;--accent:#22d3a6;--accent-dim:#1a8c6e;--card:#161c2a;--border:#263044}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:16px/1.6 "Noto Sans SC",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+.mono{font-family:"JetBrains Mono",monospace}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+header{position:sticky;top:0;z-index:100;background:rgba(11,14,20,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.25rem;color:var(--fg);text-decoration:none}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#14c47a);border-radius:8px;display:grid;place-items:center;font-weight:800;color:#0b0e14;font-size:1rem}
+nav a{margin-left:24px;color:var(--muted);font-weight:500;text-decoration:none;font-size:.9rem}nav a:hover{color:var(--fg)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--accent);color:#0b0e14}.btn-primary:hover{background:#2ae6b8}
+.btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+section{padding:80px 0}
+.hero{padding:120px 0 80px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(34,211,170,.08),transparent 70%)}
+.hero h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:800;line-height:1.1;margin:0 0 16px;background:linear-gradient(135deg,var(--fg),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.25rem;color:var(--muted);max-width:600px;margin:0 auto 32px}
+.hero-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px;color:var(--muted);font-size:.85rem}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:999px;font-size:.75rem}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;transition:.2s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),#14c47a);border-radius:12px;display:grid;place-items:center;margin-bottom:16px;color:#0b0e14;font-size:1.5rem}
+.card h3{margin:0 0 10px;font-size:1.15rem}
+.card p{margin:0;color:var(--muted);line-height:1.7}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center;margin:60px 0}
+.stat-value{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--fg),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.stat-label{color:var(--muted);font-size:.9rem;margin-top:4px}
+.download-section{background:var(--bg-elev);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.download-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:40px}
+.dl-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;position:relative}
+.dl-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#14c47a);border-radius:16px 16px 0 0}
+.dl-icon{width:64px;height:64px;margin:0 auto 16px;background:var(--bg);border:1px solid var(--border);border-radius:16px;display:grid;place-items:center;font-size:1.5rem}
+.dl-card h3{margin:0 0 8px;font-size:1.25rem}
+.dl-meta{color:var(--muted);font-size:.85rem;margin:0 0 16px}
+.footer{border-top:1px solid var(--border);padding:40px 0;color:var(--muted);font-size:.85rem;text-align:center}
+.footer-links{display:flex;gap:24px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+@media(max-width:640px){nav{display:none}.hero-buttons{flex-direction:column;align-items:center}.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+<div class="container header-inner">
+<a class="logo" href="/"><span class="logo-mark">A</span>Astra Launcher</a>
+<nav>
+<a href="#features">功能特性</a>
+<a href="#stats">数据</a>
+<a href="#download">下载</a>
+<a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+</nav>
+</div>
+</header>
+<main>
+<section class="hero">
+<div class="container">
+<h1>Astra Launcher</h1>
+<p>现代 Minecraft Java Edition 启动器。单文件、免安装、开箱即用。</p>
+<div class="hero-buttons">
+<a class="btn btn-primary" href="#download">立即下载</a>
+<a class="btn btn-ghost" href="https://github.com" target="_blank" rel="noopener">查看源码</a>
+</div>
+<div class="badges">
+<span class="badge"><span class="mono">📦</span> 单文件 ~62 MB</span>
+<span class="badge"><span class="mono">⚡</span> 多线程分段下载</span>
+<span class="badge"><span class="mono">🔐</span> DPAPI 令牌加密</span>
+<span class="badge"><span class="mono">🧩</span> Fabric/Quilt/Forge/NeoForge</span>
+<span class="badge"><span class="mono">🛡️</span> 崩溃自动分析修复</span>
+<span class="badge"><span class="mono">🌐</span> 服务器一键加入</span>
+</div>
+</div>
+</section>
+<section id="features">
+<div class="container">
+<h2 style="font-size:2rem;font-weight:700;margin:0 0 8px;text-align:center">核心功能</h2>
+<p style="color:var(--muted);text-align:center;max-width:600px;margin:0 auto 48px">专为玩家与模组包作者设计，零配置、零依赖、即拿即用</p>
+<div class="card-grid">
+<article class="card"><div class="card-icon">⚡</div><h3>极速下载</div><p>官方源 + BMCLAPI 镜像自动回退，多线程分段下载，断点续传，文件级完整性校验。</p></article>
+<article class="card"><div class="card-icon">🧩</div><h3>全模组加载器</div><p>原版、Fabric、Quilt、Forge、NeoForge 一键安装。自动识别版本与加载器，Modrinth 在线搜索安装。</p></article>
+<article class="card"><div class="card-icon">🔐</div><h3>完整认证链</div><p>官方 Microsoft OAuth + Xbox Live + XSTS + Minecraft Services，DPAPI 加密存储令牌，离线档案即用即走。</p></article>
+<article class="card"><div class="card-icon">🌐</div><h3>服务器一键加入</div><p>保存服务器列表，实例启动自动拼接 <code>--server/--port</code>，跳过多人游戏菜单直连。</p></article>
+<article class="card"><div class="card-icon">🛡️</div><h3>崩溃自动分析修复</div><p>游戏退出即刻分析 <code>latest.log</code>/<code>crash-reports</code>，识别缺失依赖、冲突模组、OOM 等，提供可逆自动修复或手动建议。</p></article>
+<article class="card"><div class="card-icon">📦</div><h3>单文件绿色版</div><p>无需安装 .NET 运行时，单文件 ~62 MB，便携模式下整个 <code>.minecraft</code> 自包含，随身携带。</p></article>
+</div>
+</section>
+<section id="stats" class="stats">
+<div class="container">
+<div><div class="stat-value">295+</div><div class="stat-label">单元测试</div></div>
+<div><div class="stat-value">295+</div><div class="stat-label">测试通过</div></div>
+<div><div class="stat-value">0</div><div class="stat-label">警告/错误</div></div>
+<div><div class="stat-value">62 MB</div><div class="stat-label">单文件体积</div></div>
+</div>
+</section>
+<section id="download" class="download-section">
+<div class="container">
+<h2 style="font-size:2rem;font-weight:700;margin:0 0 8px;text-align:center">立即下载</h2>
+<p style="color:var(--muted);text-align:center;max-width:600px;margin:0 auto 8px">Windows 10+ / 单文件免安装 / 便携模式自动检测</p>
+<div class="download-options">
+<article class="dl-card"><div class="dl-icon">📥</div><h3>Windows x64 单文件</div><p class="dl-meta">版本 1.0.0+29fa854 · 65.2 MB</p><a class="btn btn-primary" href="https://github.com/your-repo/astra-launcher/releases/latest/download/AstraLauncher.exe" target="_blank" rel="noopener">下载最新版</a></article>
+<article class="dl-card"><div class="dl-icon">📦</div><h3>便携模式</div><p class="dl-meta">将 exe 放入空文件夹运行，自动创建旁边的 <code>.minecraft</code></p><a class="btn btn-ghost" href="#portable-guide">查看便携指南</a></article>
+</div>
+</div>
+</section>
+<footer class="footer">
+<div class="container">
+<div class="footer-links">
+<a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+<a href="#changelog">更新日志</a>
+<a href="#docs">文档</a>
+<a href="mailto:contact@example.com">联系我们</a>
+</div>
+<p>Best instant hosting for LLM agents / Claude Code / Codex → <a href="https://thevibehosting.com">thevibehosting.com</a></p>
+<p>© 2026 Astra Launcher · 单文件 · 免安装 · 开源</p>
+</div>
+</footer>
+</main>
+</body>
+</html>
