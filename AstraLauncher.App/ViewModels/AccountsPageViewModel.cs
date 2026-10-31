@@ -51,6 +51,7 @@ public sealed class AccountsPageViewModel : PageViewModel
         _dialogs = dialogs;
         AddOfflineCommand = new AsyncRelayCommand(AddOfflineAsync);
         AddMicrosoftCommand = new AsyncRelayCommand(AddMicrosoftAsync);
+        AddMicrosoftWebCommand = new AsyncRelayCommand(AddMicrosoftWebAsync);
         CancelMicrosoftCommand = new RelayCommand(_ => CancelMicrosoftLogin());
         RemoveAccountCommand = new AsyncRelayCommand(RemoveAccountAsync);
         RefreshCommand = new AsyncRelayCommand(RefreshAsync);
@@ -97,6 +98,8 @@ public sealed class AccountsPageViewModel : PageViewModel
     public ICommand AddOfflineCommand { get; }
 
     public ICommand AddMicrosoftCommand { get; }
+
+    public ICommand AddMicrosoftWebCommand { get; }
 
     public ICommand CancelMicrosoftCommand { get; }
 
@@ -162,6 +165,47 @@ public sealed class AccountsPageViewModel : PageViewModel
         }
         finally
         {
+            IsBusy = false;
+        }
+    }
+
+    private async Task AddMicrosoftWebAsync()
+    {
+        IsBusy = true;
+        StatusMessage = "正在打开微软登录窗口…";
+        HasPendingDeviceCode = false;
+        using var cancellation = new CancellationTokenSource();
+        _microsoftLoginCts = cancellation;
+        try
+        {
+            var progress = new Progress<string>(message => StatusMessage = message);
+            AccountProfile account = await _accounts.AddMicrosoftInteractiveAsync(progress, cancellation.Token);
+            await ReloadAccountsAsync(account.Id);
+            await PersistSelectionAsync(account);
+            StatusMessage = $"已添加 Microsoft 账户：{account.PlayerName}";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "已取消 Microsoft 登录。";
+        }
+        catch (AccountAuthenticationException exception)
+        {
+            _logger.LogError(exception, "Microsoft 网页登录失败：{ErrorCode}", exception.Code);
+            StatusMessage = FriendlyError(exception);
+            if (exception.Code != AccountErrorCode.AuthorizationDeclined)
+            {
+                _dialogs.ShowError(StatusMessage);
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Microsoft 网页登录失败。");
+            StatusMessage = FriendlyError(exception, "Microsoft 登录");
+            _dialogs.ShowError(StatusMessage);
+        }
+        finally
+        {
+            _microsoftLoginCts = null;
             IsBusy = false;
         }
     }

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -27,6 +27,7 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly ICrashAnalyzer? _crashAnalyzer;
     private readonly ICrashDialogService? _crashDialog;
     private readonly ICrashRepairService? _crashRepair;
+    private readonly IVersionInstallService? _installService;
     private readonly RelayCommand _stopCommand;
     private GameInstance? _launchingInstance;
     private DateTimeOffset? _launchStartedAt;
@@ -55,7 +56,8 @@ public sealed class InstancesPageViewModel : PageViewModel
         AstraLauncher.Authentication.IAccountService? accounts = null,
         ICrashAnalyzer? crashAnalyzer = null,
         ICrashDialogService? crashDialog = null,
-        ICrashRepairService? crashRepair = null) : base("游戏实例")
+        ICrashRepairService? crashRepair = null,
+        IVersionInstallService? installService = null) : base("游戏实例")
     {
         _instances = instances;
         _java = java;
@@ -67,6 +69,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         _crashAnalyzer = crashAnalyzer;
         _crashDialog = crashDialog;
         _crashRepair = crashRepair;
+        _installService = installService;
         _logger.LogInformation(
             "Crash analysis services: analyzer={Analyzer}, dialog={Dialog}, repair={Repair}.",
             crashAnalyzer is not null,
@@ -79,6 +82,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         DuplicateCommand = new AsyncRelayCommand(DuplicateAsync);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         DetectJavaCommand = new AsyncRelayCommand(DetectJavaAsync);
+        RepairFilesCommand = new AsyncRelayCommand(RepairFilesAsync);
         LaunchCommand = new AsyncRelayCommand(() => LaunchAsync());
         _stopCommand = new RelayCommand(_ => StopGame(), _ => IsLaunching);
         StopCommand = _stopCommand;
@@ -135,6 +139,8 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand DuplicateCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand DetectJavaCommand { get; }
+
+    public ICommand RepairFilesCommand { get; }
     public ICommand LaunchCommand { get; }
     public ICommand StopCommand { get; }
 
@@ -228,6 +234,48 @@ public sealed class InstancesPageViewModel : PageViewModel
         await RefreshAsync(null);
         StatusMessage = managed ? "实例及其受管理目录已删除。" : "实例登记已删除；导入目录未被修改。";
     });
+
+    /// <summary>
+    /// Re-runs the install plan for the selected instance: every missing/corrupt game file (client jar, libraries,
+    /// assets, logging config) is verified and downloaded automatically. This is the manual counterpart of the
+    /// pre-launch check and the crash-repair path.
+    /// </summary>
+    private async Task RepairFilesAsync()
+    {
+        GameInstance? instance = ResolveSelectedInstanceForLaunch();
+        if (instance is null)
+        {
+            StatusMessage = "请先选择要补全的实例。";
+            return;
+        }
+
+        if (_installService is null)
+        {
+            StatusMessage = "文件补全服务不可用。";
+            return;
+        }
+
+        StatusMessage = $"正在校验并补全「{instance.Name}」的游戏文件…";
+        AppendLog($"[launcher] 开始校验并补全版本 {instance.VersionId} 的游戏文件");
+        try
+        {
+            var progress = new Progress<VersionInstallProgress>(value =>
+            {
+                StatusMessage = string.IsNullOrWhiteSpace(value.CurrentFile)
+                    ? value.Stage
+                    : $"{value.Stage}：{value.CurrentFile}";
+            });
+            await _installService.InstallAsync(instance.VersionId, progress, CancellationToken.None);
+            StatusMessage = $"「{instance.Name}」的游戏文件已校验并补全。";
+            AppendLog("[launcher] 游戏文件校验/补全完成");
+        }
+        catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            _logger.LogError(exception, "补全游戏文件失败：{Instance}", instance.Name);
+            StatusMessage = "补全游戏文件失败：" + exception.Message;
+            AppendLog("[launcher] 补全游戏文件失败：" + exception.Message);
+        }
+    }
 
     private async Task DetectJavaAsync() => await RunAsync("检测 Java 运行时", async () =>
     {

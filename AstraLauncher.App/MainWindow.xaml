@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:AstraLauncher.App.ViewModels"
         xmlns:core="clr-namespace:AstraLauncher.Core.Models;assembly=AstraLauncher.Core"
-        Title="Astra Launcher" Height="780" Width="1220" MinHeight="660" MinWidth="1000">
+        Title="Astra Launcher · 内测版本" Height="780" Width="1220" MinHeight="660" MinWidth="1000">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibility"/>
 
@@ -305,6 +305,8 @@
                             </TextBlock>
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                 <Button Style="{StaticResource PrimaryButton}" Content="启动游戏" Command="{Binding LaunchCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="补全游戏文件" Command="{Binding RepairFilesCommand}" Margin="0,0,8,0"
+                                        ToolTip="校验客户端、依赖库与资源文件，缺失或损坏时自动下载补全"/>
                                 <Button Style="{StaticResource SecondaryButton}" Content="结束游戏" Command="{Binding StopCommand}"/>
                             </StackPanel>
                         </StackPanel>
@@ -445,15 +447,16 @@
                     </Grid.ColumnDefinitions>
                     <Border Style="{StaticResource Card}" Margin="0,0,10,12">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource SectionTitle}" Text="① 官方 Microsoft 登录"/>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="① 官方 Microsoft 登录（Xbox 弹窗）"/>
                             <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
-                                       Text="点击添加后会出现设备码：在浏览器打开提示的地址并输入代码完成授权，成功后账户出现在下方列表。"/>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="Client ID"/>
-                                <TextBox Width="330" Margin="0,0,8,8" Text="{Binding MicrosoftClientId, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="Azure 门户 → 应用注册 → 移动和桌面应用 → 应用程序(客户端) ID"/>
-                                <Button Style="{StaticResource PrimaryButton}" Content="添加 Microsoft 账户" Command="{Binding AddMicrosoftCommand}" Margin="0,0,8,8"/>
-                                <Button Style="{StaticResource SecondaryButton}" Content="取消" Command="{Binding CancelMicrosoftCommand}" Margin="0,0,0,8"
+                                       Text="点击「微软 / Xbox 弹窗登录」会打开微软官方登录窗口，登录完成后自动关闭并添加账户；无需填写 Client ID。设备码登录是备用方式。"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Style="{StaticResource PrimaryButton}" Content="微软 / Xbox 弹窗登录" Command="{Binding AddMicrosoftWebCommand}"/>
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="Client ID（设备码备用）" Margin="16,0,8,0" VerticalAlignment="Center"/>
+                                <TextBox Width="240" Text="{Binding MicrosoftClientId, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="仅设备码登录需要：Azure 门户 → 应用注册 → 应用程序(客户端) ID"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="设备码登录" Command="{Binding AddMicrosoftCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="取消" Command="{Binding CancelMicrosoftCommand}" Margin="8,0,0,0"
                                         Visibility="{Binding HasPendingDeviceCode, Converter={StaticResource BooleanToVisibility}}"/>
                             </StackPanel>
                             <Border Margin="0,4,0,0" Padding="10" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="4"
@@ -869,7 +872,7 @@
                     <TextBlock Style="{StaticResource NavSection}" Text="配置"/>
                     <Button Style="{StaticResource NavButton}" Content="设置" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
                 </StackPanel>
-                <TextBlock DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Foreground="#64748B" FontSize="11" Margin="4,12,0,0" Text="{Binding AppVersion}"/>
+                <TextBlock DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Foreground="#64748B" FontSize="11" Margin="4,12,0,0" Text="{Binding AppVersion, StringFormat='{}{0} · 内测版本'}"/>
             </DockPanel>
         </Border>
 
@@ -877,6 +880,9 @@
         <DockPanel>
             <Border DockPanel.Dock="Top" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,10">
                 <DockPanel>
+                    <Border DockPanel.Dock="Right" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="999" Padding="8,2" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Foreground="#92400E" FontSize="11" FontWeight="SemiBold" Text="内测版本"/>
+                    </Border>
                     <TextBlock DockPanel.Dock="Right" Foreground="#475569" FontSize="12" VerticalAlignment="Center"
                                Text="{Binding AccountSummary, StringFormat='当前账户：{0}'}"/>
                     <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#0F172A" Text="Minecraft Java 版启动器"/>
@@ -884,7 +890,7 @@
             </Border>
             <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,6">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Right" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Text="{Binding AppVersion}"/>
+                    <TextBlock DockPanel.Dock="Right" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Text="{Binding AppVersion, StringFormat='{}{0} · 内测版本'}"/>
                     <TextBlock Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Text="{Binding FooterHint}"/>
                 </DockPanel>
             </Border>

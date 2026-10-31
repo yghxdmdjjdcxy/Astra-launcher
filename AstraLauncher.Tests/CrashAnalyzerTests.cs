@@ -39,6 +39,18 @@ public sealed class CrashAnalyzerTests : IDisposable
     }
 
     [Fact]
+    public async Task AnalyzeAsync_MissingGameFile_IsDetected()
+    {
+        await WriteLogAsync("java.io.FileNotFoundException: F:\\MC\\.minecraft\\versions\\1.21.1\\1.21.1.jar (系统找不到指定的文件)");
+
+        CrashAnalysisResult? result = await _analyzer.AnalyzeAsync(_instance, 1);
+
+        Assert.NotNull(result);
+        CrashIssue issue = Assert.Single(result!.Issues, item => item.Kind == CrashIssueKind.MissingGameFiles);
+        Assert.True(issue.CanAutoFix);
+    }
+
+    [Fact]
     public async Task AnalyzeAsync_OutOfMemory_IsDetected()
     {
         await WriteLogAsync("java.lang.OutOfMemoryError: Java heap space\n[Minecraft has crashed!]");

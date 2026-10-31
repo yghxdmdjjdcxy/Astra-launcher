@@ -95,6 +95,19 @@ public interface IDeviceCodeOAuthClient
     Task<MicrosoftTokenSet> RefreshAsync(string clientId, string refreshToken, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Interactive (Xbox-style popup) Microsoft account login using the built-in public client.</summary>
+public interface IMicrosoftInteractiveLoginClient
+{
+    /// <summary>Gets the public client id used by the interactive login/refresh flow.</summary>
+    string ClientId { get; }
+
+    /// <summary>Opens the Microsoft sign-in window and returns the issued token set.</summary>
+    Task<MicrosoftTokenSet> SignInAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Refreshes an expired access token using a stored refresh token (legacy Live endpoint).</summary>
+    Task<MicrosoftTokenSet> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default);
+}
+
 /// <summary>Xbox Live user authentication and XSTS authorization for the Minecraft relying party.</summary>
 public interface IXboxLiveAuthenticator
 {
@@ -143,6 +156,9 @@ public interface IAccountService
 
     /// <summary>Runs the full Microsoft device-code flow and stores the resulting account.</summary>
     Task<AccountProfile> AddMicrosoftAsync(string clientId, IProgress<DeviceCodeInfo>? prompt = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Runs the Xbox-style interactive popup login (built-in public client) and stores the resulting account.</summary>
+    Task<AccountProfile> AddMicrosoftInteractiveAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default);
 
     Task RemoveAsync(Guid accountId, CancellationToken cancellationToken = default);
 

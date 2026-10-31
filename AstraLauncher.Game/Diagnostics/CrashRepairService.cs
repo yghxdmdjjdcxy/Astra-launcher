@@ -15,6 +15,7 @@ public sealed class CrashRepairService : ICrashRepairService
     private readonly IModrinthClient _modrinth;
     private readonly ISettingsService _settings;
     private readonly ILauncherPaths _paths;
+    private readonly IVersionInstallService? _installService;
     private readonly ILogger<CrashRepairService> _logger;
 
     public CrashRepairService(
@@ -22,7 +23,8 @@ public sealed class CrashRepairService : ICrashRepairService
         IModrinthClient modrinth,
         ISettingsService settings,
         ILauncherPaths paths,
-        ILogger<CrashRepairService> logger)
+        ILogger<CrashRepairService> logger,
+        IVersionInstallService? installService = null)
     {
         ArgumentNullException.ThrowIfNull(mods);
         ArgumentNullException.ThrowIfNull(modrinth);
@@ -34,6 +36,7 @@ public sealed class CrashRepairService : ICrashRepairService
         _settings = settings;
         _paths = paths;
         _logger = logger;
+        _installService = installService;
     }
 
     public async Task<CrashRepairResult> RepairAsync(
@@ -72,6 +75,9 @@ public sealed class CrashRepairService : ICrashRepairService
                     break;
                 case CrashIssueKind.OutOfMemory:
                     actions.Add(await IncreaseMemoryAsync(cancellationToken).ConfigureAwait(false));
+                    break;
+                case CrashIssueKind.MissingGameFiles:
+                    actions.Add(await RepairGameFilesAsync(instance, progress, cancellationToken).ConfigureAwait(false));
                     break;
             }
         }
@@ -182,6 +188,30 @@ public sealed class CrashRepairService : ICrashRepairService
         }
 
         return actions;
+    }
+
+    private async Task<CrashRepairAction> RepairGameFilesAsync(
+        GameInstance instance,
+        IProgress<string>? progress,
+        CancellationToken cancellationToken)
+    {
+        const string description = "自动补全缺失/损坏的游戏文件";
+        if (_installService is null)
+        {
+            return new CrashRepairAction(description, false, "文件补全服务不可用。");
+        }
+
+        try
+        {
+            progress?.Report("正在校验并补全游戏文件…");
+            await _installService.InstallAsync(instance.VersionId, null, cancellationToken).ConfigureAwait(false);
+            return new CrashRepairAction(description, true, $"版本 {instance.VersionId} 已重新校验并补全客户端、依赖库与资源文件。");
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(exception, "自动补全游戏文件失败：{Version}", instance.VersionId);
+            return new CrashRepairAction(description, false, exception.Message);
+        }
     }
 
     private async Task<CrashRepairAction> IncreaseMemoryAsync(CancellationToken cancellationToken)

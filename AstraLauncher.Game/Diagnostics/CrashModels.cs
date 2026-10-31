@@ -12,6 +12,7 @@ public enum CrashIssueKind
     JavaVersion,
     OutOfMemory,
     GraphicsDriver,
+    MissingGameFiles,
     LoaderError,
     Unknown,
 }

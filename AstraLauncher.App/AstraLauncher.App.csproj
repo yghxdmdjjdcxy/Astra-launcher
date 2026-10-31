@@ -17,6 +17,7 @@
   </ItemGroup>  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>
   <ItemGroup>
     <!-- Shipped beside the app in the folder build; excluded from the single-file publish (optional file, defaults are equivalent). -->

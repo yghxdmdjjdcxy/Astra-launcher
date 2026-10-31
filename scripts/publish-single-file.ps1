@@ -61,6 +61,9 @@ if ($publishedExe.FullName -ne $targetExe) {
     Remove-Item $publishedExe.FullName -Force
 }
 
+# WebView2 ships XML documentation files as content; strip them so the artifact stays a true single file.
+Get-ChildItem $output -File | Where-Object { $_.Extension -eq '.xml' } | Remove-Item -Force
+
 $files = @(Get-ChildItem $output -File)
 if ($files.Count -ne 1) {
     throw "Expected exactly one file in $output but found $($files.Count): $($files.Name -join ', ')"

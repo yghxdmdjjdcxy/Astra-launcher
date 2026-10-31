@@ -73,6 +73,7 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
             DetectJavaVersion(combined, issues);
             DetectOutOfMemory(combined, issues);
             DetectGraphics(combined, issues);
+            DetectMissingGameFiles(combined, issues);
             DetectLoaderErrors(combined, issues);
 
             if (issues.Count == 0)
@@ -277,6 +278,28 @@ public sealed partial class CrashAnalyzer : ICrashAnalyzer
             "显卡/OpenGL 初始化失败",
             "游戏无法创建图形窗口或 OpenGL 上下文，通常是显卡驱动或远程桌面环境导致。",
             "更新显卡驱动；如使用远程桌面，请在本机物理显示器上启动；也可尝试降低图形设置。"));
+    }
+
+    private static void DetectMissingGameFiles(string text, List<CrashIssue> issues)
+    {
+        bool missing = text.Contains("java.io.FileNotFoundException", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("java.nio.file.NoSuchFileException", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("Failed to download file", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("Couldn't download", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("Missing asset", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("The game directory", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("Could not find or load main class", StringComparison.OrdinalIgnoreCase);
+        if (!missing)
+        {
+            return;
+        }
+
+        issues.Add(new CrashIssue(
+            CrashIssueKind.MissingGameFiles,
+            "游戏文件缺失或损坏",
+            "日志显示启动时找不到客户端文件、依赖库或资源文件，通常是文件被删除、下载不完整或被其他程序占用/修改。",
+            "点击实例页的「补全游戏文件」自动重新校验并下载缺失文件，然后重新启动。",
+            CanAutoFix: true));
     }
 
     private static void DetectLoaderErrors(string text, List<CrashIssue> issues)

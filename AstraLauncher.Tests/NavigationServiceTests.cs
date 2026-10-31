@@ -114,6 +114,9 @@ public sealed class NavigationServiceTests
         public Task<AccountProfile> AddMicrosoftAsync(string clientId, IProgress<DeviceCodeInfo>? prompt = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(new AccountProfile(Guid.NewGuid(), AccountKind.Microsoft, "MicrosoftPlayer", Guid.NewGuid().ToString("N"), Xuid: "0", ClientId: clientId));
 
+        public Task<AccountProfile> AddMicrosoftInteractiveAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfile(Guid.NewGuid(), AccountKind.Microsoft, "MicrosoftPlayer", Guid.NewGuid().ToString("N"), Xuid: "0", ClientId: "00000000402b5328"));
+
         public Task RemoveAsync(Guid accountId, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
         public Task<MinecraftSessionInfo?> GetMinecraftSessionAsync(Guid accountId, CancellationToken cancellationToken = default) =>

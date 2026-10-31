@@ -22,6 +22,7 @@ public sealed class AccountService : IAccountService
 
     private readonly IAccountStore _store;
     private readonly IDeviceCodeOAuthClient _oauth;
+    private readonly IMicrosoftInteractiveLoginClient? _interactiveLogin;
     private readonly IXboxLiveAuthenticator _xbox;
     private readonly IMinecraftAuthenticator _minecraft;
     private readonly ISettingsService _settings;
@@ -37,7 +38,8 @@ public sealed class AccountService : IAccountService
         IMinecraftAuthenticator minecraft,
         ISettingsService settings,
         ITokenProtector protector,
-        ILogger<AccountService> logger)
+        ILogger<AccountService> logger,
+        IMicrosoftInteractiveLoginClient? interactiveLogin = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(oauth);
@@ -50,6 +52,7 @@ public sealed class AccountService : IAccountService
         ArgumentNullException.ThrowIfNull(logger);
         _store = store;
         _oauth = oauth;
+        _interactiveLogin = interactiveLogin;
         _xbox = xbox;
         _minecraft = minecraft;
         _settings = settings;
@@ -175,6 +178,35 @@ public sealed class AccountService : IAccountService
             "device-code polling",
             cancellationToken).ConfigureAwait(false);
 
+        return await CompleteMicrosoftSignInAsync(tokens, normalizedClientId, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<AccountProfile> AddMicrosoftInteractiveAsync(
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (_interactiveLogin is null)
+        {
+            throw new AccountAuthenticationException(
+                AccountErrorCode.ClientIdMissing,
+                "当前环境不支持网页登录，请使用设备码登录。");
+        }
+
+        progress?.Report("正在打开微软登录窗口…");
+        MicrosoftTokenSet tokens = await RunAuthenticationStepAsync(
+            () => _interactiveLogin.SignInAsync(progress, cancellationToken),
+            "interactive sign-in",
+            cancellationToken).ConfigureAwait(false);
+        return await CompleteMicrosoftSignInAsync(tokens, _interactiveLogin.ClientId, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Runs the Xbox Live / XSTS / Minecraft chain and stores the resulting account.</summary>
+    private async Task<AccountProfile> CompleteMicrosoftSignInAsync(
+        MicrosoftTokenSet tokens,
+        string oauthClientId,
+        CancellationToken cancellationToken)
+    {
         XboxLiveToken xboxToken = await RunAuthenticationStepAsync(
             () => _xbox.AuthenticateAsync(tokens.AccessToken, cancellationToken),
             "Xbox Live authentication",
@@ -198,7 +230,7 @@ public sealed class AccountService : IAccountService
             session.PlayerName,
             session.PlayerUuid,
             string.IsNullOrWhiteSpace(session.Xuid) ? xboxToken.Xuid : session.Xuid,
-            Guid.NewGuid().ToString(),
+            oauthClientId,
             tokens.RefreshToken,
             now,
             now);
@@ -255,8 +287,12 @@ public sealed class AccountService : IAccountService
 
         string storedRefreshToken = account.RefreshToken!;
         LauncherSettings settings = await _settings.GetAsync(cancellationToken).ConfigureAwait(false);
-        string oauthClientId = settings.MicrosoftClientId?.Trim() ?? string.Empty;
-        if (oauthClientId.Length == 0)
+        bool usesInteractiveLogin = _interactiveLogin is not null
+            && string.Equals(account.ClientId, _interactiveLogin.ClientId, StringComparison.OrdinalIgnoreCase);
+        string oauthClientId = usesInteractiveLogin
+            ? _interactiveLogin!.ClientId
+            : settings.MicrosoftClientId?.Trim() ?? string.Empty;
+        if (!usesInteractiveLogin && oauthClientId.Length == 0)
         {
             oauthClientId = account.ClientId?.Trim() ?? string.Empty;
         }
@@ -266,10 +302,15 @@ public sealed class AccountService : IAccountService
             throw new AccountAuthenticationException(AccountErrorCode.ClientIdMissing, ClientIdMissingMessage);
         }
 
-        MicrosoftTokenSet tokens = await RunAuthenticationStepAsync(
-            () => _oauth.RefreshAsync(oauthClientId, storedRefreshToken, cancellationToken),
-            "token refresh",
-            cancellationToken).ConfigureAwait(false);
+        MicrosoftTokenSet tokens = usesInteractiveLogin
+            ? await RunAuthenticationStepAsync(
+                () => _interactiveLogin!.RefreshAsync(storedRefreshToken, cancellationToken),
+                "legacy token refresh",
+                cancellationToken).ConfigureAwait(false)
+            : await RunAuthenticationStepAsync(
+                () => _oauth.RefreshAsync(oauthClientId, storedRefreshToken, cancellationToken),
+                "token refresh",
+                cancellationToken).ConfigureAwait(false);
 
         string refreshToken = string.IsNullOrWhiteSpace(tokens.RefreshToken)
             ? storedRefreshToken

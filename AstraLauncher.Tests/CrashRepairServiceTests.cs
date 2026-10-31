@@ -95,6 +95,33 @@ public sealed class CrashRepairServiceTests : IDisposable
         Assert.Equal(LauncherSettings.DefaultMemoryMiB + 1024, settings.Settings.MemoryMiB);
     }
 
+    [Fact]
+    public async Task RepairAsync_MissingGameFiles_RunsInstallPlan()
+    {
+        var install = new FakeInstallService();
+        var service = new CrashRepairService(
+            new LocalModService(NullLogger<LocalModService>.Instance),
+            new FakeModrinthClient(),
+            new FakeSettingsService(),
+            new FakePaths(_root),
+            NullLogger<CrashRepairService>.Instance,
+            install);
+        var analysis = new CrashAnalysisResult(
+            [new CrashIssue(CrashIssueKind.MissingGameFiles, "游戏文件缺失或损坏", "detail", "suggestion", CanAutoFix: true)],
+            "游戏文件缺失",
+            null,
+            null,
+            string.Empty);
+
+        CrashRepairResult result = await service.RepairAsync(_instance, analysis);
+
+        CrashRepairAction action = Assert.Single(result.Actions);
+        Assert.True(action.Success, action.Detail);
+        Assert.Equal(1, install.InstallCalls);
+        Assert.Equal(_instance.VersionId, install.LastVersion);
+        Assert.True(result.Changed);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_root))
@@ -127,6 +154,26 @@ public sealed class CrashRepairServiceTests : IDisposable
         public string TempDirectory => Path.Combine(_root, "temp");
         public void SetMinecraftDirectory(string path) { }
         public void EnsureCreated() => Directory.CreateDirectory(_root);
+    }
+
+    private sealed class FakeInstallService : IVersionInstallService
+    {
+        public int InstallCalls { get; private set; }
+
+        public string? LastVersion { get; private set; }
+
+        public Task<VersionInstallPlan> CreatePlanAsync(string versionId, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task InstallAsync(string versionId, IProgress<VersionInstallProgress>? progress = null, CancellationToken cancellationToken = default)
+        {
+            InstallCalls++;
+            LastVersion = versionId;
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> IsVersionInstalledAsync(string versionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 
     private sealed class FakeModrinthClient : IModrinthClient

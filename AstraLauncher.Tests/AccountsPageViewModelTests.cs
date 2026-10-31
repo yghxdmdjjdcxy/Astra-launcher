@@ -390,6 +390,20 @@ public sealed class AccountsPageViewModelTests
             return account;
         }
 
+        public Task<AccountProfile> AddMicrosoftInteractiveAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+        {
+            var account = new AccountProfile(
+                Guid.NewGuid(),
+                AccountKind.Microsoft,
+                MicrosoftPlayerName,
+                Guid.NewGuid().ToString("N"),
+                Xuid: "123456789",
+                ClientId: "00000000402b5328",
+                AddedAt: DateTimeOffset.UtcNow);
+            Accounts.Add(account);
+            return Task.FromResult(account);
+        }
+
         public Task RemoveAsync(Guid accountId, CancellationToken cancellationToken = default)
         {
             RemovedIds.Add(accountId);

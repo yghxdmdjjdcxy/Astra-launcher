@@ -114,7 +114,7 @@ public sealed class AccountServiceTests
         Assert.Equal("6f8f57715090da2632453988d9a1501b", account.PlayerUuid);
         Assert.Equal("xuid-from-xbox", account.Xuid);
         Assert.Equal("msa-refresh-token", account.RefreshToken);
-        Assert.True(Guid.TryParse(account.ClientId, out _));
+        Assert.Equal("client-id", account.ClientId);
         Assert.Equal(1, fixture.Store.SaveCount);
 
         AccountProfile stored = Assert.Single(fixture.Store.LastSavedAccounts);

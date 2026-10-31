@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -133,6 +133,7 @@ public partial class App : Application
         builder.Services.AddSingleton<ITokenProtector, DpapiTokenProtector>();
         builder.Services.AddSingleton<IAccountStore, AccountStore>();
         builder.Services.AddSingleton<IDeviceCodeOAuthClient, DeviceCodeOAuthClient>();
+        builder.Services.AddSingleton<IMicrosoftInteractiveLoginClient, WebViewMicrosoftLoginClient>();
         builder.Services.AddSingleton<IXboxLiveAuthenticator, XboxLiveAuthenticator>();
         builder.Services.AddSingleton<IMinecraftAuthenticator, MinecraftAuthenticator>();
         builder.Services.AddSingleton<IAccountService, AccountService>();
