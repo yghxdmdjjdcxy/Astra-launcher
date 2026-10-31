@@ -66,6 +66,7 @@ public partial class App : Application
                 bootstrap.Paths.MinecraftDirectory,
                 bootstrap.Paths.ApplicationDataDirectory);
             MinecraftDataMigrator.MigrateLegacyMinecraftData(bootstrap.Paths, logger);
+            _host.Services.GetRequiredService<IAppearanceService>().ApplySavedAsync().GetAwaiter().GetResult();
             _host.Services.GetRequiredService<MainWindow>().Show();
         }
         catch (Exception exception)
@@ -145,12 +146,14 @@ public partial class App : Application
         builder.Services.AddSingleton<ICrashRepairService, CrashRepairService>();
         builder.Services.AddSingleton<ICrashDialogService, CrashAnalysisDialogService>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
+        builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();
         builder.Services.AddSingleton<DownloadsPageViewModel>();
         builder.Services.AddSingleton<ModsPageViewModel>();
         builder.Services.AddSingleton<AccountsPageViewModel>();
         builder.Services.AddSingleton<ServersPageViewModel>();
+        builder.Services.AddSingleton<ToolboxPageViewModel>();
         builder.Services.AddSingleton<SettingsPageViewModel>();
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();

@@ -18,6 +18,10 @@ public sealed class LauncherSettings
     public const int MinimumMaxConcurrentDownloads = 1;
     public const int MaximumMaxConcurrentDownloads = 32;
     public const string DefaultMirrorBaseUrl = "https://bmclapi2.bangbang93.com";
+    public const string DefaultProgressBarStyle = "classic";
+    public const int DefaultProgressBarHeight = 16;
+    public const int MinimumProgressBarHeight = 8;
+    public const int MaximumProgressBarHeight = 32;
 
     /// <summary>Gets or sets the maximum Java heap size in mebibytes.</summary>
     public int MemoryMiB { get; set; } = DefaultMemoryMiB;
@@ -53,6 +57,12 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets a value indicating whether snapshot versions are listed.</summary>
     public bool ShowSnapshots { get; set; }
 
+    /// <summary>Gets or sets the progress-bar visual preset key (see the launcher's appearance presets).</summary>
+    public string ProgressBarStyle { get; set; } = DefaultProgressBarStyle;
+
+    /// <summary>Gets or sets the progress-bar thickness in device-independent pixels.</summary>
+    public int ProgressBarHeight { get; set; } = DefaultProgressBarHeight;
+
     /// <summary>Gets or sets the player name used for offline profiles.</summary>
     public string? OfflinePlayerName { get; set; } = "Player";
 
@@ -73,11 +83,19 @@ public sealed class LauncherSettings
         }
 
         MirrorBaseUrl = NormalizeMirrorBaseUrl(MirrorBaseUrl);
+        ProgressBarStyle = NormalizeProgressBarStyle(ProgressBarStyle);
+        ProgressBarHeight = Math.Clamp(ProgressBarHeight, MinimumProgressBarHeight, MaximumProgressBarHeight);
         JavaExecutablePath = NormalizeOptionalText(JavaExecutablePath);
         MinecraftDirectory = NormalizeOptionalText(MinecraftDirectory);
         GameArguments = NormalizeOptionalText(GameArguments);
         JvmArguments = NormalizeOptionalText(JvmArguments);
         OfflinePlayerName = NormalizePlayerName(OfflinePlayerName);
+    }
+
+    private static string NormalizeProgressBarStyle(string? style)
+    {
+        string value = string.IsNullOrWhiteSpace(style) ? DefaultProgressBarStyle : style.Trim().ToLowerInvariant();
+        return value.Length <= 32 ? value : DefaultProgressBarStyle;
     }
 
     private static string NormalizePlayerName(string? playerName)

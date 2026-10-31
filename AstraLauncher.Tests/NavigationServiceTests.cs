@@ -41,8 +41,21 @@ public sealed class NavigationServiceTests
             new ModsPageViewModel(new GameInstanceRepository(paths), new EmptyLocalModService(), new EmptyModrinthClient(), new EmptyFilePicker(), paths, dialogs, NullLogger<ModsPageViewModel>.Instance),
             new AccountsPageViewModel(new FakeSettingsService(), new FakeAccountService(), NullLogger<AccountsPageViewModel>.Instance, dialogs),
             new ServersPageViewModel(new EmptyServerRepository(), NullLogger<ServersPageViewModel>.Instance),
+            new ToolboxPageViewModel(new FakeSettingsService(), new FakeAppearanceService(), NullLogger<ToolboxPageViewModel>.Instance),
             new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N"))), NullLogger<SettingsPageViewModel>.Instance, dialogs),
             NullLogger<NavigationService>.Instance);
+    }
+
+    private sealed class FakeAppearanceService : IAppearanceService
+    {
+        public IReadOnlyList<AstraLauncher.App.Appearance.ProgressBarPreset> ProgressBarPresets =>
+            AstraLauncher.App.Appearance.ProgressBarPresets.All;
+
+        public void ApplyProgressBar(string? styleKey, int height)
+        {
+        }
+
+        public Task ApplySavedAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class EmptyLocalModService : ILocalModService

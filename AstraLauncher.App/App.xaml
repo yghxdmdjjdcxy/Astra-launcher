@@ -1,5 +1,35 @@
 <Application x:Class="AstraLauncher.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Application.Resources />
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <Application.Resources>
+        <!-- Defaults; AppearanceService replaces these dynamic resources when the user picks a preset. -->
+        <SolidColorBrush x:Key="ProgressTrackBrush" Color="#E2E8F0"/>
+        <SolidColorBrush x:Key="ProgressFillBrush" Color="#2563EB"/>
+        <CornerRadius x:Key="ProgressCornerRadius">6</CornerRadius>
+        <sys:Double x:Key="ProgressBarHeight">16</sys:Double>
+
+        <Style TargetType="{x:Type ProgressBar}">
+            <Setter Property="Height" Value="{DynamicResource ProgressBarHeight}"/>
+            <Setter Property="Background" Value="{DynamicResource ProgressTrackBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ProgressFillBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ProgressBar}">
+                        <Grid ClipToBounds="True">
+                            <Border x:Name="PART_Track"
+                                    Background="{TemplateBinding Background}"
+                                    CornerRadius="{DynamicResource ProgressCornerRadius}"/>
+                            <Border x:Name="PART_Indicator"
+                                    HorizontalAlignment="Left"
+                                    Background="{TemplateBinding Foreground}"
+                                    CornerRadius="{DynamicResource ProgressCornerRadius}"
+                                    Effect="{DynamicResource ProgressGlowEffect}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
 </Application>

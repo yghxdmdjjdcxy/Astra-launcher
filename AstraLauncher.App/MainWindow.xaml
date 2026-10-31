@@ -311,7 +311,7 @@
                             </StackPanel>
                         </StackPanel>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,0">
-                            <ProgressBar Height="16" Minimum="0" Maximum="100" Value="{Binding LaunchPercent, Mode=OneWay}"/>
+                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding LaunchPercent, Mode=OneWay}"/>
                             <TextBlock Margin="0,6,0,0" TextTrimming="CharacterEllipsis">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource Hint}">
@@ -409,7 +409,7 @@
                             <Button Style="{StaticResource SecondaryButton}" Content="取消安装" Command="{Binding CancelLoaderCommand}" Margin="0,0,0,8"
                                     Visibility="{Binding IsLoaderBusy, Converter={StaticResource BooleanToVisibility}}"/>
                         </WrapPanel>
-                        <ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding LoaderProgressPercent, Mode=OneWay}"/>
+                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding LoaderProgressPercent, Mode=OneWay}"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{Binding LoaderProgressText}"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding LoaderStatus}"/>
                     </StackPanel>
@@ -418,7 +418,7 @@
                     <StackPanel>
                         <TextBlock FontWeight="SemiBold" Foreground="#0F172A"
                                    Text="{Binding SelectedVersion.Id, StringFormat='已选版本：{0}'}"/>
-                        <ProgressBar Height="16" Margin="0,8,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}"/>
+                        <ProgressBar Margin="0,8,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}"/>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,4,0,0" Text="{Binding ProgressText}"/>
                     </StackPanel>
                 </Border>
@@ -853,6 +853,124 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ToolboxPageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PageTitle}" Text="百宝箱"/>
+                    <TextBlock Style="{StaticResource PageSubtitle}"
+                               Text="自定义启动器外观，以及集中管理实用工具。修改后立即生效并自动保存。"/>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="自定义 · 进度条样式"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                       Text="选择喜欢的样式后，所有页面的进度条会立即更新。"/>
+                            <ListBox ItemsSource="{Binding ProgressBarPresets}"
+                                     SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Margin" Value="0,0,12,12"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="SelectionBorder" CornerRadius="12" BorderThickness="2"
+                                                            BorderBrush="Transparent" Background="Transparent" Padding="2">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="SelectionBorder" Property="BorderBrush" Value="#2563EB"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="190" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"
+                                                CornerRadius="10" Padding="14">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource Hint}"
+                                                           TextWrapping="Wrap" Margin="0,4,0,10" Height="34"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="16" Height="16" CornerRadius="4" Background="{Binding FillStart}"/>
+                                                    <Border Width="16" Height="16" CornerRadius="4" Background="{Binding FillEnd}" Margin="6,0,0,0"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="进度条粗细"/>
+                                <ComboBox Width="150" ItemsSource="{Binding ProgressBarSizes}"
+                                          SelectedItem="{Binding SelectedSize, Mode=TwoWay}"
+                                          DisplayMemberPath="Label"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="恢复默认"
+                                        Command="{Binding ResetCommand}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,12,0,4" Text="效果预览（当前样式，68%）"/>
+                            <ProgressBar Minimum="0" Maximum="100" Value="68" Width="520" HorizontalAlignment="Left"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,10,0,0" Text="{Binding StatusMessage}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="百宝箱 · 更多工具"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                       Text="后续版本会逐步开放，欢迎在 GitHub 提需求。"/>
+                            <UniformGrid Columns="4">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"
+                                        CornerRadius="10" Padding="16" Margin="0,0,10,10">
+                                    <StackPanel>
+                                        <TextBlock Text="🗂" FontSize="22"/>
+                                        <TextBlock Text="存档管理" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                        <TextBlock Style="{StaticResource Hint}" Text="一键备份 / 还原世界存档"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"
+                                        CornerRadius="10" Padding="16" Margin="0,0,10,10">
+                                    <StackPanel>
+                                        <TextBlock Text="🎨" FontSize="22"/>
+                                        <TextBlock Text="皮肤预览" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                        <TextBlock Style="{StaticResource Hint}" Text="查看与切换角色皮肤"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"
+                                        CornerRadius="10" Padding="16" Margin="0,0,10,10">
+                                    <StackPanel>
+                                        <TextBlock Text="⚡" FontSize="22"/>
+                                        <TextBlock Text="一键优化" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                        <TextBlock Style="{StaticResource Hint}" Text="清理缓存与无效文件"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"
+                                        CornerRadius="10" Padding="16" Margin="0,0,10,10">
+                                    <StackPanel>
+                                        <TextBlock Text="🎵" FontSize="22"/>
+                                        <TextBlock Text="音乐电台" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                        <TextBlock Style="{StaticResource Hint}" Text="启动游戏时播放背景音乐"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel Background="#F1F5F9">
@@ -869,6 +987,7 @@
                     <Button Style="{StaticResource NavButton}" Content="模组" Command="{Binding NavigateCommand}" CommandParameter="Mods"/>
                     <Button Style="{StaticResource NavButton}" Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts"/>
                     <Button Style="{StaticResource NavButton}" Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers"/>
+                    <Button Style="{StaticResource NavButton}" Content="百宝箱" Command="{Binding NavigateCommand}" CommandParameter="Toolbox"/>
                     <TextBlock Style="{StaticResource NavSection}" Text="配置"/>
                     <Button Style="{StaticResource NavButton}" Content="设置" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
                 </StackPanel>

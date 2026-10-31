@@ -228,7 +228,13 @@ public sealed class DownloadQueueTests : IAsyncLifetime
     {
         byte[] data = Encoding.UTF8.GetBytes("progress");
         var states = new List<DownloadState>();
-        await using DownloadQueue queue = Queue(new DelegateHandler(_ => Response(HttpStatusCode.OK, data)));
+        // Delay the response so the test can subscribe to ProgressChanged before the tiny download completes;
+        // without it the "Downloading" event can fire before the handler is attached.
+        await using DownloadQueue queue = Queue(new AsyncDelegateHandler(async _ =>
+        {
+            await Task.Delay(50).ConfigureAwait(false);
+            return Response(HttpStatusCode.OK, data);
+        }));
         IDownloadHandle job = queue.Enqueue(DownloadRequest.Create(new Uri("https://unit.test/progress"), Path.Combine(_root, "progress.bin")));
         job.ProgressChanged += (_, progress) =>
         {
