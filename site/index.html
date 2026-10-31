@@ -1,129 +1,259 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Astra Launcher - Modern Minecraft Java Edition Launcher</title>
-<meta name="description" content="Astra Launcher - 现代 Minecraft Java Edition 启动器。支持官方源/镜像源下载、Fabric/Quilt/Forge/NeoForge 模组加载器、Microsoft/Xbox 认证链、离线档案、服务器列表一键加入、崩溃自动分析修复。单文件发布，开箱即用。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<title>Astra Launcher — 现代 Minecraft Java 版启动器</title>
+<meta name="description" content="Astra Launcher 是一个现代 Minecraft Java 版启动器：单文件免安装，支持 Fabric / Quilt / Forge / NeoForge、Microsoft / Xbox 登录、Modrinth 模组、崩溃自动分析、文件自动补全与百宝箱工具。">
+<meta name="theme-color" content="#0b0e14">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="Astra Launcher — 现代 Minecraft Java 版启动器">
+<meta property="og:description" content="单文件免安装，支持全模组加载器、官方登录、崩溃分析、文件补全与百宝箱。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://astra-launcher.us.ci/">
 <style>
-:root{--bg:#0b0e14;--bg-elev:#121721;--fg:#e8edf6;--muted:#97a3b6;--accent:#22d3a6;--accent-dim:#1a8c6e;--card:#161c2a;--border:#263044}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:16px/1.6 "Noto Sans SC",system-ui,sans-serif;background:var(--bg);color:var(--fg)}
-.mono{font-family:"JetBrains Mono",monospace}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-.container{max-width:1100px;margin:0 auto;padding:0 24px}
-header{position:sticky;top:0;z-index:100;background:rgba(11,14,20,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-.header-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.25rem;color:var(--fg);text-decoration:none}
-.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#14c47a);border-radius:8px;display:grid;place-items:center;font-weight:800;color:#0b0e14;font-size:1rem}
-nav a{margin-left:24px;color:var(--muted);font-weight:500;text-decoration:none;font-size:.9rem}nav a:hover{color:var(--fg)}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;border:none;transition:.15s}
-.btn-primary{background:var(--accent);color:#0b0e14}.btn-primary:hover{background:#2ae6b8}
-.btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-section{padding:80px 0}
-.hero{padding:120px 0 80px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(34,211,170,.08),transparent 70%)}
-.hero h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:800;line-height:1.1;margin:0 0 16px;background:linear-gradient(135deg,var(--fg),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:1.25rem;color:var(--muted);max-width:600px;margin:0 auto 32px}
-.hero-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
-.badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px;color:var(--muted);font-size:.85rem}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--card);border:1px solid var(--border);border-radius:999px;font-size:.75rem}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;transition:.2s}
-.card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.card-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),#14c47a);border-radius:12px;display:grid;place-items:center;margin-bottom:16px;color:#0b0e14;font-size:1.5rem}
-.card h3{margin:0 0 10px;font-size:1.15rem}
-.card p{margin:0;color:var(--muted);line-height:1.7}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center;margin:60px 0}
-.stat-value{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--fg),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
-.stat-label{color:var(--muted);font-size:.9rem;margin-top:4px}
-.download-section{background:var(--bg-elev);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.download-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:40px}
-.dl-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;position:relative}
-.dl-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#14c47a);border-radius:16px 16px 0 0}
-.dl-icon{width:64px;height:64px;margin:0 auto 16px;background:var(--bg);border:1px solid var(--border);border-radius:16px;display:grid;place-items:center;font-size:1.5rem}
-.dl-card h3{margin:0 0 8px;font-size:1.25rem}
-.dl-meta{color:var(--muted);font-size:.85rem;margin:0 0 16px}
-.footer{border-top:1px solid var(--border);padding:40px 0;color:var(--muted);font-size:.85rem;text-align:center}
-.footer-links{display:flex;gap:24px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
-@media(max-width:640px){nav{display:none}.hero-buttons{flex-direction:column;align-items:center}.stats{grid-template-columns:repeat(2,1fr)}}
+:root{--bg:#080b12;--bg2:#0d1220;--panel:#111827;--panel2:#0f172a;--fg:#eef2ff;--muted:#94a3b8;--line:#1e293b;--accent:#22d3a6;--accent2:#38bdf8;--radius:16px;--max:1180px;--shadow:0 20px 60px rgba(2,8,23,.45)}
+[data-theme="light"]{--bg:#f8fafc;--bg2:#eef2f7;--panel:#fff;--panel2:#f1f5f9;--fg:#0f172a;--muted:#52627a;--line:#e2e8f0;--shadow:0 20px 50px rgba(15,23,42,.10)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;overflow-x:hidden;transition:background .25s,color .25s}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent2)}
+code,.mono{font-family:"Cascadia Code",Consolas,monospace}
+.container{max-width:var(--max);margin:0 auto;padding:0 24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:12px;font-weight:700;font-size:.95rem;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04110d;box-shadow:0 8px 28px rgba(34,211,166,.28)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(34,211,166,.38);color:#04110d}
+.btn-ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.7}
+header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+.brand{display:flex;align-items:center;gap:11px;color:var(--fg);font-weight:800;font-size:1.25rem;letter-spacing:-.01em}
+.brand-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#04110d;font-weight:900;font-size:1.15rem}
+.nav-links{display:flex;gap:4px;align-items:center}.nav-links a{padding:8px 13px;border-radius:9px;color:var(--muted);font-weight:600;font-size:.9rem}.nav-links a:hover{color:var(--fg);background:var(--panel2)}
+.nav-actions{display:flex;gap:10px;align-items:center}
+.theme-toggle{width:42px;height:42px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;display:grid;place-items:center;font-size:1.05rem}.theme-toggle:hover{border-color:var(--accent)}
+.menu-btn{display:none;width:42px;height:42px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;font-size:1.1rem}
+main{position:relative;z-index:1}section{padding:88px 0}
+.hero{padding:110px 0 74px;text-align:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--line);background:var(--panel);border-radius:999px;font-size:.8rem;color:var(--muted);font-weight:600}
+.hero-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.hero h1{font-size:clamp(2.7rem,7vw,5.3rem);line-height:1.02;margin:22px 0 18px;letter-spacing:-.035em;font-weight:900;background:linear-gradient(120deg,var(--fg) 20%,var(--accent) 62%,var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero .lead{font-size:clamp(1.05rem,2.2vw,1.3rem);color:var(--muted);max-width:720px;margin:0 auto 30px}
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero-meta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px;color:var(--muted);font-size:.8rem}
+.pill{padding:6px 13px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 70%,transparent);border-radius:999px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:56px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 18px;text-align:center}
+.stat b{display:block;font-size:2rem;line-height:1.1;font-weight:900;background:linear-gradient(120deg,var(--fg),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat span{font-size:.82rem;color:var(--muted)}
+.section-head{text-align:center;max-width:700px;margin:0 auto 46px}
+.section-head h2{font-size:clamp(1.8rem,4vw,2.7rem);margin:0 0 12px;letter-spacing:-.02em}.section-head p{color:var(--muted);margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:transform .25s,border-color .25s,box-shadow .25s}
+.card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:var(--shadow)}
+.card-icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,transparent),color-mix(in srgb,var(--accent2) 18%,transparent));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));margin-bottom:15px}
+.card h3{margin:0 0 8px;font-size:1.08rem}.card p{margin:0;color:var(--muted);font-size:.92rem}
+.card ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:.9rem}
+.mockup{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;max-width:980px;margin:0 auto}
+.mock-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 75%,transparent)}
+.mock-dot{width:10px;height:10px;border-radius:50%;background:#ef4444}.mock-dot:nth-child(2){background:#f59e0b}.mock-dot:nth-child(3){background:#22c55e}
+.mock-title{margin-left:10px;font-size:.78rem;color:var(--muted)}
+.mock-body{display:grid;grid-template-columns:180px 1fr;min-height:360px}
+.mock-side{background:#0b1220;border-right:1px solid var(--line);padding:18px 14px;color:#cbd5e1;font-size:.82rem}
+.mock-side .s-brand{font-weight:900;letter-spacing:.08em;color:#fff;margin-bottom:18px}
+.mock-side a{display:block;padding:8px 10px;border-radius:8px;color:#94a3b8;margin-bottom:3px}
+.mock-side a.on{background:rgba(34,211,166,.15);color:#22d3a6;font-weight:700}
+.mock-main{padding:22px}.mock-main h4{margin:0 0 4px;font-size:1.15rem}.mock-main p{margin:0 0 16px;color:var(--muted);font-size:.85rem}
+.mock-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.mock-card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px}
+.mock-card b{font-size:.85rem}.mock-card span{display:block;color:var(--muted);font-size:.72rem;margin-top:4px}
+.mock-progress{height:12px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:12px}
+.mock-progress i{display:block;height:100%;width:68%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px}
+.mock-log{background:#050a12;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:14px;font-family:monospace;font-size:.7rem;color:#7dd3fc;line-height:1.8;white-space:pre-wrap}
+.dl-wrap{display:grid;grid-template-columns:1.35fr .65fr;gap:24px;align-items:stretch}
+.dl-main{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,var(--panel)),var(--panel));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:22px;padding:34px}
+.dl-main h2{margin:0 0 6px;font-size:2rem}.dl-main .sub{color:var(--muted);margin:0 0 22px}
+.dl-facts{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0}
+.dl-fact{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:10px 13px;font-size:.8rem;color:var(--muted)}
+.dl-fact b{color:var(--fg);display:block;font-size:.86rem}
+.dl-side{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px}
+.dl-side h3{margin:0 0 10px;font-size:1rem}.dl-side ul{margin:0;padding-left:18px;color:var(--muted);font-size:.85rem;line-height:2}
+.hash{margin-top:14px;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;font-family:monospace;font-size:.68rem;color:var(--muted);word-break:break-all}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.step b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#04110d;font-size:.8rem;margin-bottom:10px}
+.step h3{margin:0 0 6px;font-size:.98rem}.step p{margin:0;color:var(--muted);font-size:.84rem}
+.timeline{position:relative;max-width:780px;margin:0 auto;padding-left:26px}
+.timeline:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.timeline-item{position:relative;padding:0 0 26px 22px}
+.timeline-item:before{content:"";position:absolute;left:-26px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.timeline-item h3{margin:0 0 4px;font-size:1rem}.timeline-item .date{font-family:monospace;font-size:.75rem;color:var(--muted)}.timeline-item p{margin:6px 0 0;color:var(--muted);font-size:.88rem}
+.faq{max-width:820px;margin:0 auto}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:10px}
+details summary{cursor:pointer;font-weight:700;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}
+details summary:after{content:"+";float:right;color:var(--accent);font-weight:800}details[open] summary:after{content:"−"}
+details p{margin:10px 0 0;color:var(--muted);font-size:.9rem}
+footer{border-top:1px solid var(--line);padding:46px 0;color:var(--muted);font-size:.86rem}
+.foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+.foot-links{display:flex;gap:18px;flex-wrap:wrap}footer a{color:var(--muted)}footer a:hover{color:var(--accent)}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}.reveal.in{opacity:1;transform:none}
+@media(max-width:900px){.nav-links{display:none}.menu-btn{display:grid;place-items:center}.nav-links.open{display:flex;position:absolute;top:70px;left:0;right:0;flex-direction:column;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 20px;gap:2px}.stats{grid-template-columns:repeat(2,1fr)}.dl-wrap{grid-template-columns:1fr}.steps{grid-template-columns:repeat(2,1fr)}.mock-body{grid-template-columns:1fr}.mock-side{display:none}}
+@media(max-width:560px){section{padding:66px 0}.hero{padding:82px 0 54px}.steps{grid-template-columns:1fr}.mock-cards{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
 </head>
 <body>
+<canvas id="bg" aria-hidden="true"></canvas>
 <header>
-<div class="container header-inner">
-<a class="logo" href="/"><span class="logo-mark">A</span>Astra Launcher</a>
-<nav>
-<a href="#features">功能特性</a>
-<a href="#stats">数据</a>
-<a href="#download">下载</a>
-<a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
-</nav>
-</div>
+  <div class="container nav">
+    <a class="brand" href="/"><span class="brand-mark">A</span>Astra Launcher</a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#features">功能</a><a href="#preview">预览</a><a href="#download">下载</a>
+      <a href="#start">快速开始</a><a href="#changelog">更新日志</a><a href="#faq">常见问题</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="切换主题">🌙</button>
+      <button class="menu-btn" id="menuBtn" aria-label="菜单">☰</button>
+      <a class="btn btn-primary" href="#download" style="padding:10px 18px">下载</a>
+    </div>
+  </div>
 </header>
 <main>
-<section class="hero">
-<div class="container">
-<h1>Astra Launcher</h1>
-<p>现代 Minecraft Java Edition 启动器。单文件、免安装、开箱即用。</p>
-<div class="hero-buttons">
-<a class="btn btn-primary" href="#download">立即下载</a>
-<a class="btn btn-ghost" href="https://github.com" target="_blank" rel="noopener">查看源码</a>
-</div>
-<div class="badges">
-<span class="badge"><span class="mono">📦</span> 单文件 ~62 MB</span>
-<span class="badge"><span class="mono">⚡</span> 多线程分段下载</span>
-<span class="badge"><span class="mono">🔐</span> DPAPI 令牌加密</span>
-<span class="badge"><span class="mono">🧩</span> Fabric/Quilt/Forge/NeoForge</span>
-<span class="badge"><span class="mono">🛡️</span> 崩溃自动分析修复</span>
-<span class="badge"><span class="mono">🌐</span> 服务器一键加入</span>
-</div>
-</div>
-</section>
-<section id="features">
-<div class="container">
-<h2 style="font-size:2rem;font-weight:700;margin:0 0 8px;text-align:center">核心功能</h2>
-<p style="color:var(--muted);text-align:center;max-width:600px;margin:0 auto 48px">专为玩家与模组包作者设计，零配置、零依赖、即拿即用</p>
-<div class="card-grid">
-<article class="card"><div class="card-icon">⚡</div><h3>极速下载</div><p>官方源 + BMCLAPI 镜像自动回退，多线程分段下载，断点续传，文件级完整性校验。</p></article>
-<article class="card"><div class="card-icon">🧩</div><h3>全模组加载器</div><p>原版、Fabric、Quilt、Forge、NeoForge 一键安装。自动识别版本与加载器，Modrinth 在线搜索安装。</p></article>
-<article class="card"><div class="card-icon">🔐</div><h3>完整认证链</div><p>官方 Microsoft OAuth + Xbox Live + XSTS + Minecraft Services，DPAPI 加密存储令牌，离线档案即用即走。</p></article>
-<article class="card"><div class="card-icon">🌐</div><h3>服务器一键加入</div><p>保存服务器列表，实例启动自动拼接 <code>--server/--port</code>，跳过多人游戏菜单直连。</p></article>
-<article class="card"><div class="card-icon">🛡️</div><h3>崩溃自动分析修复</div><p>游戏退出即刻分析 <code>latest.log</code>/<code>crash-reports</code>，识别缺失依赖、冲突模组、OOM 等，提供可逆自动修复或手动建议。</p></article>
-<article class="card"><div class="card-icon">📦</div><h3>单文件绿色版</div><p>无需安装 .NET 运行时，单文件 ~62 MB，便携模式下整个 <code>.minecraft</code> 自包含，随身携带。</p></article>
-</div>
-</section>
-<section id="stats" class="stats">
-<div class="container">
-<div><div class="stat-value">295+</div><div class="stat-label">单元测试</div></div>
-<div><div class="stat-value">295+</div><div class="stat-label">测试通过</div></div>
-<div><div class="stat-value">0</div><div class="stat-label">警告/错误</div></div>
-<div><div class="stat-value">62 MB</div><div class="stat-label">单文件体积</div></div>
-</div>
-</section>
-<section id="download" class="download-section">
-<div class="container">
-<h2 style="font-size:2rem;font-weight:700;margin:0 0 8px;text-align:center">立即下载</h2>
-<p style="color:var(--muted);text-align:center;max-width:600px;margin:0 auto 8px">Windows 10+ / 单文件免安装 / 便携模式自动检测</p>
-<div class="download-options">
-<article class="dl-card"><div class="dl-icon">📥</div><h3>Windows x64 单文件</div><p class="dl-meta">版本 1.0.0+29fa854 · 65.2 MB</p><a class="btn btn-primary" href="https://github.com/your-repo/astra-launcher/releases/latest/download/AstraLauncher.exe" target="_blank" rel="noopener">下载最新版</a></article>
-<article class="dl-card"><div class="dl-icon">📦</div><h3>便携模式</div><p class="dl-meta">将 exe 放入空文件夹运行，自动创建旁边的 <code>.minecraft</code></p><a class="btn btn-ghost" href="#portable-guide">查看便携指南</a></article>
-</div>
-</div>
-</section>
-<footer class="footer">
-<div class="container">
-<div class="footer-links">
-<a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
-<a href="#changelog">更新日志</a>
-<a href="#docs">文档</a>
-<a href="mailto:contact@example.com">联系我们</a>
-</div>
-<p>Best instant hosting for LLM agents / Claude Code / Codex → <a href="https://thevibehosting.com">thevibehosting.com</a></p>
-<p>© 2026 Astra Launcher · 单文件 · 免安装 · 开源</p>
-</div>
-</footer>
+  <section class="hero">
+    <div class="container">
+      <span class="hero-eyebrow"><span class="dot"></span>v1.0.0 内测版 · 持续更新中</span>
+      <h1>Astra Launcher</h1>
+      <p class="lead">现代 Minecraft Java 版启动器。单文件、免安装、开箱即用；为玩家与整合包作者而生。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#download">⬇ 立即下载</a>
+        <a class="btn btn-ghost" href="https://github.com/yghxdmdjjdcxy/Astra-launcher" target="_blank" rel="noopener">★ GitHub 源码</a>
+      </div>
+      <div class="hero-meta">
+        <span class="pill">Windows 10 / 11 x64</span><span class="pill">Fabric · Quilt · Forge · NeoForge</span>
+        <span class="pill">Microsoft / Xbox 登录</span><span class="pill">MIT License</span>
+      </div>
+      <div class="stats reveal">
+        <div class="stat"><b>298</b><span>单元测试通过</span></div>
+        <div class="stat"><b>0</b><span>编译警告 / 错误</span></div>
+        <div class="stat"><b>62.6 MB</b><span>单文件体积</span></div>
+        <div class="stat"><b>100%</b><span>开源可审计</span></div>
+      </div>
+    </div>
+  </section>
+  <section id="features">
+    <div class="container">
+      <div class="section-head reveal"><h2>该有的，全都有</h2><p>从下载、装模组、登录，到崩溃修复与日常工具，一个启动器全部覆盖。</p></div>
+      <div class="grid">
+        <article class="card reveal"><div class="card-icon">⚡</div><h3>极速下载</h3><p>官方源与 BMCLAPI 镜像自动回退，多线程分段下载，断点续传，文件完整性校验。</p></article>
+        <article class="card reveal"><div class="card-icon">🧩</div><h3>全模组加载器</h3><p>原版、Fabric、Quilt、Forge、NeoForge 一键安装，自动识别版本与加载器。</p><ul><li>本地版本自动合并</li><li>加载器版本按 MC 版本筛选</li></ul></article>
+        <article class="card reveal"><div class="card-icon">🔐</div><h3>官方登录</h3><p>Microsoft OAuth → Xbox Live → XSTS → Minecraft 完整认证链，也支持 Xbox 弹窗登录与离线档案。</p><ul><li>DPAPI 加密保存令牌</li><li>自动刷新会话</li></ul></article>
+        <article class="card reveal"><div class="card-icon">📦</div><h3>MOD 管理</h3><p>本地导入、启用/禁用、删除；Modrinth 在线搜索安装，按实例版本与加载器自动筛选。</p></article>
+        <article class="card reveal"><div class="card-icon">🛡️</div><h3>崩溃自动分析</h3><p>读取 latest.log 与 crash-reports，识别缺失前置、冲突模组、OOM、Java 版本等问题，给出可逆修复或手动建议。</p></article>
+        <article class="card reveal"><div class="card-icon">🧰</div><h3>文件自动补全</h3><p>启动前自动校验客户端、依赖库、资源文件；缺失或损坏自动下载补全，也可在实例页一键修复。</p></article>
+        <article class="card reveal"><div class="card-icon">🌐</div><h3>服务器一键加入</h3><p>保存服务器列表，启动时自动拼接 --server/--port，跳过多人游戏菜单直连。</p></article>
+        <article class="card reveal"><div class="card-icon">🎁</div><h3>百宝箱</h3><p>今日人品、内存优化、清理游戏垃圾、回声洞、自定义文件下载，以及可自定义的进度条样式。</p></article>
+      </div>
+    </div>
+  </section>
+  <section id="preview">
+    <div class="container">
+      <div class="section-head reveal"><h2>看一眼界面</h2><p>深色、克制、信息密度刚好；所有关键操作都在一屏内完成。</p></div>
+      <div class="mockup reveal">
+        <div class="mock-bar"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-title">Astra Launcher · 内测版本</span></div>
+        <div class="mock-body">
+          <aside class="mock-side"><div class="s-brand">ASTRA</div><a>首页</a><a class="on">游戏实例</a><a>下载</a><a>模组</a><a>账户</a><a>服务器</a><a>百宝箱</a><a>设置</a></aside>
+          <div class="mock-main"><h4>游戏实例</h4><p>实例使用独立目录，互不干扰；启动前自动校验并补齐游戏文件。</p>
+            <div class="mock-cards"><div class="mock-card"><b>1.21.1 · Fabric</b><span>已就绪 · 12 个 MOD</span></div><div class="mock-card"><b>1.20.1 · Forge</b><span>已就绪 · 47 个 MOD</span></div><div class="mock-card"><b>1.21.1 · 原版</b><span>已就绪</span></div></div>
+            <div class="mock-progress"><i></i></div>
+            <div class="mock-log">[launcher] 正在校验游戏文件…
+[launcher] 检查完成：0 个文件需要补全
+[launcher] 正在启动 Minecraft 1.21.1
+[game] Minecraft 已启动，PID 12345</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="download">
+    <div class="container">
+      <div class="dl-wrap">
+        <div class="dl-main reveal">
+          <h2>下载 Astra Launcher</h2>
+          <p class="sub">Windows x64 · 免安装单文件 · 不需要安装 .NET 运行时</p>
+          <a class="btn btn-primary" href="https://github.com/yghxdmdjjdcxy/Astra-launcher/releases/latest" target="_blank" rel="noopener">⬇ 从 GitHub Releases 下载 v1.0.0（62.6 MB）</a>
+          <a class="btn btn-ghost" href="https://github.com/yghxdmdjjdcxy/Astra-launcher/releases" target="_blank" rel="noopener" style="margin-left:10px">全部版本</a>
+          <div class="dl-facts"><div class="dl-fact"><b>版本</b>1.0.0+2293e6b</div><div class="dl-fact"><b>大小</b>62.6 MB</div><div class="dl-fact"><b>系统</b>Windows 10/11 x64</div><div class="dl-fact"><b>许可</b>MIT</div></div>
+          <div class="hash">SHA-256: B8AAE6AF1A05A28E4304D4DE1EBCEC7E907A8FE8FDE5A0F4568290451D93A1FA</div>
+        </div>
+        <aside class="dl-side reveal">
+          <h3>运行要求</h3><ul><li>Windows 10 1809+ / Windows 11</li><li>64 位系统，至少 4 GB 内存</li><li>已安装 Java 8 / 17 / 21 之一</li><li>首次启动会解压运行时，稍慢</li></ul>
+          <h3 style="margin-top:22px">便携使用</h3>
+          <p style="color:var(--muted);font-size:.86rem;margin:0">把 exe 放进空文件夹运行，启动器会在旁边创建独立的 .minecraft，整个文件夹可拷进 U 盘带走。</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+  <section id="start">
+    <div class="container">
+      <div class="section-head reveal"><h2>四步开始游戏</h2><p>不需要看教程，跟着首页提示走即可。</p></div>
+      <div class="steps">
+        <div class="step reveal"><b>1</b><h3>下载版本</h3><p>在「下载」页选择 Minecraft 版本，点击下载。</p></div>
+        <div class="step reveal"><b>2</b><h3>创建实例</h3><p>在「游戏实例」页新建或导入实例，选择版本。</p></div>
+        <div class="step reveal"><b>3</b><h3>登录账户</h3><p>添加 Microsoft 账户或离线档案，选中即可。</p></div>
+        <div class="step reveal"><b>4</b><h3>启动游戏</h3><p>点击启动，启动器会先校验并补齐文件。</p></div>
+      </div>
+    </div>
+  </section>
+  <section id="changelog">
+    <div class="container">
+      <div class="section-head reveal"><h2>更新日志</h2><p>最近几个版本的关键变化。</p></div>
+      <div class="timeline">
+        <div class="timeline-item reveal"><span class="date">2026-10-31 · v1.0.0+2293e6b</span><h3>百宝箱上线</h3><p>今日人品、内存优化、清理游戏垃圾、千万别点彩蛋、回声洞、自定义文件下载；进度条样式可自定义。</p></div>
+        <div class="timeline-item reveal"><span class="date">2026-10-31 · v1.0.0+4db91b3</span><h3>自定义外观</h3><p>新增百宝箱页与 5 种进度条预设，支持粗细调整、实时预览与自动保存。</p></div>
+        <div class="timeline-item reveal"><span class="date">2026-10-31 · v1.0.0+d33abdd</span><h3>文件自动补全</h3><p>实例页新增「补全游戏文件」；崩溃分析能识别文件缺失并自动修复。</p></div>
+        <div class="timeline-item reveal"><span class="date">2026-10-29 · v1.0.0+29fa854</span><h3>崩溃弹窗更可靠</h3><p>游戏未退出时也能实时分析，分析窗口置顶显示在游戏错误画面上方。</p></div>
+        <div class="timeline-item reveal"><span class="date">2026-10-29 · v1.0.0+fc1175f</span><h3>MOD 管理与崩溃修复</h3><p>本地 MOD / Modrinth 安装、依赖补全；崩溃分析支持缺失前置、重复模组、OOM 等。</p></div>
+      </div>
+    </div>
+  </section>
+  <section id="faq">
+    <div class="container">
+      <div class="section-head reveal"><h2>常见问题</h2><p>先看这里，能省一次提问。</p></div>
+      <div class="faq">
+        <details class="reveal"><summary>这是官方启动器吗？需要正版账号吗？</summary><p>不是 Mojang 官方产品。启动器支持 Microsoft 正版登录，也支持离线档案；使用正版账号才能进入正版服务器。</p></details>
+        <details class="reveal"><summary>为什么第一次启动比较慢？</summary><p>单文件版本首次运行会把 .NET 运行时解压到临时目录，之后启动会快很多。</p></details>
+        <details class="reveal"><summary>支持 macOS / Linux 吗？</summary><p>目前只提供 Windows x64 版本。项目是开源的，欢迎社区移植。</p></details>
+        <details class="reveal"><summary>游戏崩溃了怎么办？</summary><p>启动器会自动分析 latest.log 与 crash-reports，弹窗给出可逆修复建议；也可以点「补全游戏文件」重新校验客户端与依赖库。</p></details>
+        <details class="reveal"><summary>会修改我已有的 .minecraft 吗？</summary><p>导入实例只登记路径，删除实例不会删原目录；补全文件只会补齐缺失/损坏的本体文件，不动存档和模组配置。</p></details>
+        <details class="reveal"><summary>源码在哪里？</summary><p>GitHub：<a href="https://github.com/yghxdmdjjdcxy/Astra-launcher" target="_blank" rel="noopener">yghxdmdjjdcxy/Astra-launcher</a>，MIT 协议，欢迎 Issue / PR。</p></details>
+      </div>
+    </div>
+  </section>
 </main>
+<footer>
+  <div class="container foot">
+    <div><div class="brand" style="font-size:1.05rem"><span class="brand-mark" style="width:30px;height:30px;font-size:.9rem">A</span>Astra Launcher</div><p style="margin:8px 0 0">现代 Minecraft Java 版启动器 · 单文件 · 开源</p></div>
+    <div class="foot-links"><a href="https://github.com/yghxdmdjjdcxy/Astra-launcher" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/yghxdmdjjdcxy/Astra-launcher/issues" target="_blank" rel="noopener">问题反馈</a><a href="https://github.com/yghxdmdjjdcxy/Astra-launcher/releases" target="_blank" rel="noopener">Releases</a><a href="#download">下载</a></div>
+  </div>
+  <div class="container" style="margin-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap"><span>© 2026 Astra Launcher · MIT License</span><span>astra-launcher.us.ci</span></div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,saved=localStorage.getItem('astra-theme');
+  if(saved)root.setAttribute('data-theme',saved);
+  var toggle=document.getElementById('themeToggle');
+  function sync(){toggle.textContent=root.getAttribute('data-theme')==='light'?'☀️':'🌙';}sync();
+  toggle.addEventListener('click',function(){var next=root.getAttribute('data-theme')==='light'?'dark':'light';root.setAttribute('data-theme',next);localStorage.setItem('astra-theme',next);sync();});
+  document.getElementById('menuBtn').addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('open');});
+  document.querySelectorAll('#navLinks a').forEach(function(a){a.addEventListener('click',function(){document.getElementById('navLinks').classList.remove('open');});});
+  var els=document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -40px 0px'});els.forEach(function(el){io.observe(el);});}else{els.forEach(function(el){el.classList.add('in');});}
+  var canvas=document.getElementById('bg'),ctx=canvas.getContext('2d'),w=0,h=0,pts=[],raf=null,reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches,accent='34,211,166';
+  function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;}
+  function init(){pts=[];var count=Math.min(70,Math.floor(w*h/20000));for(var i=0;i<count;i++){pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.4+.4,o:Math.random()*.35+.12});}}
+  function draw(){ctx.clearRect(0,0,w,h);for(var i=0;i<pts.length;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba('+accent+','+p.o+')';ctx.fill();for(var j=i+1;j<pts.length;j++){var q=pts[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy);if(d<120){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle='rgba('+accent+','+(.06*(1-d/120))+')';ctx.lineWidth=.6;ctx.stroke();}}}raf=requestAnimationFrame(draw);}
+  if(!reduce){resize();init();draw();addEventListener('resize',function(){resize();init();});}
+  document.addEventListener('visibilitychange',function(){if(document.hidden)cancelAnimationFrame(raf);else if(!reduce)draw();});
+})();
+</script>
 </body>
 </html>
