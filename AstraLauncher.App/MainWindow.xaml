@@ -858,7 +858,69 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource PageTitle}" Text="百宝箱"/>
                     <TextBlock Style="{StaticResource PageSubtitle}"
-                               Text="自定义启动器外观，以及集中管理实用工具。修改后立即生效并自动保存。"/>
+                               Text="PCL 风格的小工具、自定义文件下载，以及启动器外观自定义。修改后立即生效并自动保存。"/>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="百宝箱"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                       Text="点一下试试。最后一个按钮真的建议别点。"/>
+                            <UniformGrid Columns="4">
+                                <Button Style="{StaticResource SecondaryButton}" Content="今日人品"
+                                        Command="{Binding DailyLuckCommand}" Margin="0,0,10,0" Height="40"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="内存优化"
+                                        Command="{Binding OptimizeMemoryCommand}" Margin="0,0,10,0" Height="40"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="清理游戏垃圾"
+                                        Command="{Binding CleanJunkCommand}" Margin="0,0,10,0" Height="40"/>
+                                <Button Style="{StaticResource DangerButton}" Content="千万别点"
+                                        Command="{Binding DoNotClickCommand}" Height="40"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Content="听一句回声"
+                                    Command="{Binding EchoCaveCommand}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="回声洞"/>
+                                <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap"
+                                           Text="反复点击这里可以查看 PCL 作者与各位沙雕网友乱七八糟的留言！"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="下载自定义文件"/>
+                            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap"
+                                       Text="使用启动器的高速下载引擎下载任意文件。请注意，部分网站（例如百度网盘）可能会报错 403，无法正常下载。"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="下载地址" Width="80"/>
+                                <TextBox Width="600" Text="{Binding DownloadUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="http / https 链接"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="保存到" Width="80"/>
+                                <TextBox Width="520" Text="{Binding DownloadDirectory, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="选择" Margin="8,0,0,0"
+                                        Command="{Binding BrowseDownloadFolderCommand}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="文件名" Width="80"/>
+                                <TextBox Width="600" Text="{Binding DownloadFileName, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="留空则使用链接中的文件名"/>
+                            </StackPanel>
+                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding DownloadProgress, Mode=OneWay}" Margin="0,12,0,0"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0" Text="{Binding DownloadStatus}" TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Style="{StaticResource PrimaryButton}" Content="开始下载"
+                                        Command="{Binding StartDownloadCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="打开文件夹"
+                                        Command="{Binding OpenDownloadFolderCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                         <StackPanel>
