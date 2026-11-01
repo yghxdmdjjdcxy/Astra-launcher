@@ -30,6 +30,7 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly IVersionInstallService? _installService;
     private readonly IExternalInstanceScanner? _externalScanner;
     private readonly RelayCommand _stopCommand;
+    private bool _isVersionManagerOpen;
     private GameInstance? _launchingInstance;
     private DateTimeOffset? _launchStartedAt;
     private bool _crashDialogShown;
@@ -83,6 +84,25 @@ public sealed class InstancesPageViewModel : PageViewModel
         ImportCommand = new AsyncRelayCommand(ImportAsync);
         ScanExternalCommand = new AsyncRelayCommand(ScanExternalAsync);
         ImportSavesCommand = new AsyncRelayCommand(ImportSavesAsync);
+        OpenVersionManagerCommand = new RelayCommand(_ => IsVersionManagerOpen = true);
+        CloseVersionManagerCommand = new RelayCommand(_ => IsVersionManagerOpen = false);
+        SelectInstanceCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is GameInstance instance)
+            {
+                SelectedInstance = instance;
+                IsVersionManagerOpen = false;
+            }
+        });
+        LaunchInstanceCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is GameInstance instance)
+            {
+                SelectedInstance = instance;
+                IsVersionManagerOpen = false;
+                _ = LaunchAsync();
+            }
+        });
         RenameCommand = new AsyncRelayCommand(RenameAsync);
         DuplicateCommand = new AsyncRelayCommand(DuplicateAsync);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
@@ -108,7 +128,11 @@ public sealed class InstancesPageViewModel : PageViewModel
         get => _selectedInstance;
         set
         {
-            if (SetProperty(ref _selectedInstance, value) && value is not null) _selectedInstanceId = value.Id;
+            if (SetProperty(ref _selectedInstance, value) && value is not null)
+            {
+                _selectedInstanceId = value.Id;
+                RememberInstance(value);
+            }
         }
     }
 
@@ -144,6 +168,17 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand ScanExternalCommand { get; }
 
     public ICommand ImportSavesCommand { get; }
+    public ICommand OpenVersionManagerCommand { get; }
+    public ICommand CloseVersionManagerCommand { get; }
+    public ICommand SelectInstanceCommand { get; }
+    public ICommand LaunchInstanceCommand { get; }
+    public ObservableCollection<GameInstance> RecentInstances { get; } = [];
+
+    public bool IsVersionManagerOpen
+    {
+        get => _isVersionManagerOpen;
+        set => SetProperty(ref _isVersionManagerOpen, value);
+    }
     public ICommand RenameCommand { get; }
     public ICommand DuplicateCommand { get; }
     public ICommand DeleteCommand { get; }
@@ -155,6 +190,7 @@ public sealed class InstancesPageViewModel : PageViewModel
 
     public async Task InitializeAsync()
     {
+        IsVersionManagerOpen = false;
         await RunAsync("加载实例列表", () => RefreshAsync(_selectedInstanceId));
         await PromptExternalImportAsync().ConfigureAwait(true);
     }
@@ -243,6 +279,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         IReadOnlyList<GameInstance> values = await _instances.ListAsync();
         Instances.Clear();
         foreach (GameInstance value in values) Instances.Add(value);
+        await RefreshRecentAsync().ConfigureAwait(true);
         ForceSelect(keepId is Guid instanceId ? Instances.FirstOrDefault(value => value.Id == instanceId) : null);
         StatusMessage = $"已加载 {Instances.Count} 个实例。";
     }
@@ -259,6 +296,76 @@ public sealed class InstancesPageViewModel : PageViewModel
         SelectedInstance = instance;
     }
 
+    private async Task RefreshRecentAsync()
+    {
+        RecentInstances.Clear();
+        if (_settings is not null)
+        {
+            try
+            {
+                LauncherSettings settings = await _settings.GetAsync().ConfigureAwait(true);
+                foreach (Guid id in settings.RecentInstanceIds)
+                {
+                    GameInstance? instance = Instances.FirstOrDefault(value => value.Id == id);
+                    if (instance is not null)
+                    {
+                        RecentInstances.Add(instance);
+                    }
+
+                    if (RecentInstances.Count >= 2)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                _logger.LogDebug(exception, "读取最近实例失败。");
+            }
+        }
+
+        foreach (GameInstance instance in Instances)
+        {
+            if (RecentInstances.Count >= 2)
+            {
+                break;
+            }
+
+            if (RecentInstances.All(item => item.Id != instance.Id))
+            {
+                RecentInstances.Add(instance);
+            }
+        }
+    }
+
+    private void RememberInstance(GameInstance instance)
+    {
+        RecentInstances.Remove(RecentInstances.FirstOrDefault(item => item.Id == instance.Id)!);
+        RecentInstances.Insert(0, instance);
+        while (RecentInstances.Count > 2)
+        {
+            RecentInstances.RemoveAt(RecentInstances.Count - 1);
+        }
+
+        if (_settings is not null)
+        {
+            _ = SaveRecentAsync();
+        }
+    }
+
+    private async Task SaveRecentAsync()
+    {
+        try
+        {
+            LauncherSettings settings = await _settings!.GetAsync().ConfigureAwait(true);
+            settings.RecentInstanceIds = RecentInstances.Select(instance => instance.Id).ToList();
+            await _settings.SaveAsync(settings).ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogDebug(exception, "保存最近实例失败。");
+        }
+    }
     private async Task CreateAsync() => await RunAsync("创建实例", async () =>
     {
         GameInstance created = await _instances.CreateAsync(Name, VersionId);

@@ -26,4 +26,7 @@
     <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\Icons\*.png" />
+  </ItemGroup>
 </Project>

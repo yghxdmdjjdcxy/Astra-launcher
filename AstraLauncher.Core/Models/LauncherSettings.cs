@@ -78,6 +78,9 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets a value indicating whether the launcher checks GitHub Releases for updates on startup.</summary>
     public bool AutoCheckUpdates { get; set; } = true;
 
+    /// <summary>Gets or sets the most recently used instance ids, newest first (max 2).</summary>
+    public List<Guid> RecentInstanceIds { get; set; } = [];
+
     /// <summary>Gets or sets the player name used for offline profiles.</summary>
     public string? OfflinePlayerName { get; set; } = "Player";
 
