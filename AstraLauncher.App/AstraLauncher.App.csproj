@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <VersionPrefix>1.0.8</VersionPrefix>
-    <VersionSuffix>alpha</VersionSuffix>
+    <VersionSuffix>beta</VersionSuffix>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AstraLauncher.Core\AstraLauncher.Core.csproj" />

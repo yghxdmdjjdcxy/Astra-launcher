@@ -185,7 +185,7 @@ public partial class App : Application
             .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion?
             .Split('+')[0]
             ?? typeof(App).Assembly.GetName().Version?.ToString(3)
-            ?? "1.0.8-alpha";
+            ?? "1.0.8-beta";
         var notice = new BetaNoticeWindow(version) { Owner = owner };
         notice.ShowDialog();
         if (notice.DontShowAgain)

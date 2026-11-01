@@ -16,7 +16,7 @@
         <StackPanel>
             <Border HorizontalAlignment="Left" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1"
                     CornerRadius="999" Padding="10,3">
-                <TextBlock Foreground="#92400E" FontSize="11" FontWeight="SemiBold" Text="公开测试 · ALPHA"/>
+                <TextBlock Foreground="#92400E" FontSize="11" FontWeight="SemiBold" Text="公开测试 · BETA"/>
             </Border>
             <TextBlock Foreground="#EEF2FF" FontSize="26" FontWeight="Bold" Margin="0,14,0,6" Text="欢迎使用 Astra Launcher 公开测试版"/>
             <TextBlock x:Name="VersionText" Foreground="#94A3B8" FontSize="12" Text="版本 1.0.1"/>
@@ -25,7 +25,7 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,18,0,10">
             <StackPanel>
                 <TextBlock Foreground="#CBD5E1" FontSize="13" TextWrapping="Wrap" LineHeight="24">
-                    这是第二个公开测试版本（v1.0.8-alpha），功能与稳定性仍在持续完善，可能遇到崩溃、下载失败或数据不兼容。建议：<LineBreak/>
+                    这是第二个公开测试版本（v1.0.8-beta），功能与稳定性仍在持续完善，可能遇到崩溃、下载失败或数据不兼容。建议：<LineBreak/>
                     <LineBreak/>• 重要存档与配置先备份（实例目录下的 saves / config）<LineBreak/>
                     • 遇到问题请附上 logs 目录日志到 GitHub Issues<LineBreak/>
                     • 启动器会自动检查 GitHub Releases 更新<LineBreak/>
