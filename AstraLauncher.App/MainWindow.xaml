@@ -575,26 +575,38 @@
                                 <Button Style="{StaticResource SecondaryButton}" Content="刷新列表" Command="{Binding RefreshModsCommand}" Margin="8,0,0,0"/>
                                 <Button Style="{StaticResource DangerButton}" Content="删除" Command="{Binding DeleteCommand}" Margin="8,0,0,0"/>
                             </StackPanel>
-                            <ListBox ItemsSource="{Binding Mods}" SelectedItem="{Binding SelectedMod}" Height="150"
+                            <ListBox ItemsSource="{Binding Mods}" SelectedItem="{Binding SelectedMod}" Height="190"
                                      ScrollViewer.VerticalScrollBarVisibility="Auto">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Margin="2,3">
-                                            <TextBlock FontWeight="SemiBold">
-                                                <Run Text="{Binding DisplayName, Mode=OneWay}"/>
-                                                <Run Text="{Binding Version, Mode=OneWay}" Foreground="#64748B"/>
-                                            </TextBlock>
-                                            <TextBlock Style="{StaticResource Hint}">
-                                                <Run Text="{Binding Platform, Mode=OneWay}"/>
-                                                <Run Text=" · "/>
-                                                <Run Text="{Binding ModId, Mode=OneWay}"/>
-                                                <Run Text=" · "/>
-                                                <Run Text="{Binding IsEnabled, Mode=OneWay}" FontWeight="SemiBold"/>
-                                            </TextBlock>
-                                        </StackPanel>
+                                        <Grid Margin="2,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock FontWeight="SemiBold">
+                                                    <Run Text="{Binding DisplayName, Mode=OneWay}"/>
+                                                    <Run Text="{Binding Version, Mode=OneWay}" Foreground="#64748B"/>
+                                                </TextBlock>
+                                                <TextBlock Style="{StaticResource Hint}">
+                                                    <Run Text="{Binding Platform, Mode=OneWay}"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding ModId, Mode=OneWay}"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding IsEnabled, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <CheckBox Grid.Column="1" Content="启用" VerticalAlignment="Center" Margin="12,0,0,0"
+                                                      IsChecked="{Binding IsEnabled, Mode=OneWay}"
+                                                      Command="{Binding DataContext.ToggleModCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                      CommandParameter="{Binding}"
+                                                      ToolTip="勾选启用，取消勾选禁用（重命名为 .jar.disabled，不删除文件）"/>
+                                        </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
+                            <TextBlock Text="勾选/取消每个 MOD 右侧的「启用」即可单独开关；禁用只重命名文件，不删除。" Style="{StaticResource Hint}" Margin="0,6,0,0"/>
                             <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Hint}" Margin="0,8,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>

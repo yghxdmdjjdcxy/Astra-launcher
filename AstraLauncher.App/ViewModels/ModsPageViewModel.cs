@@ -74,6 +74,13 @@ public sealed partial class ModsPageViewModel : PageViewModel
         RefreshModsCommand = new AsyncRelayCommand(LoadModsAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync);
         ToggleCommand = new AsyncRelayCommand(ToggleAsync);
+        ToggleModCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is LocalMod mod)
+            {
+                _ = ToggleAsync(mod);
+            }
+        });
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
         OpenFolderCommand = new RelayCommand(_ => OpenModsFolder());
         SearchCommand = new AsyncRelayCommand(SearchAsync);
@@ -90,6 +97,7 @@ public sealed partial class ModsPageViewModel : PageViewModel
     public ICommand RefreshModsCommand { get; }
     public ICommand ImportCommand { get; }
     public ICommand ToggleCommand { get; }
+    public ICommand ToggleModCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand OpenFolderCommand { get; }
     public ICommand SearchCommand { get; }
@@ -267,11 +275,22 @@ public sealed partial class ModsPageViewModel : PageViewModel
 
     private async Task ToggleAsync()
     {
-        GameInstance? instance = SelectedInstance;
         LocalMod? selected = SelectedMod;
-        if (instance is null || selected is null)
+        if (selected is null)
         {
             StatusMessage = "请先在列表中选择一个 MOD。";
+            return;
+        }
+
+        await ToggleAsync(selected);
+    }
+
+    private async Task ToggleAsync(LocalMod selected)
+    {
+        GameInstance? instance = SelectedInstance;
+        if (instance is null)
+        {
+            StatusMessage = "请先选择实例。";
             return;
         }
 
