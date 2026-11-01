@@ -26,6 +26,7 @@ public sealed class SettingsPageViewModel : PageViewModel
     private readonly ILauncherPaths _paths;
     private readonly ILogger<SettingsPageViewModel> _logger;
     private readonly IDialogService _dialogs;
+    private readonly IUpdatePrompter? _updatePrompter;
     private int _memoryMiB = LauncherSettings.DefaultMemoryMiB;
     private int _maxConcurrentDownloads = LauncherSettings.DefaultMaxConcurrentDownloads;
     private DownloadSourceMode _sourceMode = DownloadSourceMode.OfficialWithFallback;
@@ -34,13 +35,14 @@ public sealed class SettingsPageViewModel : PageViewModel
     private JavaRuntimeOption? _selectedJavaChoice = AutomaticJavaOption;
     private string? _selectedJavaPath;
     private bool _showSnapshots;
+    private bool _autoCheckUpdates = true;
     private string _offlinePlayerName = "Player";
     private string? _gameArguments;
     private string? _jvmArguments;
     private bool _isBusy;
     private string _statusMessage = "正在加载设置…";
 
-    public SettingsPageViewModel(ISettingsService settings, IJavaRuntimeDetector java, ILauncherPaths paths, ILogger<SettingsPageViewModel> logger, IDialogService dialogs) : base("设置")
+    public SettingsPageViewModel(ISettingsService settings, IJavaRuntimeDetector java, ILauncherPaths paths, ILogger<SettingsPageViewModel> logger, IDialogService dialogs, IUpdatePrompter? updatePrompter = null) : base("设置")
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(java);
@@ -52,11 +54,13 @@ public sealed class SettingsPageViewModel : PageViewModel
         _paths = paths;
         _logger = logger;
         _dialogs = dialogs;
+        _updatePrompter = updatePrompter;
         MinecraftDirectory = paths.MinecraftDirectory;
         JavaOptions.Add(AutomaticJavaOption);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         RefreshJavaCommand = new AsyncRelayCommand(RefreshJavaAsync);
         BrowseMinecraftDirectoryCommand = new RelayCommand(_ => BrowseMinecraftDirectory());
+        CheckUpdateCommand = new AsyncRelayCommand(CheckUpdateAsync);
     }
 
     public IReadOnlyList<DownloadSourceMode> AvailableSourceModes { get; } = Enum.GetValues<DownloadSourceMode>();
@@ -101,6 +105,10 @@ public sealed class SettingsPageViewModel : PageViewModel
 
     public bool ShowSnapshots { get => _showSnapshots; set => SetProperty(ref _showSnapshots, value); }
 
+    public bool AutoCheckUpdates { get => _autoCheckUpdates; set => SetProperty(ref _autoCheckUpdates, value); }
+
+    public string CurrentVersionText => _updatePrompter?.CurrentVersion ?? "1.0.0";
+
     public string OfflinePlayerName { get => _offlinePlayerName; set => SetProperty(ref _offlinePlayerName, value); }
 
     public string? GameArguments { get => _gameArguments; set => SetProperty(ref _gameArguments, value); }
@@ -116,6 +124,8 @@ public sealed class SettingsPageViewModel : PageViewModel
     public ICommand RefreshJavaCommand { get; }
 
     public ICommand BrowseMinecraftDirectoryCommand { get; }
+
+    public ICommand CheckUpdateCommand { get; }
 
     /// <summary>Loads persisted settings and refreshes the detected Java runtime list.</summary>
     public async Task InitializeAsync()
@@ -164,6 +174,7 @@ public sealed class SettingsPageViewModel : PageViewModel
             settings.MinecraftDirectory = requestedMinecraftDirectory;
             settings.JavaExecutablePath = SelectedJavaChoice?.ExecutablePath;
             settings.ShowSnapshots = ShowSnapshots;
+            settings.AutoCheckUpdates = AutoCheckUpdates;
             settings.OfflinePlayerName = string.IsNullOrWhiteSpace(OfflinePlayerName) ? "Player" : OfflinePlayerName;
             settings.GameArguments = GameArguments;
             settings.JvmArguments = JvmArguments;
@@ -185,6 +196,27 @@ public sealed class SettingsPageViewModel : PageViewModel
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private async Task CheckUpdateAsync()
+    {
+        if (_updatePrompter is null)
+        {
+            StatusMessage = "更新服务不可用。";
+            return;
+        }
+
+        StatusMessage = "正在检查更新…";
+        try
+        {
+            await _updatePrompter.CheckAsync(silent: false).ConfigureAwait(true);
+            StatusMessage = "检查更新完成。";
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "检查更新失败。");
+            StatusMessage = "检查更新失败：" + exception.Message;
         }
     }
 
@@ -219,6 +251,7 @@ public sealed class SettingsPageViewModel : PageViewModel
         SourceMode = settings.DownloadSourceMode;
         MirrorBaseUrl = settings.MirrorBaseUrl ?? LauncherSettings.DefaultMirrorBaseUrl;
         ShowSnapshots = settings.ShowSnapshots;
+        AutoCheckUpdates = settings.AutoCheckUpdates;
         OfflinePlayerName = string.IsNullOrWhiteSpace(settings.OfflinePlayerName) ? "Player" : settings.OfflinePlayerName;
         GameArguments = settings.GameArguments;
         JvmArguments = settings.JvmArguments;

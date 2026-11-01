@@ -62,6 +62,15 @@ After a game process exits (including exit code 0 when the game showed a crash s
 - **Reversible auto-repair** — installs a missing dependency from Modrinth (when a compatible project/version exists), disables suspected or duplicate mods by renaming them to `.jar.disabled`, and raises the configured memory by 1 GiB for out-of-memory crashes. Each action is listed as success/failure; disabled mods can be re-enabled, downloaded mods deleted, and memory changed back in Settings. Java/driver problems are reported as manual suggestions only.
 - Verified against a real crashed Forge 1.20.1 modpack (`changed&机械动力`): the analyzer identified the missing `create` dependency required by `create_dragons_plus` and `create_hypertube`, showed the dialog, and the Manual choice preserved the files.
 
+## Auto-update
+
+- **Startup check** — when `AutoCheckUpdates` is enabled (default), the launcher queries GitHub Releases (`/releases/latest`) in the background after the window opens. Drafts and pre-releases are ignored.
+- **Manual check** — Settings → 更新 → 立即检查更新.
+- **Prompt** — a newer tag shows a confirmation dialog; accepting opens a topmost progress window while the release asset downloads.
+- **Verification** — the download must match the asset size and, when GitHub supplies a `sha256:` digest, its SHA-256 before installation.
+- **Self-replace and restart** — a detached PowerShell script waits for the launcher process to exit, stages the new executable, swaps it with `.old` backup, starts the new build and removes the backup. In-flight games are independent processes and are not affected.
+- **Bootstrap note** — only builds that already contain this updater can auto-update. The first release containing it must be installed manually once; every later release can then be installed in-place.
+
 ## Project layout
 
 - `AstraLauncher.App` — WPF entry point, DI composition root, MVVM shell/navigation, settings and instance/download pages.
