@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -56,6 +56,7 @@ public sealed class CloudDrivePageViewModel : PageViewModel
     private readonly ISettingsService _settings;
     private readonly IDialogService _dialogs;
     private readonly ICloudreveAuthService? _cloudreveAuth;
+    private readonly ICloudreveBrowserLoginService? _cloudreveBrowser;
     private readonly ILogger<CloudDrivePageViewModel> _logger;
     private string _serverUrl;
     private string _email;
@@ -73,7 +74,8 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         ISettingsService settings,
         IDialogService dialogs,
         ILogger<CloudDrivePageViewModel> logger,
-        ICloudreveAuthService? cloudreveAuth = null) : base("云盘")
+        ICloudreveAuthService? cloudreveAuth = null,
+        ICloudreveBrowserLoginService? cloudreveBrowser = null) : base("云盘")
     {
         ArgumentNullException.ThrowIfNull(cloud);
         ArgumentNullException.ThrowIfNull(instances);
@@ -87,6 +89,7 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         _settings = settings;
         _dialogs = dialogs;
         _cloudreveAuth = cloudreveAuth;
+        _cloudreveBrowser = cloudreveBrowser;
         _logger = logger;
         _serverUrl = "http://127.0.0.1:5212/dav/";
         _email = string.Empty;
@@ -98,6 +101,7 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         ConnectCommand = new AsyncRelayCommand(ConnectAsync);
         CloudreveLoginCommand = new AsyncRelayCommand(CloudreveLoginAsync);
         CloudreveRegisterCommand = new AsyncRelayCommand(CloudreveRegisterAsync);
+        CloudreveBrowserLoginCommand = new AsyncRelayCommand(CloudreveBrowserLoginAsync);
         RefreshCommand = new AsyncRelayCommand(RefreshAsync);
         UploadSlotCommand = new RelayCommand(parameter =>
         {
@@ -125,6 +129,8 @@ public sealed class CloudDrivePageViewModel : PageViewModel
     public ICommand CloudreveLoginCommand { get; }
 
     public ICommand CloudreveRegisterCommand { get; }
+
+    public ICommand CloudreveBrowserLoginCommand { get; }
 
     public ICommand RefreshCommand { get; }
 
@@ -210,6 +216,38 @@ public sealed class CloudDrivePageViewModel : PageViewModel
     private async Task CloudreveLoginAsync() => await CloudreveSignInAsync(register: false);
 
     private async Task CloudreveRegisterAsync() => await CloudreveSignInAsync(register: true);
+
+    private async Task CloudreveBrowserLoginAsync()
+    {
+        if (_cloudreveBrowser is null)
+        {
+            StatusMessage = "统一验证窗口不可用。";
+            return;
+        }
+
+        StatusMessage = "正在连接 Astra Launcher & cloudrive 统一验证服务…";
+        try
+        {
+            CloudreveWebDavAccount? account = await _cloudreveBrowser.LoginAsync(CloudreveServerUrl).ConfigureAwait(true);
+            if (account is null)
+            {
+                StatusMessage = "已取消 Cloudreve 登录。";
+                return;
+            }
+
+            ServerUrl = CloudreveServerUrl.Trim().TrimEnd('/') + "/dav/";
+            Email = account.Email;
+            Password = account.Password;
+            CloudrevePassword = string.Empty;
+            StatusMessage = "登录成功，正在连接云盘…";
+            await ConnectAsync().ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or InvalidOperationException or HttpRequestException or IOException)
+        {
+            StatusMessage = "Cloudreve 登录失败：" + exception.Message;
+            _dialogs.ShowError(StatusMessage, "Cloudrive 统一验证");
+        }
+    }
 
     private async Task CloudreveSignInAsync(bool register)
     {

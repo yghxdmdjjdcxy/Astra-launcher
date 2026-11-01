@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -155,6 +155,7 @@ public partial class App : Application
         builder.Services.AddSingleton<IJavaInstallerService, JavaInstallerService>();
         builder.Services.AddSingleton<ICloudDriveService, CloudDriveService>();
         builder.Services.AddSingleton<ICloudreveAuthService, CloudreveAuthService>();
+        builder.Services.AddSingleton<ICloudreveBrowserLoginService, CloudreveBrowserLoginService>();
         builder.Services.AddSingleton<IExternalInstanceScanner, ExternalInstanceScanner>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();

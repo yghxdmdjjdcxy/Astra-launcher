@@ -15,6 +15,7 @@ public interface ICloudreveAuthService
 {
     Task<CloudreveWebDavAccount> LoginAsync(string serverUrl, string email, string password, CancellationToken cancellationToken = default);
     Task<CloudreveWebDavAccount> RegisterAsync(string serverUrl, string email, string password, CancellationToken cancellationToken = default);
+    Task<CloudreveWebDavAccount> ProvisionWebDavAsync(string serverUrl, string accessToken, string email, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Thin Cloudreve v4 REST client used to avoid showing the Cloudreve web page to launcher users.</summary>
@@ -34,6 +35,16 @@ public sealed class CloudreveAuthService : ICloudreveAuthService
     public async Task<CloudreveWebDavAccount> LoginAsync(string serverUrl, string email, string password, CancellationToken cancellationToken = default)
     {
         string accessToken = await LoginTokenAsync(serverUrl, email, password, cancellationToken).ConfigureAwait(false);
+        return await ProvisionWebDavAsync(serverUrl, accessToken, email, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Reuses/creates the launcher WebDAV account using an access token obtained from the embedded browser.</summary>
+    public async Task<CloudreveWebDavAccount> ProvisionWebDavAsync(
+        string serverUrl,
+        string accessToken,
+        string email,
+        CancellationToken cancellationToken = default)
+    {
         string webDavPassword = await EnsureWebDavAccountAsync(serverUrl, accessToken, cancellationToken).ConfigureAwait(false);
         return new CloudreveWebDavAccount(email.Trim(), webDavPassword);
     }
