@@ -153,7 +153,72 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand LaunchCommand { get; }
     public ICommand StopCommand { get; }
 
-    public Task InitializeAsync() => RunAsync("加载实例列表", () => RefreshAsync(_selectedInstanceId));
+    public async Task InitializeAsync()
+    {
+        await RunAsync("加载实例列表", () => RefreshAsync(_selectedInstanceId));
+        await PromptExternalImportAsync().ConfigureAwait(true);
+    }
+
+    /// <summary>On the first run, offers to adopt PCL/HMCL version-isolation directories found in the Minecraft folder.</summary>
+    private async Task PromptExternalImportAsync()
+    {
+        if (_externalScanner is null || _settings is null)
+        {
+            return;
+        }
+
+        try
+        {
+            LauncherSettings settings = await _settings.GetAsync().ConfigureAwait(true);
+            if (settings.ExternalImportPrompted)
+            {
+                return;
+            }
+
+            ExternalScanResult scan = _externalScanner.Scan();
+            IReadOnlyList<GameInstance> existing = await _instances.ListAsync().ConfigureAwait(true);
+            var existingPaths = existing
+                .Select(instance => Path.GetFullPath(instance.DirectoryPath))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            List<ExternalInstanceCandidate> candidates = scan.Candidates
+                .Where(candidate => !existingPaths.Contains(Path.GetFullPath(candidate.DirectoryPath)))
+                .ToList();
+            if (candidates.Count > 0)
+            {
+                string preview = string.Join(
+                    "\n",
+                    candidates.Take(8).Select(candidate => $"• {candidate.Name}（MOD {candidate.ModCount}，存档 {candidate.SaveCount}）"));
+                bool accepted = _dialogs.Confirm(
+                    $"检测到 {candidates.Count} 个其他启动器（PCL / HMCL）版本目录：\n\n{preview}\n\n"
+                    + "是否导入为实例？导入只登记目录，存档和 MOD 保持在原位置，可直接启动。",
+                    "导入其他启动器");
+                if (accepted)
+                {
+                    foreach (ExternalInstanceCandidate candidate in candidates)
+                    {
+                        try
+                        {
+                            await _instances.ImportAsync(candidate.Name, candidate.VersionId, candidate.DirectoryPath).ConfigureAwait(true);
+                        }
+                        catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
+                        {
+                            _logger.LogWarning(exception, "导入外部版本失败：{Name}", candidate.Name);
+                        }
+                    }
+
+                    await RefreshAsync(_selectedInstanceId).ConfigureAwait(true);
+                    StatusMessage = $"已导入 {candidates.Count} 个其他启动器实例。";
+                }
+            }
+
+            settings.ExternalImportPrompted = true;
+            await _settings.SaveAsync(settings).ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "自动扫描其他启动器实例失败。");
+        }
+    }
 
     /// <summary>Fills the version picker from the version manifest; the value is still free text when offline.</summary>
     public void SetAvailableVersions(IEnumerable<string> versions)

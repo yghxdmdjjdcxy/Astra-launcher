@@ -69,6 +69,9 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets the saved Cloudreve WebDAV account email.</summary>
     public string? CloudDriveEmail { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
+    public bool ExternalImportPrompted { get; set; }
+
     /// <summary>Gets or sets a value indicating whether the beta notice is shown on startup.</summary>
     public bool ShowBetaNotice { get; set; } = true;
 
