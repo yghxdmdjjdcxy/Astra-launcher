@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.Services;
 
-public enum PageKey { Welcome, Instances, Downloads, Mods, Accounts, Servers, Toolbox, Settings }
+public enum PageKey { Welcome, Instances, Downloads, Mods, Accounts, Servers, Toolbox, CloudDrive, Settings }
 
 public interface INavigationService
 {
@@ -20,6 +20,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
     private readonly AccountsPageViewModel _accounts;
     private readonly ServersPageViewModel _servers;
     private readonly ToolboxPageViewModel _toolbox;
+    private readonly CloudDrivePageViewModel _cloudDrive;
     private readonly SettingsPageViewModel _settings;
     private readonly ILogger<NavigationService> _logger;
     private PageViewModel _currentPage;
@@ -32,6 +33,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
         AccountsPageViewModel accounts,
         ServersPageViewModel servers,
         ToolboxPageViewModel toolbox,
+        CloudDrivePageViewModel cloudDrive,
         SettingsPageViewModel settings,
         ILogger<NavigationService> logger)
     {
@@ -42,6 +44,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
         _accounts = accounts;
         _servers = servers;
         _toolbox = toolbox;
+        _cloudDrive = cloudDrive;
         _settings = settings;
         _logger = logger;
         _currentPage = welcome;
@@ -60,6 +63,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
             PageKey.Accounts => _accounts,
             PageKey.Servers => _servers,
             PageKey.Toolbox => _toolbox,
+            PageKey.CloudDrive => _cloudDrive,
             PageKey.Settings => _settings,
             _ => throw new ArgumentOutOfRangeException(nameof(page), page, "Unknown application page.")
         };

@@ -27,6 +27,7 @@ public sealed class SettingsPageViewModel : PageViewModel
     private readonly ILogger<SettingsPageViewModel> _logger;
     private readonly IDialogService _dialogs;
     private readonly IUpdatePrompter? _updatePrompter;
+    private readonly IJavaInstallerService? _javaInstaller;
     private int _memoryMiB = LauncherSettings.DefaultMemoryMiB;
     private int _maxConcurrentDownloads = LauncherSettings.DefaultMaxConcurrentDownloads;
     private DownloadSourceMode _sourceMode = DownloadSourceMode.OfficialWithFallback;
@@ -36,13 +37,15 @@ public sealed class SettingsPageViewModel : PageViewModel
     private string? _selectedJavaPath;
     private bool _showSnapshots;
     private bool _autoCheckUpdates = true;
+    private JavaDownloadOption? _selectedJavaDownload;
+    private bool _showBetaNotice = true;
     private string _offlinePlayerName = "Player";
     private string? _gameArguments;
     private string? _jvmArguments;
     private bool _isBusy;
     private string _statusMessage = "正在加载设置…";
 
-    public SettingsPageViewModel(ISettingsService settings, IJavaRuntimeDetector java, ILauncherPaths paths, ILogger<SettingsPageViewModel> logger, IDialogService dialogs, IUpdatePrompter? updatePrompter = null) : base("设置")
+    public SettingsPageViewModel(ISettingsService settings, IJavaRuntimeDetector java, ILauncherPaths paths, ILogger<SettingsPageViewModel> logger, IDialogService dialogs, IUpdatePrompter? updatePrompter = null, IJavaInstallerService? javaInstaller = null) : base("设置")
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(java);
@@ -55,12 +58,19 @@ public sealed class SettingsPageViewModel : PageViewModel
         _logger = logger;
         _dialogs = dialogs;
         _updatePrompter = updatePrompter;
+        _javaInstaller = javaInstaller;
+        if (javaInstaller is not null)
+        {
+            JavaDownloads = javaInstaller.Options;
+            _selectedJavaDownload = JavaDownloads.FirstOrDefault();
+        }
         MinecraftDirectory = paths.MinecraftDirectory;
         JavaOptions.Add(AutomaticJavaOption);
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         RefreshJavaCommand = new AsyncRelayCommand(RefreshJavaAsync);
         BrowseMinecraftDirectoryCommand = new RelayCommand(_ => BrowseMinecraftDirectory());
         CheckUpdateCommand = new AsyncRelayCommand(CheckUpdateAsync);
+        DownloadJavaCommand = new AsyncRelayCommand(DownloadJavaAsync);
     }
 
     public IReadOnlyList<DownloadSourceMode> AvailableSourceModes { get; } = Enum.GetValues<DownloadSourceMode>();
@@ -107,6 +117,12 @@ public sealed class SettingsPageViewModel : PageViewModel
 
     public bool AutoCheckUpdates { get => _autoCheckUpdates; set => SetProperty(ref _autoCheckUpdates, value); }
 
+    public bool ShowBetaNotice { get => _showBetaNotice; set => SetProperty(ref _showBetaNotice, value); }
+
+    public IReadOnlyList<JavaDownloadOption> JavaDownloads { get; } = [];
+
+    public JavaDownloadOption? SelectedJavaDownload { get => _selectedJavaDownload; set => SetProperty(ref _selectedJavaDownload, value); }
+
     public string CurrentVersionText => _updatePrompter?.CurrentVersion ?? "1.0.0";
 
     public string OfflinePlayerName { get => _offlinePlayerName; set => SetProperty(ref _offlinePlayerName, value); }
@@ -126,6 +142,8 @@ public sealed class SettingsPageViewModel : PageViewModel
     public ICommand BrowseMinecraftDirectoryCommand { get; }
 
     public ICommand CheckUpdateCommand { get; }
+
+    public ICommand DownloadJavaCommand { get; }
 
     /// <summary>Loads persisted settings and refreshes the detected Java runtime list.</summary>
     public async Task InitializeAsync()
@@ -175,6 +193,7 @@ public sealed class SettingsPageViewModel : PageViewModel
             settings.JavaExecutablePath = SelectedJavaChoice?.ExecutablePath;
             settings.ShowSnapshots = ShowSnapshots;
             settings.AutoCheckUpdates = AutoCheckUpdates;
+            settings.ShowBetaNotice = ShowBetaNotice;
             settings.OfflinePlayerName = string.IsNullOrWhiteSpace(OfflinePlayerName) ? "Player" : OfflinePlayerName;
             settings.GameArguments = GameArguments;
             settings.JvmArguments = JvmArguments;
@@ -191,6 +210,40 @@ public sealed class SettingsPageViewModel : PageViewModel
         {
             _logger.LogError(exception, "保存设置失败。");
             StatusMessage = FriendlyError(exception, "保存设置");
+            _dialogs.ShowError(StatusMessage);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task DownloadJavaAsync()
+    {
+        if (_javaInstaller is null || SelectedJavaDownload is null)
+        {
+            StatusMessage = "Java 下载服务不可用。";
+            return;
+        }
+
+        IsBusy = true;
+        StatusMessage = $"正在下载 Java {SelectedJavaDownload.Display}…";
+        try
+        {
+            var progress = new Progress<string>(message => StatusMessage = message);
+            string executable = await _javaInstaller.InstallAsync(SelectedJavaDownload.Major, progress).ConfigureAwait(true);
+            LauncherSettings settings = await _settings.GetAsync().ConfigureAwait(true);
+            settings.JavaExecutablePath = executable;
+            await _settings.SaveAsync(settings).ConfigureAwait(true);
+            SelectedJavaPath = executable;
+            IReadOnlyList<JavaRuntimeInfo> runtimes = await _java.DetectAsync().ConfigureAwait(true);
+            RebuildJavaOptions(runtimes, executable);
+            StatusMessage = $"Java 已安装：{executable}";
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "下载 Java 失败。");
+            StatusMessage = "下载 Java 失败：" + exception.Message;
             _dialogs.ShowError(StatusMessage);
         }
         finally
@@ -252,6 +305,7 @@ public sealed class SettingsPageViewModel : PageViewModel
         MirrorBaseUrl = settings.MirrorBaseUrl ?? LauncherSettings.DefaultMirrorBaseUrl;
         ShowSnapshots = settings.ShowSnapshots;
         AutoCheckUpdates = settings.AutoCheckUpdates;
+        ShowBetaNotice = settings.ShowBetaNotice;
         OfflinePlayerName = string.IsNullOrWhiteSpace(settings.OfflinePlayerName) ? "Player" : settings.OfflinePlayerName;
         GameArguments = settings.GameArguments;
         JvmArguments = settings.JvmArguments;

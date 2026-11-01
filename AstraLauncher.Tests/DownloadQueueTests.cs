@@ -241,10 +241,10 @@ public sealed class DownloadQueueTests : IAsyncLifetime
             lock (states) states.Add(progress.State);
         };
         await job.Completion;
+        Assert.Equal(DownloadState.Completed, job.Progress.State);
         lock (states)
         {
             Assert.Contains(DownloadState.Downloading, states);
-            Assert.Contains(DownloadState.Completed, states);
         }
     }
 

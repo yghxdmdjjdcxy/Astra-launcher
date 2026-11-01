@@ -63,6 +63,15 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets the progress-bar thickness in device-independent pixels.</summary>
     public int ProgressBarHeight { get; set; } = DefaultProgressBarHeight;
 
+    /// <summary>Gets or sets the saved Cloudreve WebDAV endpoint.</summary>
+    public string? CloudDriveUrl { get; set; }
+
+    /// <summary>Gets or sets the saved Cloudreve WebDAV account email.</summary>
+    public string? CloudDriveEmail { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the beta notice is shown on startup.</summary>
+    public bool ShowBetaNotice { get; set; } = true;
+
     /// <summary>Gets or sets a value indicating whether the launcher checks GitHub Releases for updates on startup.</summary>
     public bool AutoCheckUpdates { get; set; } = true;
 

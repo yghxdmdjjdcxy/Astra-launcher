@@ -42,8 +42,18 @@ public sealed class NavigationServiceTests
             new AccountsPageViewModel(new FakeSettingsService(), new FakeAccountService(), NullLogger<AccountsPageViewModel>.Instance, dialogs),
             new ServersPageViewModel(new EmptyServerRepository(), NullLogger<ServersPageViewModel>.Instance),
             new ToolboxPageViewModel(new FakeSettingsService(), new FakeAppearanceService(), NullLogger<ToolboxPageViewModel>.Instance),
+            new CloudDrivePageViewModel(new FakeCloudDriveService(), new GameInstanceRepository(paths), paths, new FakeSettingsService(), dialogs, NullLogger<CloudDrivePageViewModel>.Instance),
             new SettingsPageViewModel(new FakeSettingsService(), new FakeJavaRuntimeDetector(), new LauncherPaths(Path.Combine(Path.GetTempPath(), "AstraLauncher.NavigationTests", Guid.NewGuid().ToString("N"))), NullLogger<SettingsPageViewModel>.Instance, dialogs),
             NullLogger<NavigationService>.Instance);
+    }
+
+    private sealed class FakeCloudDriveService : ICloudDriveService
+    {
+        public Task TestAsync(string serverUrl, string userName, string password, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<IReadOnlyList<CloudDriveEntry>> ListAsync(string serverUrl, string userName, string password, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<CloudDriveEntry>>([]);
+        public Task UploadAsync(string serverUrl, string userName, string password, string localPath, string remoteName, IProgress<string>? progress = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task DownloadAsync(string serverUrl, string userName, string password, string remoteName, string localPath, IProgress<string>? progress = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class FakeAppearanceService : IAppearanceService

@@ -31,6 +31,32 @@ Produces exactly one file: `artifacts/AstraLauncher-win-x64-single/AstraLauncher
 
 The WPF shell uses a clear navigation sidebar, a header with the current account and a footer with the recommended start flow. Every page follows the same card layout with Chinese labels and short explanations: the welcome page guides through the three steps (download → create instance → launch) and summarizes the Minecraft directory, account, Java and version status; instances, downloads, accounts, servers and settings are grouped into clearly labelled sections. The servers page stores a reusable multiplayer list and launches the selected instance with `--server/--port`. Screenshots are kept under `docs/evidence/ui-redesign/`, `docs/evidence/m5/` and `docs/evidence/m6/`.
 
+## Beta build
+
+- A modal beta notice is shown on startup (version, risks, backup advice, links). A checkbox suppresses it for future launches, and the same toggle is available in Settings → 更新.
+- The window title, header pill and footer show `内测版本`.
+
+## One-click Java
+
+Settings → Java 运行时 → 一键安装 Java supports Java 8/17/21:
+
+- Resolves the newest Windows x64 JDK zip from the TUNA Adoptium mirror (USTC fallback).
+- Downloads it through the segmented `DownloadQueue` (parallel HTTP Range requests).
+- Extracts to `%LOCALAPPDATA%\AstraLauncher\runtime\jdk-<major>-<timestamp>` and points the launcher at the resulting `javaw.exe`.
+
+## Cloud drive (Cloudreve)
+
+The 云盘 page connects to a Cloudreve instance over WebDAV (`http://127.0.0.1:5212/dav/` by default):
+
+- Login uses the Cloudreve account email/password (or a dedicated WebDAV password); the password stays in memory and is never written to disk.
+- Four fixed slots (`astra-slot1.zip` … `astra-slot4.zip`) map to the four game-version slots per user.
+- Upload builds a zip of `mods`, `config`, `saves`, `resourcepacks`, `shaderpacks`, `scripts`, `defaultconfigs`, `datapacks`, `options.txt`, `servers.dat` plus an `astra-instance.json` manifest, then PUTs it over WebDAV.
+- Download fetches the zip, extracts it under the instances directory, reads the manifest and registers the restored folder as a local instance.
+
+## Segmented downloads
+
+The install pipeline, Java installer and Modrinth mod downloads all run through `DownloadQueue` with HTTP Range segmentation, resume and SHA-1 verification (Modrinth sends the expected SHA-1 and size).
+
 ## Mod loaders
 
 The Downloads page has a loader card below the version list: choose a Minecraft version, then a loader (Fabric, Quilt, Forge, NeoForge), refresh its version list (with a recommended build preselected) and click **安装加载器**. Installed loader profiles appear in the instance version picker together with locally installed versions from `.minecraft/versions` (for example PCL profiles).

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using AstraLauncher.Downloader;
 using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.Game.Mods;
@@ -14,14 +15,16 @@ public sealed class ModrinthClient : IModrinthClient
     private const string UserAgent = "AstraLauncher/1.0 (Windows; Minecraft launcher)";
 
     private readonly HttpClient _httpClient;
+    private readonly DownloadQueue? _downloadQueue;
     private readonly ILogger<ModrinthClient> _logger;
 
-    public ModrinthClient(HttpClient httpClient, ILogger<ModrinthClient> logger)
+    public ModrinthClient(HttpClient httpClient, ILogger<ModrinthClient> logger, DownloadQueue? downloadQueue = null)
     {
         ArgumentNullException.ThrowIfNull(httpClient);
         ArgumentNullException.ThrowIfNull(logger);
         _httpClient = httpClient;
         _logger = logger;
+        _downloadQueue = downloadQueue;
     }
 
     /// <summary>Maps a detected mod platform to the loader id used by Modrinth facets and version filters.</summary>
@@ -160,6 +163,49 @@ public sealed class ModrinthClient : IModrinthClient
 
         progress?.Report(new ModrinthDownloadProgress($"正在下载 {fileName}", 0));
         string temporaryPath = destination + ".part";
+        if (_downloadQueue is not null)
+        {
+            try
+            {
+                DownloadRequest request = DownloadRequest.Create(
+                    file.Url,
+                    temporaryPath,
+                    expectedSha1: file.Sha1,
+                    expectedSize: file.Size > 0 ? file.Size : null,
+                    priority: DownloadPriority.High);
+                IDownloadHandle handle = _downloadQueue.Enqueue(request);
+                handle.ProgressChanged += (_, value) =>
+                {
+                    if (value.TotalBytes is > 0)
+                    {
+                        progress?.Report(new ModrinthDownloadProgress(
+                            $"正在下载 {fileName}",
+                            Math.Clamp(value.BytesReceived * 100d / value.TotalBytes.Value, 0, 100)));
+                    }
+                };
+                await using (cancellationToken.Register(handle.Cancel))
+                {
+                    await handle.Completion.ConfigureAwait(false);
+                }
+
+                File.Move(temporaryPath, destination, overwrite: true);
+                progress?.Report(new ModrinthDownloadProgress($"已安装 {fileName}", 100));
+                _logger.LogInformation("Downloaded Modrinth mod {FileName} via segmented queue into {ModsDirectory}.", fileName, modsDirectory);
+                return destination;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                TryDelete(temporaryPath);
+                throw;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or HttpRequestException or InvalidDataException)
+            {
+                TryDelete(temporaryPath);
+                _logger.LogError(exception, "下载或安装 MOD 失败：{FileName}", file.FileName);
+                throw new InvalidOperationException($"下载 MOD 失败：{exception.Message}", exception);
+            }
+        }
+
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, file.Url);

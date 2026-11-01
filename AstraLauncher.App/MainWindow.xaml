@@ -809,6 +809,15 @@
                                     <Button Style="{StaticResource SecondaryButton}" Content="重新检测 Java" Command="{Binding RefreshJavaCommand}" Margin="10,0,0,0"/>
                                 </StackPanel>
                                 <TextBlock Style="{StaticResource Hint}" Margin="120,6,0,0" Text="启动时如果自动选择失败，可在这里手动指定。"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="一键安装 Java"/>
+                                    <ComboBox Width="150" ItemsSource="{Binding JavaDownloads}"
+                                              SelectedItem="{Binding SelectedJavaDownload}" DisplayMemberPath="Display"/>
+                                    <Button Style="{StaticResource PrimaryButton}" Content="下载并安装"
+                                            Command="{Binding DownloadJavaCommand}" Margin="8,0,0,0"/>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Hint}" Margin="120,6,0,0"
+                                           Text="从清华 TUNA / 中科大 Adoptium 镜像多线程下载 JDK 并解压，安装后自动设为当前 Java。"/>
                             </StackPanel>
                         </Border>
 
@@ -849,6 +858,7 @@
                                            Text="从 GitHub Releases 检查新版本；下载完成后会自动替换当前 exe 并重启启动器。正在运行的游戏不受影响。"/>
                                 <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8" Text="{Binding CurrentVersionText, StringFormat='当前版本：{0}'}"/>
                                 <CheckBox Content="启动时自动检查更新" IsChecked="{Binding AutoCheckUpdates}" Margin="0,0,0,8"/>
+                                <CheckBox Content="启动时显示内测提示" IsChecked="{Binding ShowBetaNotice}" Margin="0,0,0,8"/>
                                 <Button Style="{StaticResource SecondaryButton}" Content="立即检查更新" Command="{Binding CheckUpdateCommand}"
                                         HorizontalAlignment="Left"/>
                             </StackPanel>
@@ -1044,6 +1054,73 @@
                 </StackPanel>
             </ScrollViewer>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CloudDrivePageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PageTitle}" Text="云盘"/>
+                    <TextBlock Style="{StaticResource PageSubtitle}"
+                               Text="连接 Cloudreve（WebDAV），把游戏实例压缩后保存到云端。每个用户固定 4 个版本槽位，上传时自动压缩 mods、config、saves 等目录。"/>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="登录 Cloudreve"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="WebDAV 地址"/>
+                                <TextBox Grid.Column="1" Margin="0,0,0,8" Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Cloudreve 默认：http://127.0.0.1:5212/dav/"/>
+                                <TextBlock Grid.Row="1" Style="{StaticResource FieldLabel}" Text="账号"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="2" Style="{StaticResource FieldLabel}" Text="密码"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="Cloudreve 账号密码或 WebDAV 专用密码，仅本次运行使用，不写入磁盘"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource PrimaryButton}" Content="连接" Command="{Binding ConnectCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="刷新槽位" Command="{Binding RefreshCommand}"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0" Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ItemsControl ItemsSource="{Binding Slots}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Card}" Width="470" Margin="0,0,12,12">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource SectionTitle}" Text="{Binding Title}"/>
+                                        <TextBlock Style="{StaticResource Hint}" Text="{Binding RemoteInfo}" Margin="0,0,0,8"/>
+                                        <ComboBox ItemsSource="{Binding DataContext.Instances, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                  SelectedItem="{Binding SelectedInstance}" DisplayMemberPath="Name" Margin="0,0,0,8"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource PrimaryButton}" Content="上传到此槽位" Margin="0,0,8,0"
+                                                    Command="{Binding DataContext.UploadSlotCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                            <Button Style="{StaticResource SecondaryButton}" Content="下载并恢复"
+                                                    Command="{Binding DataContext.DownloadSlotCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel Background="#F1F5F9">
@@ -1061,6 +1138,7 @@
                     <Button Style="{StaticResource NavButton}" Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts"/>
                     <Button Style="{StaticResource NavButton}" Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers"/>
                     <Button Style="{StaticResource NavButton}" Content="百宝箱" Command="{Binding NavigateCommand}" CommandParameter="Toolbox"/>
+                    <Button Style="{StaticResource NavButton}" Content="云盘" Command="{Binding NavigateCommand}" CommandParameter="CloudDrive"/>
                     <TextBlock Style="{StaticResource NavSection}" Text="配置"/>
                     <Button Style="{StaticResource NavButton}" Content="设置" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
                 </StackPanel>

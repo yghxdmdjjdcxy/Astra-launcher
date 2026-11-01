@@ -67,7 +67,9 @@ public partial class App : Application
                 bootstrap.Paths.ApplicationDataDirectory);
             MinecraftDataMigrator.MigrateLegacyMinecraftData(bootstrap.Paths, logger);
             _host.Services.GetRequiredService<IAppearanceService>().ApplySavedAsync().GetAwaiter().GetResult();
-            _host.Services.GetRequiredService<MainWindow>().Show();
+            MainWindow mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            mainWindow.Show();
+            ShowBetaNotice(mainWindow, logger);
             _ = _host.Services.GetRequiredService<IUpdatePrompter>().CheckAsync(silent: true);
         }
         catch (Exception exception)
@@ -150,6 +152,8 @@ public partial class App : Application
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
         builder.Services.AddSingleton<IUpdateService, UpdateService>();
         builder.Services.AddSingleton<IUpdatePrompter, UpdatePrompter>();
+        builder.Services.AddSingleton<IJavaInstallerService, JavaInstallerService>();
+        builder.Services.AddSingleton<ICloudDriveService, CloudDriveService>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();
         builder.Services.AddSingleton<DownloadsPageViewModel>();
@@ -157,10 +161,31 @@ public partial class App : Application
         builder.Services.AddSingleton<AccountsPageViewModel>();
         builder.Services.AddSingleton<ServersPageViewModel>();
         builder.Services.AddSingleton<ToolboxPageViewModel>();
+        builder.Services.AddSingleton<CloudDrivePageViewModel>();
         builder.Services.AddSingleton<SettingsPageViewModel>();
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         return builder.Build();
+    }
+
+    private void ShowBetaNotice(MainWindow owner, ILogger logger)
+    {
+        ISettingsService settingsService = _host!.Services.GetRequiredService<ISettingsService>();
+        AstraLauncher.Core.Models.LauncherSettings settings = settingsService.GetAsync().GetAwaiter().GetResult();
+        if (!settings.ShowBetaNotice)
+        {
+            return;
+        }
+
+        string version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+        var notice = new BetaNoticeWindow(version) { Owner = owner };
+        notice.ShowDialog();
+        if (notice.DontShowAgain)
+        {
+            settings.ShowBetaNotice = false;
+            settingsService.SaveAsync(settings).GetAwaiter().GetResult();
+            logger.LogInformation("Beta notice disabled by the user.");
+        }
     }
 
     /// <summary>
