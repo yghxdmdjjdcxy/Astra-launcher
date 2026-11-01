@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Navigation;
 
@@ -18,7 +18,7 @@ public partial class BetaNoticeWindow : Window
 
     private void OnConfirm(object sender, RoutedEventArgs e) => Close();
 
-    private void OnOpenReleases(object sender, RoutedEventArgs e) => Open("https://github.com/yghxdmdjjdcxy/Astra-launcher/releases");
+    private void OnOpenReleases(object sender, RoutedEventArgs e) => new ChangelogWindow().ShowDialog();
 
     private void OnNavigate(object sender, RequestNavigateEventArgs e)
     {

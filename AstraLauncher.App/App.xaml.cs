@@ -1,4 +1,5 @@
-using System.IO;
+﻿using System.IO;
+using System.Reflection;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -180,7 +181,11 @@ public partial class App : Application
             return;
         }
 
-        string version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+        string version = typeof(App).Assembly
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion?
+            .Split('+')[0]
+            ?? typeof(App).Assembly.GetName().Version?.ToString(3)
+            ?? "1.0.8-alpha";
         var notice = new BetaNoticeWindow(version) { Owner = owner };
         notice.ShowDialog();
         if (notice.DontShowAgain)

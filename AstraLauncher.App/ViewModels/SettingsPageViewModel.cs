@@ -70,6 +70,7 @@ public sealed class SettingsPageViewModel : PageViewModel
         RefreshJavaCommand = new AsyncRelayCommand(RefreshJavaAsync);
         BrowseMinecraftDirectoryCommand = new RelayCommand(_ => BrowseMinecraftDirectory());
         CheckUpdateCommand = new AsyncRelayCommand(CheckUpdateAsync);
+        ShowChangelogCommand = new RelayCommand(_ => new ChangelogWindow().ShowDialog());
         DownloadJavaCommand = new AsyncRelayCommand(DownloadJavaAsync);
     }
 
@@ -142,6 +143,8 @@ public sealed class SettingsPageViewModel : PageViewModel
     public ICommand BrowseMinecraftDirectoryCommand { get; }
 
     public ICommand CheckUpdateCommand { get; }
+
+    public ICommand ShowChangelogCommand { get; }
 
     public ICommand DownloadJavaCommand { get; }
 

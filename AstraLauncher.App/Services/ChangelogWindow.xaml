@@ -1,0 +1,83 @@
+<Window x:Class="AstraLauncher.App.Services.ChangelogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Astra Launcher 更新日志"
+        Width="640" Height="720"
+        WindowStartupLocation="CenterOwner"
+        Background="#0B0E14">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Foreground="#EEF2FF" FontSize="26" FontWeight="Bold" Text="Astra Launcher 更新日志"/>
+            <TextBlock x:Name="VersionText" Foreground="#94A3B8" FontSize="12" Margin="0,4,0,0" Text="当前版本：v1.0.8-alpha"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,18,0,12">
+            <StackPanel>
+                <Border Background="#111827" BorderBrush="#22D3A6" BorderThickness="1,0,0,0" Padding="14,10" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Foreground="#22D3A6" FontSize="17" FontWeight="Bold" Text="v1.0.8-alpha · 第二个公开测试版"/>
+                        <TextBlock Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" LineHeight="22" Margin="0,6,0,0">
+                            <LineBreak/>• Cloudreve 云盘改为启动器内嵌统一验证窗口：注册 / 登录 / 授权全在窗口内完成
+                            <LineBreak/>• 加载期间显示「正在连接 Astra Launcher &amp; cloudrive 统一验证服务」
+                            <LineBreak/>• 登录成功后自动创建或复用 WebDAV 账号，无需手动填写
+                            <LineBreak/>• 实例页自动检测 PCL / HMCL 版本隔离目录，首次启动询问是否导入
+                            <LineBreak/>• MOD 列表每项支持单独勾选启用 / 禁用
+                            <LineBreak/>• 启动器更新改用多线程分段下载
+                            <LineBreak/>• 新增本更新日志窗口
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#111827" BorderThickness="0" Padding="14,10" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Foreground="#EEF2FF" FontSize="15" FontWeight="Bold" Text="v1.0.7 · 自动导入 PCL 实例"/>
+                        <TextBlock Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" LineHeight="21" Margin="0,4,0,0">
+                            • 识别 PCL / HMCL 的 versions 版本隔离目录
+                            • 显示每个版本的 MOD 与存档数量，一键导入
+                            • 导入只登记路径，存档与 MOD 不移动
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#111827" Padding="14,10" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Foreground="#EEF2FF" FontSize="15" FontWeight="Bold" Text="v1.0.5 · Cloudreve 云盘"/>
+                        <TextBlock Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" LineHeight="21" Margin="0,4,0,0">
+                            • 每个用户 4 个游戏版本槽位
+                            • 上传自动压缩 mods / config / saves 等
+                            • 下载后自动解压并登记为本地实例
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#111827" Padding="14,10" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Foreground="#EEF2FF" FontSize="15" FontWeight="Bold" Text="v1.0.0~v1.0.4 · 基础能力"/>
+                        <TextBlock Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" LineHeight="21" Margin="0,4,0,0">
+                            • Fabric / Quilt / Forge / NeoForge 安装与启动
+                            • Microsoft / Xbox 登录、离线档案
+                            • MOD 导入、Modrinth 搜索安装
+                            • 崩溃自动分析、文件自动补全
+                            • Java 8 / 11 / 17 / 21 / 25 / 26 / 27 一键安装
+                            • 百宝箱：今日人品、内存优化、清理垃圾、回声洞
+                            • 自动更新与内测提示
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="GitHub Releases" Width="130" Height="36" Margin="0,0,10,0" Click="OnOpenReleases"
+                    Background="#1E293B" Foreground="#EEF2FF" BorderBrush="#334155"/>
+            <Button Content="关闭" Width="100" Height="36" Click="OnClose"
+                    Background="#22D3A6" Foreground="#04110D" FontWeight="Bold" BorderThickness="0"/>
+        </StackPanel>
+    </Grid>
+</Window>
