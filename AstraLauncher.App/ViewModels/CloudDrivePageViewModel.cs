@@ -1,6 +1,7 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
+using System.Net.Http;
 using System.Text.Json;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -54,10 +55,14 @@ public sealed class CloudDrivePageViewModel : PageViewModel
     private readonly ILauncherPaths _paths;
     private readonly ISettingsService _settings;
     private readonly IDialogService _dialogs;
+    private readonly ICloudreveAuthService? _cloudreveAuth;
     private readonly ILogger<CloudDrivePageViewModel> _logger;
     private string _serverUrl;
     private string _email;
     private string _password = string.Empty;
+    private string _cloudreveServerUrl = "https://cloud.astra-launcher-clouddrive.us.ci";
+    private string _cloudreveEmail = string.Empty;
+    private string _cloudrevePassword = string.Empty;
     private bool _isConnected;
     private string _statusMessage = "填写 Cloudreve WebDAV 地址与账号后连接。";
 
@@ -67,7 +72,8 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         ILauncherPaths paths,
         ISettingsService settings,
         IDialogService dialogs,
-        ILogger<CloudDrivePageViewModel> logger) : base("云盘")
+        ILogger<CloudDrivePageViewModel> logger,
+        ICloudreveAuthService? cloudreveAuth = null) : base("云盘")
     {
         ArgumentNullException.ThrowIfNull(cloud);
         ArgumentNullException.ThrowIfNull(instances);
@@ -80,6 +86,7 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         _paths = paths;
         _settings = settings;
         _dialogs = dialogs;
+        _cloudreveAuth = cloudreveAuth;
         _logger = logger;
         _serverUrl = "http://127.0.0.1:5212/dav/";
         _email = string.Empty;
@@ -89,6 +96,8 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         }
 
         ConnectCommand = new AsyncRelayCommand(ConnectAsync);
+        CloudreveLoginCommand = new AsyncRelayCommand(CloudreveLoginAsync);
+        CloudreveRegisterCommand = new AsyncRelayCommand(CloudreveRegisterAsync);
         RefreshCommand = new AsyncRelayCommand(RefreshAsync);
         UploadSlotCommand = new RelayCommand(parameter =>
         {
@@ -113,6 +122,10 @@ public sealed class CloudDrivePageViewModel : PageViewModel
 
     public ICommand ConnectCommand { get; }
 
+    public ICommand CloudreveLoginCommand { get; }
+
+    public ICommand CloudreveRegisterCommand { get; }
+
     public ICommand RefreshCommand { get; }
 
     public ICommand UploadSlotCommand { get; }
@@ -123,6 +136,24 @@ public sealed class CloudDrivePageViewModel : PageViewModel
     {
         get => _serverUrl;
         set => SetProperty(ref _serverUrl, value);
+    }
+
+    public string CloudreveServerUrl
+    {
+        get => _cloudreveServerUrl;
+        set => SetProperty(ref _cloudreveServerUrl, value);
+    }
+
+    public string CloudreveEmail
+    {
+        get => _cloudreveEmail;
+        set => SetProperty(ref _cloudreveEmail, value);
+    }
+
+    public string CloudrevePassword
+    {
+        get => _cloudrevePassword;
+        set => SetProperty(ref _cloudrevePassword, value);
     }
 
     public string Email
@@ -173,6 +204,46 @@ public sealed class CloudDrivePageViewModel : PageViewModel
         {
             _logger.LogError(exception, "加载云盘实例列表失败。");
             StatusMessage = "加载实例失败：" + exception.Message;
+        }
+    }
+
+    private async Task CloudreveLoginAsync() => await CloudreveSignInAsync(register: false);
+
+    private async Task CloudreveRegisterAsync() => await CloudreveSignInAsync(register: true);
+
+    private async Task CloudreveSignInAsync(bool register)
+    {
+        if (_cloudreveAuth is null)
+        {
+            StatusMessage = "Cloudreve 登录服务不可用。";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(CloudreveServerUrl) ||
+            string.IsNullOrWhiteSpace(CloudreveEmail) ||
+            string.IsNullOrWhiteSpace(CloudrevePassword))
+        {
+            StatusMessage = "请填写 Cloudreve 地址、邮箱和密码。";
+            return;
+        }
+
+        StatusMessage = register ? "正在注册 Cloudreve 账号…" : "正在登录 Cloudreve…";
+        try
+        {
+            CloudreveWebDavAccount account = register
+                ? await _cloudreveAuth.RegisterAsync(CloudreveServerUrl, CloudreveEmail, CloudrevePassword).ConfigureAwait(true)
+                : await _cloudreveAuth.LoginAsync(CloudreveServerUrl, CloudreveEmail, CloudrevePassword).ConfigureAwait(true);
+            ServerUrl = CloudreveServerUrl.Trim().TrimEnd('/') + "/dav/";
+            Email = account.Email;
+            Password = account.Password;
+            CloudrevePassword = string.Empty;
+            StatusMessage = "账号验证成功，正在连接云盘…";
+            await ConnectAsync().ConfigureAwait(true);
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or InvalidOperationException or HttpRequestException or IOException)
+        {
+            StatusMessage = (register ? "注册失败：" : "登录失败：") + exception.Message;
+            _dialogs.ShowError(StatusMessage, "Cloudreve 登录");
         }
     }
 

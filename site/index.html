@@ -153,7 +153,7 @@ footer{border-top:1px solid var(--line);padding:46px 0;color:var(--muted);font-s
         <article class="card reveal"><div class="card-icon">🔄</div><h3>自动更新</h3><p>启动时静默检查 GitHub Releases；发现新版本一键下载、校验并自动替换重启，正在运行的游戏不受影响。</p></article>
         <article class="card reveal"><div class="card-icon">📥</div><h3>导入其他启动器</h3><p>一键扫描 PCL / HMCL / 官方启动器的版本隔离目录与全局存档，直接登记为实例，无需重新下载。</p></article>
         <article class="card reveal"><div class="card-icon">☕</div><h3>一键安装 Java</h3><p>内置 Java 8 / 11 / 17 / 21 / 25 / 26 / 27 一键下载，走清华 TUNA / 中科大 Adoptium 镜像（新版本回退 Adoptium API），多线程分段下载后自动解压并设为当前 Java。</p></article>
-        <article class="card reveal"><div class="card-icon">☁️</div><h3>云盘同步</h3><p>连接 Cloudreve（WebDAV），每个用户 4 个游戏版本槽位；上传时自动压缩模组、配置与存档，换机一键恢复。</p></article>
+        <article class="card reveal"><div class="card-icon">☁️</div><h3>云盘同步</h3><p>启动器内直接注册 / 登录 Cloudreve，自动创建 WebDAV 账号；每个用户 4 个游戏版本槽位，上传自动压缩模组、配置与存档。</p></article>
         <article class="card reveal"><div class="card-icon">🎁</div><h3>百宝箱</h3><p>今日人品、内存优化、清理游戏垃圾、回声洞、自定义文件下载，以及可自定义的进度条样式。</p></article>
       </div>
     </div>
@@ -211,6 +211,7 @@ footer{border-top:1px solid var(--line);padding:46px 0;color:var(--muted);font-s
     <div class="container">
       <div class="section-head reveal"><h2>更新日志</h2><p>最近几个版本的关键变化。</p></div>
       <div class="timeline">
+        <div class="timeline-item reveal"><span class="date">2026-11-01 · v1.0.5</span><h3>Cloudreve 注册 / 登录</h3><p>云盘页内置 Cloudreve 注册与登录，自动创建 WebDAV 账号，无需打开 Cloudreve 网页。</p></div>
         <div class="timeline-item reveal"><span class="date">2026-11-01 · v1.0.4</span><h3>Java 25/27 与更新提速</h3><p>Java 下载扩展到 8/11/17/21/25/26/27；启动器更新改为多线程分段下载，国内拉取 GitHub Release 更快。</p></div>
         <div class="timeline-item reveal"><span class="date">2026-11-01 · v1.0.3</span><h3>导入其他启动器</h3><p>实例页新增「扫描其他启动器」与「导入全局存档」，可直接启动 PCL / HMCL 的版本隔离实例。</p></div>
         <div class="timeline-item reveal"><span class="date">2026-11-01 · v1.0.2</span><h3>内测弹窗 · Java 一键安装 · 云盘</h3><p>启动内测提示弹窗；Java 8/17/21 镜像一键安装；Cloudreve 云盘 4 槽位自动压缩上传；MOD 下载走多线程分段。</p></div>

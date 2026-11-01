@@ -1061,11 +1061,42 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource PageTitle}" Text="云盘"/>
                     <TextBlock Style="{StaticResource PageSubtitle}"
-                               Text="连接 Cloudreve（WebDAV），把游戏实例压缩后保存到云端。每个用户固定 4 个版本槽位。请先在 Cloudreve 左侧「WebDAV」创建账号，用注册邮箱 + 系统生成的密码登录这里（与 Cloudreve 登录密码不互通）。"/>
+                               Text="登录 Cloudreve 账号即可使用云盘：每个用户 4 个游戏版本槽位，上传自动压缩。登录/注册在本页完成，不需要打开 Cloudreve 网页；登录后会自动创建 WebDAV 账号。"/>
 
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource SectionTitle}" Text="登录 Cloudreve"/>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="Cloudreve 账号（注册 / 登录）"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
+                                       Text="输入 Cloudreve 站点地址、邮箱和密码。注册成功后自动登录，并自动创建 WebDAV 账号；不需要去 Cloudreve 网页操作。"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="Cloudreve 地址"/>
+                                <TextBox Grid.Column="1" Margin="0,0,0,8" Text="{Binding CloudreveServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="例如 https://cloud.astra-launcher-clouddrive.us.ci"/>
+                                <TextBlock Grid.Row="1" Style="{StaticResource FieldLabel}" Text="邮箱"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Text="{Binding CloudreveEmail, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="2" Style="{StaticResource FieldLabel}" Text="密码"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" Text="{Binding CloudrevePassword, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="仅用于本次登录，不写入磁盘"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource PrimaryButton}" Content="登录并连接" Command="{Binding CloudreveLoginCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="注册新账号" Command="{Binding CloudreveRegisterCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="高级：手动 WebDAV 登录"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="110"/>
