@@ -42,11 +42,11 @@ public sealed class UpdateService : IUpdateService
     private readonly HttpClient _httpClient;
     private readonly ILogger<UpdateService> _logger;
 
-    public UpdateService(ILogger<UpdateService> logger)
+    public UpdateService(ILogger<UpdateService> logger, HttpClient? httpClient = null)
     {
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
-        _httpClient = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
+        _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("AstraLauncher/" + CurrentVersion);
         _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     }
@@ -56,7 +56,7 @@ public sealed class UpdateService : IUpdateService
     {
         get
         {
-            Version version = Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(1, 0, 0, 0);
+            Version version = typeof(UpdateService).Assembly.GetName().Version ?? new Version(1, 0, 0, 0);
             return $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}";
         }
     }
