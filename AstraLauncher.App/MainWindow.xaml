@@ -1059,7 +1059,7 @@
                 <StackPanel>
                     <TextBlock Style="{StaticResource PageTitle}" Text="云盘"/>
                     <TextBlock Style="{StaticResource PageSubtitle}"
-                               Text="连接 Cloudreve（WebDAV），把游戏实例压缩后保存到云端。每个用户固定 4 个版本槽位，上传时自动压缩 mods、config、saves 等目录。"/>
+                               Text="连接 Cloudreve（WebDAV），把游戏实例压缩后保存到云端。每个用户固定 4 个版本槽位。请先在 Cloudreve 左侧「WebDAV」创建账号，用注册邮箱 + 系统生成的密码登录这里（与 Cloudreve 登录密码不互通）。"/>
 
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12">
                         <StackPanel>
@@ -1079,7 +1079,7 @@
                                          ToolTip="Cloudreve 默认：http://127.0.0.1:5212/dav/"/>
                                 <TextBlock Grid.Row="1" Style="{StaticResource FieldLabel}" Text="账号"/>
                                 <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Grid.Row="2" Style="{StaticResource FieldLabel}" Text="密码"/>
+                                <TextBlock Grid.Row="2" Style="{StaticResource FieldLabel}" Text="WebDAV 密码"/>
                                 <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Cloudreve 账号密码或 WebDAV 专用密码，仅本次运行使用，不写入磁盘"/>
                             </Grid>

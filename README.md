@@ -48,7 +48,7 @@ Settings → Java 运行时 → 一键安装 Java supports Java 8/17/21:
 
 The 云盘 page connects to a Cloudreve instance over WebDAV (`http://127.0.0.1:5212/dav/` by default):
 
-- Login uses the Cloudreve account email/password (or a dedicated WebDAV password); the password stays in memory and is never written to disk.
+- Login uses a Cloudreve **WebDAV account** (create one in Cloudreve: 左侧 WebDAV → 创建新账号). The account name is the Cloudreve email and the password is the generated WebDAV password; it is not the Cloudreve login password. The password stays in memory and is never written to disk.
 - Four fixed slots (`astra-slot1.zip` … `astra-slot4.zip`) map to the four game-version slots per user.
 - Upload builds a zip of `mods`, `config`, `saves`, `resourcepacks`, `shaderpacks`, `scripts`, `defaultconfigs`, `datapacks`, `options.txt`, `servers.dat` plus an `astra-instance.json` manifest, then PUTs it over WebDAV.
 - Download fetches the zip, extracts it under the instances directory, reads the manifest and registers the restored folder as a local instance.
