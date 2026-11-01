@@ -908,7 +908,7 @@
                             <StackPanel>
                                 <TextBlock Style="{StaticResource SectionTitle}" Text="回声洞"/>
                                 <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap"
-                                           Text="反复点击这里可以查看 PCL 作者与各位沙雕网友乱七八糟的留言！"/>
+                                           Text="灵感来自 PCL 的回声洞；这里显示的是 Astra Launcher 自己的留言。"/>
                             </StackPanel>
                         </DockPanel>
                     </Border>

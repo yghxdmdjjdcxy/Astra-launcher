@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using AstraLauncher.Downloader;
 using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.Services;
@@ -40,12 +41,14 @@ public sealed class UpdateService : IUpdateService
     private const string LatestReleaseApi = "https://api.github.com/repos/yghxdmdjjdcxy/Astra-launcher/releases/latest";
 
     private readonly HttpClient _httpClient;
+    private readonly DownloadQueue? _downloadQueue;
     private readonly ILogger<UpdateService> _logger;
 
-    public UpdateService(ILogger<UpdateService> logger, HttpClient? httpClient = null)
+    public UpdateService(ILogger<UpdateService> logger, HttpClient? httpClient = null, DownloadQueue? downloadQueue = null)
     {
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
+        _downloadQueue = downloadQueue;
         _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("AstraLauncher/" + CurrentVersion);
         _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
@@ -152,6 +155,39 @@ public sealed class UpdateService : IUpdateService
         string target = Path.Combine(directory, $"AstraLauncher-{safeTag}.exe");
         string part = target + ".part";
 
+        if (_downloadQueue is not null)
+        {
+            try
+            {
+                TryDelete(part);
+                DownloadRequest request = DownloadRequest.Create(
+                    update.DownloadUri,
+                    part,
+                    expectedSize: update.Size > 0 ? update.Size : null,
+                    priority: DownloadPriority.High);
+                IDownloadHandle handle = _downloadQueue.Enqueue(request);
+                handle.ProgressChanged += (_, value) =>
+                {
+                    if (value.TotalBytes is > 0)
+                    {
+                        progress?.Report(Math.Clamp(value.BytesReceived * 100d / value.TotalBytes.Value, 0, 100));
+                    }
+                };
+                await using (cancellationToken.Register(handle.Cancel))
+                {
+                    await handle.Completion.ConfigureAwait(false);
+                }
+
+                File.Move(part, target, overwrite: true);
+                return await VerifyDownloadAsync(target, update, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                TryDelete(part);
+                throw;
+            }
+        }
+
         using HttpResponseMessage response = await _httpClient
             .GetAsync(update.DownloadUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
@@ -177,23 +213,7 @@ public sealed class UpdateService : IUpdateService
             }
 
             File.Move(part, target, overwrite: true);
-            if (update.Size > 0 && new FileInfo(target).Length != update.Size)
-            {
-                throw new InvalidDataException("下载文件大小与 GitHub Release 不一致。");
-            }
-
-            if (!string.IsNullOrWhiteSpace(update.Sha256))
-            {
-                string actual = await ComputeSha256Async(target, cancellationToken).ConfigureAwait(false);
-                if (!string.Equals(actual, update.Sha256, StringComparison.OrdinalIgnoreCase))
-                {
-                    File.Delete(target);
-                    throw new InvalidDataException("更新文件 SHA-256 校验失败。");
-                }
-            }
-
-            _logger.LogInformation("Update {Tag} downloaded to {Path}.", update.Tag, target);
-            return target;
+            return await VerifyDownloadAsync(target, update, cancellationToken).ConfigureAwait(false);
         }
         catch
         {
@@ -210,6 +230,43 @@ public sealed class UpdateService : IUpdateService
             }
 
             throw;
+        }
+    }
+
+    private async Task<string> VerifyDownloadAsync(string target, LauncherUpdate update, CancellationToken cancellationToken)
+    {
+        if (update.Size > 0 && new FileInfo(target).Length != update.Size)
+        {
+            TryDelete(target);
+            throw new InvalidDataException("下载文件大小与 GitHub Release 不一致。");
+        }
+
+        if (!string.IsNullOrWhiteSpace(update.Sha256))
+        {
+            string actual = await ComputeSha256Async(target, cancellationToken).ConfigureAwait(false);
+            if (!string.Equals(actual, update.Sha256, StringComparison.OrdinalIgnoreCase))
+            {
+                TryDelete(target);
+                throw new InvalidDataException("更新文件 SHA-256 校验失败。");
+            }
+        }
+
+        _logger.LogInformation("Update {Tag} downloaded to {Path}.", update.Tag, target);
+        return target;
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (IOException)
+        {
+            // Best effort cleanup.
         }
     }
 

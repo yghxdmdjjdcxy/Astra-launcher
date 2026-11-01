@@ -1,6 +1,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Downloader;
@@ -29,6 +30,8 @@ public sealed class JavaInstallerService : IJavaInstallerService
         "https://mirrors.ustc.edu.cn/adoptium",
     ];
 
+    private const string AdoptiumLatestApi = "https://api.adoptium.net/v3/assets/latest";
+
     private readonly DownloadQueue _downloadQueue;
     private readonly ILogger<JavaInstallerService> _logger;
     private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(60) };
@@ -46,8 +49,12 @@ public sealed class JavaInstallerService : IJavaInstallerService
     public IReadOnlyList<JavaDownloadOption> Options { get; } =
     [
         new(8, "Java 8"),
+        new(11, "Java 11"),
         new(17, "Java 17"),
-        new(21, "Java 21"),
+        new(21, "Java 21 (LTS)"),
+        new(25, "Java 25 (LTS)"),
+        new(26, "Java 26"),
+        new(27, "Java 27 (EA)"),
     ];
 
     /// <inheritdoc />
@@ -55,7 +62,7 @@ public sealed class JavaInstallerService : IJavaInstallerService
     {
         if (Options.All(option => option.Major != majorVersion))
         {
-            throw new ArgumentOutOfRangeException(nameof(majorVersion), "仅支持 Java 8 / 17 / 21。");
+            throw new ArgumentOutOfRangeException(nameof(majorVersion), "不支持的 Java 版本。");
         }
 
         progress?.Report($"正在查找 Java {majorVersion} 镜像文件…");
@@ -144,6 +151,43 @@ public sealed class JavaInstallerService : IJavaInstallerService
             }
         }
 
+        Uri? fallback = await ResolveFromAdoptiumApiAsync(majorVersion, cancellationToken).ConfigureAwait(false);
+        if (fallback is not null)
+        {
+            _logger.LogInformation("Using Adoptium API asset for Java {Major}: {Uri}", majorVersion, fallback);
+            return fallback;
+        }
+
         throw new InvalidOperationException("无法从 Java 镜像站获取安装包。", lastError);
+    }
+
+    /// <summary>Falls back to the Adoptium API for versions not yet mirrored (e.g. JDK 26/27 early access).</summary>
+    private async Task<Uri?> ResolveFromAdoptiumApiAsync(int majorVersion, CancellationToken cancellationToken)
+    {
+        string url = $"{AdoptiumLatestApi}/{majorVersion}/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse";
+        try
+        {
+            using HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            string json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            using JsonDocument document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            JsonElement package = document.RootElement[0].GetProperty("binary").GetProperty("package");
+            string? link = package.TryGetProperty("link", out JsonElement linkElement) ? linkElement.GetString() : null;
+            return link is not null && Uri.TryCreate(link, UriKind.Absolute, out Uri? uri) ? uri : null;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidOperationException)
+        {
+            _logger.LogWarning(exception, "Adoptium API fallback failed for Java {Major}.", majorVersion);
+            return null;
+        }
     }
 }

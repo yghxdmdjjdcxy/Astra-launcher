@@ -38,9 +38,9 @@ The WPF shell uses a clear navigation sidebar, a header with the current account
 
 ## One-click Java
 
-Settings → Java 运行时 → 一键安装 Java supports Java 8/17/21:
+Settings → Java 运行时 → 一键安装 Java supports Java 8/11/17/21/25/26/27 (LTS and current EA):
 
-- Resolves the newest Windows x64 JDK zip from the TUNA Adoptium mirror (USTC fallback).
+- Resolves the newest Windows x64 JDK zip from the TUNA Adoptium mirror (USTC fallback), then falls back to the Adoptium API for majors not yet mirrored (e.g. JDK 26/27).
 - Downloads it through the segmented `DownloadQueue` (parallel HTTP Range requests).
 - Extracts to `%LOCALAPPDATA%\AstraLauncher\runtime\jdk-<major>-<timestamp>` and points the launcher at the resulting `javaw.exe`.
 
