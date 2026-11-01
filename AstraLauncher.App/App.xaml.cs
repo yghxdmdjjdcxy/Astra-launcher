@@ -154,6 +154,7 @@ public partial class App : Application
         builder.Services.AddSingleton<IUpdatePrompter, UpdatePrompter>();
         builder.Services.AddSingleton<IJavaInstallerService, JavaInstallerService>();
         builder.Services.AddSingleton<ICloudDriveService, CloudDriveService>();
+        builder.Services.AddSingleton<IExternalInstanceScanner, ExternalInstanceScanner>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();
         builder.Services.AddSingleton<DownloadsPageViewModel>();

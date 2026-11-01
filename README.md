@@ -57,6 +57,14 @@ The 云盘 page connects to a Cloudreve instance over WebDAV (`http://127.0.0.1:
 
 The install pipeline, Java installer and Modrinth mod downloads all run through `DownloadQueue` with HTTP Range segmentation, resume and SHA-1 verification (Modrinth sends the expected SHA-1 and size).
 
+## Importing other launchers
+
+The instances page can adopt data created by PCL / HMCL / the official launcher:
+
+- **扫描其他启动器** scans `versions/*` under the current Minecraft directory and `%APPDATA%\.minecraft`, lists version-isolation directories with their mod/save counts, and registers them as instances (path-only import, no files moved).
+- **导入全局存档** copies worlds from the shared `.minecraft\saves` folder into the selected instance's `saves` directory (originals are kept; duplicate names receive an `-imported` suffix).
+- Imported versions launch through the normal install pipeline, so missing libraries/assets are completed automatically.
+
 ## Mod loaders
 
 The Downloads page has a loader card below the version list: choose a Minecraft version, then a loader (Fabric, Quilt, Forge, NeoForge), refresh its version list (with a recommended build preselected) and click **安装加载器**. Installed loader profiles appear in the instance version picker together with locally installed versions from `.minecraft/versions` (for example PCL profiles).

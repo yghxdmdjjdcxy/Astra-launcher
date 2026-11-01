@@ -225,6 +225,8 @@
                             <TextBox Width="420" Margin="0,0,8,0" Text="{Binding ImportPath, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="现有游戏目录的绝对路径（只登记，不移动文件）"/>
                             <Button Style="{StaticResource SecondaryButton}" Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="扫描其他启动器" Command="{Binding ScanExternalCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="导入全局存档" Command="{Binding ImportSavesCommand}" Margin="0,0,8,0"/>
                             <Button Style="{StaticResource SecondaryButton}" Content="检测 Java" Command="{Binding DetectJavaCommand}"/>
                         </WrapPanel>
                     </StackPanel>

@@ -28,6 +28,7 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly ICrashDialogService? _crashDialog;
     private readonly ICrashRepairService? _crashRepair;
     private readonly IVersionInstallService? _installService;
+    private readonly IExternalInstanceScanner? _externalScanner;
     private readonly RelayCommand _stopCommand;
     private GameInstance? _launchingInstance;
     private DateTimeOffset? _launchStartedAt;
@@ -57,7 +58,8 @@ public sealed class InstancesPageViewModel : PageViewModel
         ICrashAnalyzer? crashAnalyzer = null,
         ICrashDialogService? crashDialog = null,
         ICrashRepairService? crashRepair = null,
-        IVersionInstallService? installService = null) : base("游戏实例")
+        IVersionInstallService? installService = null,
+        IExternalInstanceScanner? externalScanner = null) : base("游戏实例")
     {
         _instances = instances;
         _java = java;
@@ -70,6 +72,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         _crashDialog = crashDialog;
         _crashRepair = crashRepair;
         _installService = installService;
+        _externalScanner = externalScanner;
         _logger.LogInformation(
             "Crash analysis services: analyzer={Analyzer}, dialog={Dialog}, repair={Repair}.",
             crashAnalyzer is not null,
@@ -78,6 +81,8 @@ public sealed class InstancesPageViewModel : PageViewModel
         RefreshCommand = new AsyncRelayCommand(() => RunAsync("刷新实例列表", () => RefreshAsync(_selectedInstanceId)));
         CreateCommand = new AsyncRelayCommand(CreateAsync);
         ImportCommand = new AsyncRelayCommand(ImportAsync);
+        ScanExternalCommand = new AsyncRelayCommand(ScanExternalAsync);
+        ImportSavesCommand = new AsyncRelayCommand(ImportSavesAsync);
         RenameCommand = new AsyncRelayCommand(RenameAsync);
         DuplicateCommand = new AsyncRelayCommand(DuplicateAsync);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync);
@@ -135,6 +140,10 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand RefreshCommand { get; }
     public ICommand CreateCommand { get; }
     public ICommand ImportCommand { get; }
+
+    public ICommand ScanExternalCommand { get; }
+
+    public ICommand ImportSavesCommand { get; }
     public ICommand RenameCommand { get; }
     public ICommand DuplicateCommand { get; }
     public ICommand DeleteCommand { get; }
@@ -205,6 +214,135 @@ public sealed class InstancesPageViewModel : PageViewModel
         await RefreshAsync(imported.Id);
         StatusMessage = $"已导入实例：{imported.Name}";
     });
+
+    private async Task ScanExternalAsync() => await RunAsync("扫描其他启动器", async () =>
+    {
+        if (_externalScanner is null)
+        {
+            StatusMessage = "外部实例扫描服务不可用。";
+            return;
+        }
+
+        ExternalScanResult scan = _externalScanner.Scan();
+        IReadOnlyList<GameInstance> existing = await _instances.ListAsync();
+        var existingPaths = existing
+            .Select(instance => Path.GetFullPath(instance.DirectoryPath))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        List<ExternalInstanceCandidate> candidates = scan.Candidates
+            .Where(candidate => !existingPaths.Contains(Path.GetFullPath(candidate.DirectoryPath)))
+            .ToList();
+        if (candidates.Count == 0)
+        {
+            string savesHint = scan.GlobalSaveCount > 0
+                ? $"\n\n另外发现全局存档 {scan.GlobalSaveCount} 个，可用「导入全局存档」复制到选中实例。"
+                : string.Empty;
+            StatusMessage = "未发现新的外部版本。";
+            _dialogs.ShowInfo("没有发现其他启动器的新版本目录。" + savesHint, "扫描其他启动器");
+            return;
+        }
+
+        string preview = string.Join(
+            "\n",
+            candidates.Take(12).Select(candidate => $"• {candidate.Name}（MOD {candidate.ModCount}，存档 {candidate.SaveCount}）"));
+        if (candidates.Count > 12)
+        {
+            preview += $"\n… 其余 {candidates.Count - 12} 个";
+        }
+
+        bool accepted = _dialogs.Confirm(
+            $"发现 {candidates.Count} 个其他启动器版本：\n\n{preview}\n\n"
+            + "是否全部导入为实例？导入只登记目录，不移动任何文件。",
+            "扫描其他启动器");
+        if (!accepted)
+        {
+            return;
+        }
+
+        int imported = 0;
+        foreach (ExternalInstanceCandidate candidate in candidates)
+        {
+            try
+            {
+                await _instances.ImportAsync(candidate.Name, candidate.VersionId, candidate.DirectoryPath);
+                imported++;
+                AppendLog($"[launcher] 已导入外部版本：{candidate.Name} → {candidate.DirectoryPath}");
+            }
+            catch (Exception exception) when (exception is IOException or InvalidOperationException or UnauthorizedAccessException)
+            {
+                _logger.LogWarning(exception, "导入外部版本失败：{Name}", candidate.Name);
+            }
+        }
+
+        await RefreshAsync(_selectedInstanceId);
+        StatusMessage = $"已导入 {imported} 个外部版本实例。";
+    });
+
+    private async Task ImportSavesAsync() => await RunAsync("导入存档", async () =>
+    {
+        GameInstance? instance = ResolveSelectedInstanceForLaunch();
+        if (instance is null)
+        {
+            StatusMessage = "请先选择目标实例。";
+            return;
+        }
+
+        ExternalScanResult scan = _externalScanner?.Scan() ?? new ExternalScanResult([], null, 0);
+        if (scan.GlobalSavesDirectory is null || scan.GlobalSaveCount == 0)
+        {
+            StatusMessage = "没有找到其他启动器的全局存档。";
+            _dialogs.ShowInfo("没有在 .minecraft\\saves 找到可导入的存档。", "导入存档");
+            return;
+        }
+
+        bool accepted = _dialogs.Confirm(
+            $"发现 {scan.GlobalSaveCount} 个全局存档：\n{scan.GlobalSavesDirectory}\n\n"
+            + $"是否复制到实例「{instance.Name}」的 saves 目录？不会删除原存档。",
+            "导入全局存档");
+        if (!accepted)
+        {
+            return;
+        }
+
+        string targetDirectory = Path.Combine(instance.DirectoryPath, "saves");
+        Directory.CreateDirectory(targetDirectory);
+        int copied = 0;
+        foreach (string source in Directory.EnumerateDirectories(scan.GlobalSavesDirectory))
+        {
+            string name = Path.GetFileName(source);
+            string destination = Path.Combine(targetDirectory, name);
+            if (Directory.Exists(destination))
+            {
+                destination += "-imported";
+            }
+
+            try
+            {
+                CopyDirectory(source, destination);
+                copied++;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogWarning(exception, "复制存档失败：{Name}", name);
+            }
+        }
+
+        StatusMessage = $"已导入 {copied} 个存档到「{instance.Name}」。";
+        _dialogs.ShowInfo($"已复制 {copied} 个存档到实例「{instance.Name}」的 saves 目录。", "导入存档");
+    });
+
+    private static void CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (string file in Directory.EnumerateFiles(source))
+        {
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite: false);
+        }
+
+        foreach (string directory in Directory.EnumerateDirectories(source))
+        {
+            CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+        }
+    }
 
     private async Task RenameAsync() => await RunAsync("重命名实例", async () =>
     {
