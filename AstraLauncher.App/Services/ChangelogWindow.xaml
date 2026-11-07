@@ -29,6 +29,7 @@
                             <LineBreak/>• 实例页自动检测 PCL / HMCL 版本隔离目录，首次启动询问是否导入
                             <LineBreak/>• MOD 列表每项支持单独勾选启用 / 禁用
                             <LineBreak/>• 启动器更新改用多线程分段下载
+                            <LineBreak/>• 新增内置问题反馈：feedback.md、截图无损压缩、可选日志、离线队列
                             <LineBreak/>• 新增本更新日志窗口
                         </TextBlock>
                     </StackPanel>

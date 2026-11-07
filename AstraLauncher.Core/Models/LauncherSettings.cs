@@ -1,4 +1,4 @@
-namespace AstraLauncher.Core.Models;
+﻿namespace AstraLauncher.Core.Models;
 
 /// <summary>Selects where version metadata and game files are downloaded from.</summary>
 public enum DownloadSourceMode
@@ -70,6 +70,9 @@ public sealed class LauncherSettings
     public string? CloudDriveEmail { get; set; }
 
     /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
+    public const string DefaultFeedbackEndpoint = "https://feedback.astra-launcher-clouddrive.us.ci/api/feedback";
+
+    /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
     public bool ExternalImportPrompted { get; set; }
 
     /// <summary>Gets or sets a value indicating whether the beta notice is shown on startup.</summary>
@@ -77,6 +80,9 @@ public sealed class LauncherSettings
 
     /// <summary>Gets or sets a value indicating whether the launcher checks GitHub Releases for updates on startup.</summary>
     public bool AutoCheckUpdates { get; set; } = true;
+
+    /// <summary>Gets or sets the feedback upload endpoint (multipart POST).</summary>
+    public string FeedbackEndpoint { get; set; } = DefaultFeedbackEndpoint;
 
     /// <summary>Gets or sets the most recently used instance ids, newest first (max 2).</summary>
     public List<Guid> RecentInstanceIds { get; set; } = [];

@@ -37,6 +37,9 @@ public partial class App : Application
     private IHost? _host;
     private Mutex? _singleInstanceMutex;
 
+    /// <summary>Gets the running host services (used by windows that are not created through DI).</summary>
+    public IServiceProvider Services => _host?.Services ?? throw new InvalidOperationException("The launcher host is not initialized.");
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -157,6 +160,8 @@ public partial class App : Application
         builder.Services.AddSingleton<ICloudDriveService, CloudDriveService>();
         builder.Services.AddSingleton<ICloudreveAuthService, CloudreveAuthService>();
         builder.Services.AddSingleton<ICloudreveBrowserLoginService, CloudreveBrowserLoginService>();
+        builder.Services.AddSingleton<IFeedbackService, FeedbackService>();
+        builder.Services.AddHostedService<FeedbackQueueWorker>();
         builder.Services.AddSingleton<IExternalInstanceScanner, ExternalInstanceScanner>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
         builder.Services.AddSingleton<InstancesPageViewModel>();

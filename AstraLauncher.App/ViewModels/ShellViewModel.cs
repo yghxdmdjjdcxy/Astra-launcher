@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
 using AstraLauncher.App.Services;

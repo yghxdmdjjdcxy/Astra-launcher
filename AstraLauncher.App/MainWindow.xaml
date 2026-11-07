@@ -1,4 +1,4 @@
-<Window x:Class="AstraLauncher.App.MainWindow"
+﻿<Window x:Class="AstraLauncher.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:AstraLauncher.App.ViewModels"
@@ -1240,6 +1240,7 @@
                     <Button Style="{StaticResource NavButton}" Content="云盘" Command="{Binding NavigateCommand}" CommandParameter="CloudDrive"/>
                     <TextBlock Style="{StaticResource NavSection}" Text="配置"/>
                     <Button Style="{StaticResource NavButton}" Content="设置" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
+                    <Button Style="{StaticResource NavButton}" Content="问题反馈" Click="OnFeedbackClick"/>
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Foreground="#64748B" FontSize="11" Margin="4,12,0,0" Text="{Binding AppVersion, StringFormat='{}{0} · 公开测试'}"/>
             </DockPanel>
