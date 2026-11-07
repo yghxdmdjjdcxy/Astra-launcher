@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.Services;
 
-public enum PageKey { Welcome, Instances, Downloads, Mods, Accounts, Servers, Toolbox, CloudDrive, Settings }
+public enum PageKey { Welcome, Instances, Downloads, Mods, Accounts, Servers, Toolbox, CloudDrive, Settings, Multiplayer }
 
 public interface INavigationService
 {
@@ -22,6 +22,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
     private readonly ToolboxPageViewModel _toolbox;
     private readonly CloudDrivePageViewModel _cloudDrive;
     private readonly SettingsPageViewModel _settings;
+    private readonly MultiplayerPageViewModel? _multiplayer;
     private readonly ILogger<NavigationService> _logger;
     private PageViewModel _currentPage;
 
@@ -35,7 +36,8 @@ public sealed class NavigationService : ObservableObject, INavigationService
         ToolboxPageViewModel toolbox,
         CloudDrivePageViewModel cloudDrive,
         SettingsPageViewModel settings,
-        ILogger<NavigationService> logger)
+        ILogger<NavigationService> logger,
+        MultiplayerPageViewModel? multiplayer = null)
     {
         _welcome = welcome;
         _instances = instances;
@@ -46,6 +48,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
         _toolbox = toolbox;
         _cloudDrive = cloudDrive;
         _settings = settings;
+        _multiplayer = multiplayer;
         _logger = logger;
         _currentPage = welcome;
     }
@@ -65,6 +68,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
             PageKey.Toolbox => _toolbox,
             PageKey.CloudDrive => _cloudDrive,
             PageKey.Settings => _settings,
+            PageKey.Multiplayer => _multiplayer ?? throw new InvalidOperationException("联机页面未注册到导航服务。"),
             _ => throw new ArgumentOutOfRangeException(nameof(page), page, "Unknown application page.")
         };
         _logger.LogInformation("Navigated to {Page}", page);

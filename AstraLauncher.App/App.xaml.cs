@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using System.Net;
 using System.Net.Http;
@@ -25,6 +25,8 @@ using AstraLauncher.Infrastructure.Net;
 using AstraLauncher.Infrastructure.Servers;
 using AstraLauncher.Infrastructure.Settings;
 using AstraLauncher.Infrastructure.Versioning;
+using AstraLauncher.Multiplayer;
+using AstraLauncher.Plugin.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -136,6 +138,9 @@ public partial class App : Application
         builder.Services.AddSingleton<GameCommandBuilder>();
         builder.Services.AddSingleton<IGameProcessLauncher, GameProcessLauncher>();
         builder.Services.AddSingleton<IGameLaunchService, GameLaunchService>();
+        builder.Services.AddSingleton<EasyTierBinaryResolver>();
+        builder.Services.AddSingleton<IEasyTierService, EasyTierService>();
+        builder.Services.AddSingleton<ILaunchHook, EasyTierLaunchHook>();
         builder.Services.AddSingleton<IGameInstanceRepository, GameInstanceRepository>();
         builder.Services.AddSingleton<IJavaRuntimeDetector, JavaRuntimeDetector>();
         builder.Services.AddSingleton<ITokenProtector, DpapiTokenProtector>();
@@ -172,6 +177,7 @@ public partial class App : Application
         builder.Services.AddSingleton<ToolboxPageViewModel>();
         builder.Services.AddSingleton<CloudDrivePageViewModel>();
         builder.Services.AddSingleton<SettingsPageViewModel>();
+        builder.Services.AddSingleton<MultiplayerPageViewModel>();
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         return builder.Build();

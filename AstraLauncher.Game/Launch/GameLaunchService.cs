@@ -4,6 +4,7 @@ using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Java;
 using AstraLauncher.Game.Metadata;
+using AstraLauncher.Plugin.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.Game.Launch;
@@ -27,6 +28,7 @@ public sealed class GameLaunchService : IGameLaunchService
     private readonly GameCommandBuilder _commandBuilder;
     private readonly IGameProcessLauncher _processLauncher;
     private readonly ILogger<GameLaunchService> _logger;
+    private readonly ILaunchHook[] _hooks;
 
     public GameLaunchService(
         ILauncherPaths paths,
@@ -35,7 +37,8 @@ public sealed class GameLaunchService : IGameLaunchService
         IJavaRuntimeDetector javaDetector,
         GameCommandBuilder commandBuilder,
         IGameProcessLauncher processLauncher,
-        ILogger<GameLaunchService> logger)
+        ILogger<GameLaunchService> logger,
+        IEnumerable<ILaunchHook>? hooks = null)
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(installService);
@@ -51,6 +54,7 @@ public sealed class GameLaunchService : IGameLaunchService
         _commandBuilder = commandBuilder;
         _processLauncher = processLauncher;
         _logger = logger;
+        _hooks = hooks?.ToArray() ?? [];
     }
 
     /// <inheritdoc />
@@ -126,12 +130,17 @@ public sealed class GameLaunchService : IGameLaunchService
             extraGameArguments,
             options.ServerAddress,
             options.ServerPort);
-        if (!string.IsNullOrWhiteSpace(options.ServerAddress))
+        if (_hooks.Length > 0)
+        {
+            request = await ApplyLaunchHooksAsync(request, instance, session, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ServerAddress))
         {
             _logger.LogInformation(
                 "Joining server {ServerAddress}:{ServerPort} directly when launching version {VersionId}.",
-                options.ServerAddress,
-                options.ServerPort?.ToString(CultureInfo.InvariantCulture) ?? "(default)",
+                request.ServerAddress,
+                request.ServerPort?.ToString(CultureInfo.InvariantCulture) ?? "(default)",
                 instance.VersionId);
         }
         if (extraJvmArguments.Count > 0 || extraGameArguments.Count > 0)
@@ -151,6 +160,14 @@ public sealed class GameLaunchService : IGameLaunchService
         cancellationToken.ThrowIfCancellationRequested();
         Report(progress, "启动游戏", "正在启动游戏进程…");
         IGameProcess process = _processLauncher.Start(command);
+        if (_hooks.Length > 0)
+        {
+            await LaunchHookPipeline.NotifyAsync(
+                _hooks,
+                hook => hook.OnGameStartedAsync(process.Id, CancellationToken.None),
+                OnLaunchHookError).ConfigureAwait(false);
+            _ = NotifyGameExitedAsync(process);
+        }
         _logger.LogInformation(
             "Started version {VersionId} (PID {ProcessId}) with Java {JavaPath}, {MemoryMiB} MiB, working directory {WorkingDirectory}.",
             instance.VersionId,
@@ -166,6 +183,60 @@ public sealed class GameLaunchService : IGameLaunchService
     /// Returns the Java executable to use. An explicit path is validated verbatim; otherwise the detected runtimes are
     /// filtered down to an exact major-version match first and to the smallest sufficient runtime second.
     /// </summary>
+    /// <summary>
+    /// Passes a snapshot of the launch request through every registered launch hook and maps the (possibly
+    /// modified) result back. A failing hook is logged and skipped so it can never block a launch.
+    /// </summary>
+    private async Task<GameLaunchRequest> ApplyLaunchHooksAsync(
+        GameLaunchRequest request,
+        GameInstance instance,
+        GameSession session,
+        CancellationToken cancellationToken)
+    {
+        var snapshot = new PluginLaunchRequest(
+            request.MinecraftDirectory,
+            request.GameDirectory,
+            instance.VersionId,
+            instance.Name,
+            session.PlayerName,
+            request.JavaExecutablePath,
+            request.MaximumMemoryMiB,
+            request.ExtraJvmArguments ?? [],
+            request.ExtraGameArguments ?? [],
+            request.ServerAddress,
+            request.ServerPort);
+        PluginLaunchRequest updated = await LaunchHookPipeline.ApplyBeforeBuildAsync(
+            _hooks, snapshot, OnLaunchHookError, cancellationToken).ConfigureAwait(false);
+        return request with
+        {
+            JavaExecutablePath = updated.JavaExecutablePath,
+            MaximumMemoryMiB = updated.MaximumMemoryMiB,
+            ExtraJvmArguments = updated.ExtraJvmArguments,
+            ExtraGameArguments = updated.ExtraGameArguments,
+            ServerAddress = updated.ServerAddress,
+            ServerPort = updated.ServerPort,
+        };
+    }
+
+    private async Task NotifyGameExitedAsync(IGameProcess process)
+    {
+        try
+        {
+            GameExitInfo exitInfo = await process.Exited.ConfigureAwait(false);
+            await LaunchHookPipeline.NotifyAsync(
+                _hooks,
+                hook => hook.OnGameExitedAsync(process.Id, exitInfo.ExitCode, CancellationToken.None),
+                OnLaunchHookError).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to notify launch hooks about a game exit.");
+        }
+    }
+
+    private void OnLaunchHookError(ILaunchHook hook, Exception exception) =>
+        _logger.LogWarning(exception, "Launch hook {HookType} failed and was skipped.", hook.GetType().FullName);
+
     /// <summary>Logs the classpath size and whether the LWJGL core jar is on it, which helps diagnose loader launch issues.</summary>
     private void LogClassPathDiagnostics(string versionId, GameLaunchCommand command)
     {

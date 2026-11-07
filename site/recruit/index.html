@@ -1,0 +1,502 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Astra Launcher 团队招新：一起把 Minecraft 启动体验做得更简单、更可靠。开放开发、设计、测试、社区与文档岗位。">
+  <meta name="theme-color" content="#0B1120">
+  <title>加入 Astra Launcher · 团队招新</title>
+  <style>
+    :root {
+      --bg: #080d18;
+      --bg-soft: #0d1524;
+      --card: #101a2c;
+      --card-hover: #142137;
+      --line: rgba(148, 163, 184, .16);
+      --text: #eef4ff;
+      --muted: #9aa9c2;
+      --teal: #22d3a6;
+      --teal-soft: rgba(34, 211, 166, .12);
+      --blue: #5aa7ff;
+      --amber: #f6c76b;
+      --radius: 18px;
+      --max: 1160px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 8% -8%, rgba(34, 211, 166, .16), transparent 60%),
+        radial-gradient(760px 460px at 92% 4%, rgba(90, 167, 255, .14), transparent 58%),
+        var(--bg);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 0;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(180deg, rgba(8, 13, 24, .92), rgba(8, 13, 24, .64) 72%, transparent);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .04em; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 11px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(34, 211, 166, .22), rgba(90, 167, 255, .16));
+      border: 1px solid rgba(34, 211, 166, .35);
+      box-shadow: 0 0 30px rgba(34, 211, 166, .12);
+    }
+    .brand-mark svg { width: 23px; height: 23px; }
+    .brand small { display: block; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: .14em; }
+
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 42px; padding: 0 18px; border-radius: 11px;
+      border: 1px solid transparent; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: transform .18s ease, background .18s ease, border-color .18s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #04110d; background: var(--teal); box-shadow: 0 8px 30px rgba(34, 211, 166, .22); }
+    .btn-primary:hover { background: #46e3bb; }
+    .btn-ghost { color: var(--text); background: rgba(255,255,255,.045); border-color: var(--line); }
+    .btn-ghost:hover { background: rgba(255,255,255,.08); border-color: rgba(34,211,166,.4); }
+
+    .hero { padding: 72px 0 42px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--teal); font-size: 12px; font-weight: 800;
+      letter-spacing: .16em; text-transform: uppercase;
+      border: 1px solid rgba(34, 211, 166, .28);
+      background: var(--teal-soft);
+      padding: 7px 12px; border-radius: 999px;
+    }
+    .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 12px var(--teal); }
+
+    h1 {
+      margin: 22px 0 18px;
+      font-size: clamp(38px, 6vw, 72px);
+      line-height: 1.08;
+      letter-spacing: -.045em;
+      font-weight: 900;
+    }
+    h1 .accent {
+      display: block;
+      background: linear-gradient(100deg, var(--teal), #7ef3d3 42%, var(--blue));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-copy { max-width: 610px; color: var(--muted); font-size: 16px; }
+    .hero-copy strong { color: var(--text); font-weight: 700; }
+
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+    .hero-panel {
+      position: relative;
+      border-radius: 24px;
+      padding: 22px;
+      background: linear-gradient(165deg, rgba(20, 33, 55, .96), rgba(10, 17, 30, .96));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .hero-panel::before {
+      content: "";
+      position: absolute; inset: -2px;
+      background: radial-gradient(260px 180px at 75% 0%, rgba(34,211,166,.18), transparent 70%);
+      pointer-events: none;
+    }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .status { display: inline-flex; align-items: center; gap: 7px; color: var(--teal); font-weight: 700; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 12px var(--teal); animation: pulse 2.4s infinite; }
+
+    .terminal {
+      margin-top: 16px; padding: 16px; border-radius: 14px;
+      background: #060b14; border: 1px solid rgba(148,163,184,.14);
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px; line-height: 1.9; color: #c6d5eb;
+    }
+    .terminal .prompt { color: var(--teal); }
+    .terminal .dim { color: #64748b; }
+    .terminal .ok { color: #7ef3d3; }
+    .terminal .warn { color: var(--amber); }
+
+    .panel-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .stat { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025); }
+    .stat b { display: block; font-size: 19px; letter-spacing: -.02em; }
+    .stat span { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .section { padding: 58px 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+    .section-kicker { color: var(--teal); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h2 { margin: 8px 0 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.16; letter-spacing: -.035em; }
+    .section-head p { max-width: 430px; margin: 0; color: var(--muted); font-size: 14px; }
+
+    .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .role {
+      position: relative;
+      padding: 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(160deg, rgba(18, 29, 48, .92), rgba(13, 21, 36, .92));
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+      overflow: hidden;
+    }
+    .role:hover { transform: translateY(-4px); border-color: rgba(34,211,166,.35); background: var(--card-hover); }
+    .role::after {
+      content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(34,211,166,.12), transparent 70%); pointer-events: none;
+    }
+    .role-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: rgba(34,211,166,.1); border: 1px solid rgba(34,211,166,.2);
+      color: var(--teal); font-size: 19px; margin-bottom: 16px;
+    }
+    .role h3 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.02em; }
+    .role p { margin: 0; color: var(--muted); font-size: 13.5px; }
+    .role ul { margin: 14px 0 0; padding: 0 0 0 18px; color: #c4d1e5; font-size: 13px; }
+    .role li { margin: 5px 0; }
+    .role li::marker { color: var(--teal); }
+
+    .role-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .tag { color: #b9f7e8; background: rgba(34,211,166,.1); border: 1px solid rgba(34,211,166,.22); border-radius: 999px; padding: 3px 9px; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; }
+    .tag.blue { color: #cfe3ff; background: rgba(90,167,255,.1); border-color: rgba(90,167,255,.24); }
+    .tag.amber { color: #ffedc4; background: rgba(246,199,107,.1); border-color: rgba(246,199,107,.24); }
+
+    .values { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .value { padding: 20px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.025); }
+    .value b { display: block; font-size: 14px; margin-bottom: 4px; }
+    .value span { color: var(--muted); font-size: 13px; }
+
+    .process { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; counter-reset: step; }
+    .step { position: relative; padding: 22px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg-soft); }
+    .step::before {
+      counter-increment: step;
+      content: "0" counter(step);
+      display: block; margin-bottom: 16px;
+      color: var(--teal); font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 12px; font-weight: 800; letter-spacing: .12em;
+    }
+    .step b { display: block; margin-bottom: 4px; font-size: 15px; }
+    .step span { color: var(--muted); font-size: 13px; }
+
+    .cta {
+      margin: 24px 0 72px;
+      padding: 38px;
+      border-radius: 24px;
+      border: 1px solid rgba(34,211,166,.28);
+      background:
+        radial-gradient(700px 260px at 85% 0%, rgba(34,211,166,.18), transparent 70%),
+        linear-gradient(140deg, rgba(17, 30, 49, .96), rgba(11, 18, 31, .98));
+      display: flex; align-items: center; justify-content: space-between; gap: 28px;
+      box-shadow: var(--shadow);
+    }
+    .cta h2 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 38px); }
+    .cta p { margin: 0; color: var(--muted); font-size: 14px; max-width: 560px; }
+    .cta-actions { display: flex; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; }
+
+    .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .contact {
+      display: flex; align-items: center; gap: 12px;
+      padding: 15px 16px; border-radius: 13px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+    .contact .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: rgba(34,211,166,.1); color: var(--teal); flex: 0 0 auto; }
+    .contact b { display: block; font-size: 12px; }
+    .contact span { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+
+    footer { padding: 24px 0 40px; border-top: 1px solid var(--line); color: #7d8da6; font-size: 12px; display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    footer a { color: #aebbd0; }
+    footer a:hover { color: var(--teal); }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+      background: #0f1b2d; border: 1px solid rgba(34,211,166,.35); color: var(--text);
+      border-radius: 12px; padding: 11px 16px; font-size: 13px; opacity: 0; pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease; z-index: 100; box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 46px; }
+      .hero-panel { max-width: 620px; }
+      .roles { grid-template-columns: repeat(2, 1fr); }
+      .values, .process { grid-template-columns: repeat(2, 1fr); }
+      .cta { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (max-width: 640px) {
+      .shell { width: min(var(--max), calc(100% - 28px)); }
+      .topbar { padding: 16px 0; }
+      .top-actions .btn-ghost { display: none; }
+      .hero { padding-top: 32px; }
+      .roles, .values, .process, .contact-grid { grid-template-columns: 1fr; }
+      .panel-stats { grid-template-columns: 1fr; }
+      .section { padding: 42px 0; }
+      .section-head { flex-direction: column; align-items: flex-start; }
+      .cta { padding: 26px; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+      .reveal { opacity: 1; transform: none; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar shell">
+    <a class="brand" href="https://astra-launcher.us.ci" aria-label="Astra Launcher 官网">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7L12 2.2Z" stroke="#22d3a6" stroke-width="1.5"/>
+          <path d="M12 6.2 16.4 9v5.8L12 17.6l-4.4-2.8V9L12 6.2Z" fill="rgba(34,211,166,.22)" stroke="#7ef3d3" stroke-width="1.1"/>
+        </svg>
+      </span>
+      <span>Astra Launcher<small>TEAM RECRUITMENT</small></span>
+    </a>
+    <nav class="top-actions" aria-label="页面导航">
+      <a class="btn btn-ghost" href="#roles">开放岗位</a>
+      <a class="btn btn-primary" href="#apply">申请加入</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="reveal">
+        <div class="eyebrow"><span class="dot"></span> 2026 · 团队招新</div>
+        <h1>把 Minecraft 的<span class="accent">启动体验</span>做得更好。</h1>
+        <p class="hero-copy">
+          Astra Launcher 是一个专注 <strong>Minecraft Java 版</strong> 的开源启动器项目：
+          云盘实例同步、PCL 版本导入、MOD 管理、Java 一键安装、内置反馈，以及正在打磨的 EasyTier 联机。
+          我们想找愿意一起把细节做扎实的人，而不是只写“能跑”的代码。
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#roles">查看开放岗位 →</a>
+          <a class="btn btn-ghost" href="https://github.com/yghxdmdjjdcxy/Astra-launcher" target="_blank" rel="noreferrer">先看看源码</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel reveal" aria-label="项目状态">
+        <div class="panel-head"><span>Astra Launcher / core</span><span class="status">OPEN FOR BUILDERS</span></div>
+        <div class="terminal" aria-hidden="true">
+          <div><span class="prompt">astra@team</span>:<span class="dim">~/launcher</span>$ status</div>
+          <div><span class="ok">✓</span> Cloudreve 云盘槽位已就绪</div>
+          <div><span class="ok">✓</span> PCL / HMCL 版本导入已接入</div>
+          <div><span class="ok">✓</span> 多线程下载 / 自动补全 / 崩溃分析</div>
+          <div><span class="warn">●</span> EasyTier 联机：NoTun 模式调优中</div>
+          <div><span class="dim">next:</span> 更稳的下载、更清晰的版本管理、更友好的联机</div>
+        </div>
+        <div class="panel-stats">
+          <div class="stat"><b>336+</b><span>自动化测试</span></div>
+          <div class="stat"><b>1.0.8</b><span>公开测试版</span></div>
+          <div class="stat"><b>MIT</b><span>开源协议</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section" id="roles">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-kicker">Open Roles</div>
+          <h2>我们在找这样的队友</h2>
+        </div>
+        <p>不要求你全知全能。只要你在某个方向足够认真，愿意沟通、愿意把一件事跟到上线，就欢迎来聊。</p>
+      </div>
+
+      <div class="roles">
+        <article class="role reveal">
+          <div class="role-head"><div class="role-icon" aria-hidden="true">⌘</div><span class="tag">核心</span></div>
+          <h3>C# / WPF 启动器开发</h3>
+          <p>负责启动器核心体验：实例、下载、Java、更新与稳定性。</p>
+          <ul>
+            <li>C# / .NET、WPF 或 WinUI 基础</li>
+            <li>理解异步、DI、MVVM 与文件系统边界</li>
+            <li>愿意写测试，愿意处理真实用户环境的问题</li>
+          </ul>
+        </article>
+
+        <article class="role reveal">
+          <div class="role-head"><div class="role-icon" aria-hidden="true">◆</div><span class="tag blue">扩展</span></div>
+          <h3>Minecraft / Java 插件开发</h3>
+          <p>围绕 Minecraft 生态做扩展：联机、服务端、MOD 与插件系统。</p>
+          <ul>
+            <li>Java 或 C#，了解 Minecraft 启动/模组加载流程</li>
+            <li>接触过 Fabric / Forge / NeoForge 更佳</li>
+            <li>能排查日志、端口、网络与兼容性问题</li>
+          </ul>
+        </article>
+
+        <article class="role reveal">
+          <div class="role-head"><div class="role-icon" aria-hidden="true">✦</div><span class="tag amber">视觉</span></div>
+          <h3>UI / UX 设计</h3>
+          <p>让启动器更好看，也更好用：信息层级、交互反馈、动效与一致性。</p>
+          <ul>
+            <li>熟悉桌面端设计规范与基础可用性原则</li>
+            <li>能交付可落地的设计稿 / 组件规范</li>
+            <li>有条件参与 WPF XAML 还原者优先</li>
+          </ul>
+        </article>
+
+        <article class="role reveal">
+          <div class="role-head"><div class="role-icon" aria-hidden="true">✓</div><span class="tag">质量</span></div>
+          <h3>测试 / QA</h3>
+          <p>真实环境里把问题找出来：不同系统、不同 Java、不同网络与整合包。</p>
+          <ul>
+            <li>愿意按清单做回归测试并记录复现步骤</li>
+            <li>能读懂日志、定位环境差异</li>
+            <li>对边界条件有耐心，不放过“偶现”</li>
+          </ul>
+        </article>
+
+        <article class="role reveal">
+          <div class="role-head"><div class="role-icon" aria-hidden="true">◉</div><span class="tag blue">社区</span></div>
+          <h3>社区 / 内容运营</h3>
+          <p>维护玩家社区，整理反馈，把复杂功能讲成普通玩家能懂的话。</p>
+          <ul>
+            <li>熟悉 Minecraft 玩家社区与常见问题</li>
+            <li>能写清楚的公告、教程与版本说明</li>
+            <li>有群管理 / 内容创作经验更佳</li>
+          </ul>
+        </article>
+
+        <article class="role reveal">
+          <div class="role-head"><div class="role-icon" aria-hidden="true">✎</div><span class="tag amber">文档</span></div>
+          <h3>文档 / 本地化</h3>
+          <p>把功能写成看得懂的文档，让新用户少走弯路，也让项目更容易被贡献。</p>
+          <ul>
+            <li>中文表达清晰，能整理结构化的操作说明</li>
+            <li>愿意维护 README、FAQ 与更新日志</li>
+            <li>英文阅读能力加分，但不是硬性要求</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-kicker">Why Astra</div>
+          <h2>我们提供什么</h2>
+        </div>
+        <p>这是一个认真对待工程质量的小团队。你做的改动会真实地到用户手里。</p>
+      </div>
+      <div class="values">
+        <div class="value reveal"><b>真实的产品场景</b><span>不是练习题：下载、启动、联机、云盘，每一块都有真实用户。</span></div>
+        <div class="value reveal"><b>可 review 的代码</b><span>重视边界、测试和可维护性，欢迎把“能跑”升级成“可靠”。</span></div>
+        <div class="value reveal"><b>远程协作</b><span>以线上协作为主，按空闲时间参与，不强制坐班。</span></div>
+        <div class="value reveal"><b>署名与成长</b><span>贡献会记录在项目里；一起啃 .NET、WPF、Minecraft 与网络问题。</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head reveal">
+        <div>
+          <div class="section-kicker">Process</div>
+          <h2>加入流程</h2>
+        </div>
+        <p>不需要准备很正式的简历，能说明你做过什么、想做什么就好。</p>
+      </div>
+      <div class="process">
+        <div class="step reveal"><b>发来申请</b><span>通过邮箱或 QQ 群联系我们，附上 GitHub / 作品 / 一段自我介绍。</span></div>
+        <div class="step reveal"><b>聊一聊</b><span>了解你的方向、时间和期望，也把项目的真实情况告诉你。</span></div>
+        <div class="step reveal"><b>试做一个小任务</b><span>一个小的修复或文档任务，双向确认合作方式。</span></div>
+        <div class="step reveal"><b>正式加入</b><span>进入协作群，领取方向，开始把 Astra 做得更好。</span></div>
+      </div>
+    </section>
+
+    <section class="cta reveal" id="apply">
+      <div>
+        <div class="section-kicker">Join the build</div>
+        <h2>一起把 Astra 做得更好。</h2>
+        <p>如果你对 Minecraft 启动器、桌面体验或开源协作有热情，欢迎把自我介绍发给我们。即使暂时没有完全匹配的岗位，也欢迎聊聊。</p>
+        <div class="contact-grid">
+          <a class="contact" href="mailto:join@astra-launcher.us.ci?subject=%5BAstra%20%E6%8B%9B%E6%96%B0%5D%20%E7%94%B3%E8%AF%B7%E5%8A%A0%E5%85%A5">
+            <span class="ico" aria-hidden="true">✉</span>
+            <span><b>邮箱</b><span>join@astra-launcher.us.ci</span></span>
+          </a>
+          <div class="contact">
+            <span class="ico" aria-hidden="true">◉</span>
+            <span><b>QQ 群</b><span>[待填写群号]</span></span>
+          </div>
+          <a class="contact" href="https://github.com/yghxdmdjjdcxy/Astra-launcher/issues" target="_blank" rel="noreferrer">
+            <span class="ico" aria-hidden="true">◇</span>
+            <span><b>GitHub</b><span>yghxdmdjjdcxy/Astra-launcher</span></span>
+          </a>
+        </div>
+      </div>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="mailto:join@astra-launcher.us.ci?subject=%5BAstra%20%E6%8B%9B%E6%96%B0%5D%20%E7%94%B3%E8%AF%B7%E5%8A%A0%E5%85%A5">发送申请邮件</a>
+        <button class="btn btn-ghost" type="button" id="copyEmail">复制邮箱</button>
+        <a class="btn btn-ghost" href="https://github.com/yghxdmdjjdcxy/Astra-launcher" target="_blank" rel="noreferrer">查看项目</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    <span>© 2026 Astra Launcher · 用热爱和细节做启动器。</span>
+    <span><a href="https://astra-launcher.us.ci">官网</a> · <a href="https://github.com/yghxdmdjjdcxy/Astra-launcher">GitHub</a> · <a href="https://github.com/yghxdmdjjdcxy/Astra-launcher/issues">反馈</a></span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">邮箱已复制：join@astra-launcher.us.ci</div>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    const copyButton = document.getElementById('copyEmail');
+    const toast = document.getElementById('toast');
+    const email = 'join@astra-launcher.us.ci';
+
+    copyButton?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(email);
+        toast.textContent = '邮箱已复制：' + email;
+      } catch {
+        toast.textContent = '复制失败，请手动复制：' + email;
+      }
+      toast.classList.add('show');
+      window.clearTimeout(copyButton._timer);
+      copyButton._timer = window.setTimeout(() => toast.classList.remove('show'), 2600);
+    });
+  </script>
+</body>
+</html>

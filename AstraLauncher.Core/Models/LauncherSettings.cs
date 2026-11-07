@@ -1,4 +1,4 @@
-﻿namespace AstraLauncher.Core.Models;
+namespace AstraLauncher.Core.Models;
 
 /// <summary>Selects where version metadata and game files are downloaded from.</summary>
 public enum DownloadSourceMode
@@ -71,6 +71,13 @@ public sealed class LauncherSettings
 
     /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
     public const string DefaultFeedbackEndpoint = "https://feedback.astra-launcher-clouddrive.us.ci/api/feedback";
+    public const string DefaultEasyTierSharedNode = "tcp://public.easytier.cn:11010";
+    public const string DefaultEasyTierHostVirtualIp = "10.77.0.1";
+    public const string DefaultEasyTierRoomName = "astra-room";
+    public const int DefaultEasyTierGamePort = 25565;
+    public const int DefaultEasyTierLocalPort = 25566;
+    public const int EasyTierHostRpcPort = 15889;
+    public const int EasyTierGuestRpcPort = 15890;
 
     /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
     public bool ExternalImportPrompted { get; set; }
@@ -96,6 +103,28 @@ public sealed class LauncherSettings
     /// <summary>Gets or sets the account selected when the launcher last closed.</summary>
     public Guid? SelectedAccountId { get; set; }
 
+    /// <summary>Optional directory containing a manually extracted official EasyTier ZIP. Null uses the managed install.</summary>
+    public string? EasyTierDirectory { get; set; }
+
+    /// <summary>Public shared node used for discovery / NAT traversal / relay fallback.</summary>
+    public string EasyTierSharedNode { get; set; } = DefaultEasyTierSharedNode;
+
+    /// <summary>Fixed virtual IPv4 of the host inside the EasyTier network.</summary>
+    public string EasyTierHostVirtualIp { get; set; } = DefaultEasyTierHostVirtualIp;
+
+    public int EasyTierGamePort { get; set; } = DefaultEasyTierGamePort;
+
+    /// <summary>Local port on a guest that forwards to the host's game port in no-TUN mode.</summary>
+    public int EasyTierLocalPort { get; set; } = DefaultEasyTierLocalPort;
+
+    /// <summary>When true, EasyTier creates a TUN device and is started elevated (UAC prompt).</summary>
+    public bool EasyTierUseFullTun { get; set; }
+
+    /// <summary>When true, launching a game while connected automatically joins the room.</summary>
+    public bool EasyTierAutoJoin { get; set; } = true;
+
+    public string EasyTierLastRoomName { get; set; } = DefaultEasyTierRoomName;
+
     /// <summary>Clamps numeric values, restores invalid choices and trims text so persisted settings are always usable.</summary>
     public void Normalize()
     {
@@ -114,6 +143,12 @@ public sealed class LauncherSettings
         GameArguments = NormalizeOptionalText(GameArguments);
         JvmArguments = NormalizeOptionalText(JvmArguments);
         OfflinePlayerName = NormalizePlayerName(OfflinePlayerName);
+        EasyTierDirectory = NormalizeOptionalText(EasyTierDirectory);
+        EasyTierSharedNode = NormalizeSharedNode(EasyTierSharedNode);
+        EasyTierHostVirtualIp = NormalizeIpv4(EasyTierHostVirtualIp);
+        EasyTierGamePort = NormalizePort(EasyTierGamePort, DefaultEasyTierGamePort);
+        EasyTierLocalPort = NormalizePort(EasyTierLocalPort, DefaultEasyTierLocalPort);
+        EasyTierLastRoomName = NormalizeRoomName(EasyTierLastRoomName);
     }
 
     private static string NormalizeProgressBarStyle(string? style)
@@ -149,4 +184,33 @@ public sealed class LauncherSettings
         || string.Equals(scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
 
     private static string? NormalizeOptionalText(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string NormalizeSharedNode(string? node)
+    {
+        string value = string.IsNullOrWhiteSpace(node) ? DefaultEasyTierSharedNode : node.Trim();
+        bool supported = value.StartsWith("tcp://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("udp://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("ws://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("wss://", StringComparison.OrdinalIgnoreCase);
+        return supported && value.Length <= 256 ? value : DefaultEasyTierSharedNode;
+    }
+
+    private static string NormalizeIpv4(string? address)
+    {
+        if (!System.Net.IPAddress.TryParse(address, out System.Net.IPAddress? parsed)
+            || parsed.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+        {
+            return DefaultEasyTierHostVirtualIp;
+        }
+
+        return parsed.ToString();
+    }
+
+    private static int NormalizePort(int port, int fallback) => port is >= 1 and <= 65535 ? port : fallback;
+
+    private static string NormalizeRoomName(string? name)
+    {
+        string value = string.IsNullOrWhiteSpace(name) ? DefaultEasyTierRoomName : name.Trim();
+        return value.Length <= 64 ? value : DefaultEasyTierRoomName;
+    }
 }

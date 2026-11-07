@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AstraLauncher.Core\AstraLauncher.Core.csproj" />
     <ProjectReference Include="..\AstraLauncher.Downloader\AstraLauncher.Downloader.csproj" />
+    <ProjectReference Include="..\AstraLauncher.Plugin.Abstractions\AstraLauncher.Plugin.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />

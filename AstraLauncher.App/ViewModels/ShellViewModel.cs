@@ -20,6 +20,7 @@ public sealed class ShellViewModel : ObservableObject
     private readonly SettingsPageViewModel _settings;
     private readonly AccountsPageViewModel _accounts;
     private readonly ServersPageViewModel _servers;
+    private readonly MultiplayerPageViewModel? _multiplayer;
     private readonly IAccountService _accountService;
     private readonly ILauncherPaths _paths;
     private readonly IVersionManifestService _manifest;
@@ -40,7 +41,8 @@ public sealed class ShellViewModel : ObservableObject
         IVersionManifestService manifest,
         ILogger<ShellViewModel> logger,
         ServersPageViewModel servers,
-        ModsPageViewModel mods)
+        ModsPageViewModel mods,
+        MultiplayerPageViewModel? multiplayer = null)
     {
         ArgumentNullException.ThrowIfNull(navigation);
         ArgumentNullException.ThrowIfNull(instances);
@@ -58,6 +60,7 @@ public sealed class ShellViewModel : ObservableObject
         _settings = settings;
         _accounts = accounts;
         _servers = servers;
+        _multiplayer = multiplayer;
         ArgumentNullException.ThrowIfNull(servers);
         _accountService = accountService;
         _paths = paths;
@@ -68,6 +71,10 @@ public sealed class ShellViewModel : ObservableObject
         NavigateCommand = new RelayCommand(Navigate);
         _downloads.LoaderInstalled += OnLoaderInstalled;
         _servers.JoinRequested += OnServerJoinRequested;
+        if (_multiplayer is not null)
+        {
+            _multiplayer.JoinRequested += OnMultiplayerJoinRequested;
+        }
     }
 
     public INavigationService Navigation { get; }
@@ -227,6 +234,19 @@ public sealed class ShellViewModel : ObservableObject
         if (_instances.ResolveSelectedInstanceForLaunch() is null)
         {
             _servers.ReportStatus("请先在「游戏实例」页选择要启动的实例，再回来点击「启动并加入」。");
+            return;
+        }
+
+        Navigation.Navigate(PageKey.Instances);
+        _ = _instances.StartWithServerAsync(server);
+    }
+
+    /// <summary>The multiplayer page reuses the same "launch selected instance and join" pipeline.</summary>
+    private void OnMultiplayerJoinRequested(SavedServer server)
+    {
+        if (_instances.ResolveSelectedInstanceForLaunch() is null)
+        {
+            _multiplayer?.ReportStatus("请先在「游戏实例」页选择要启动的实例，再回来点击「启动游戏并加入」。");
             return;
         }
 

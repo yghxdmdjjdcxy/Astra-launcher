@@ -1,4 +1,4 @@
-﻿<Window x:Class="AstraLauncher.App.MainWindow"
+<Window x:Class="AstraLauncher.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:AstraLauncher.App.ViewModels"
@@ -1220,6 +1220,126 @@
                 </StackPanel>
             </ScrollViewer>
         </DataTemplate>
+        <!-- ============================ Multiplayer / EasyTier ============================ -->
+        <DataTemplate DataType="{x:Type vm:MultiplayerPageViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource PageTitle}" Text="联机"/>
+                    <TextBlock Style="{StaticResource PageSubtitle}"
+                               Text="基于 EasyTier 的虚拟局域网联机。当前版本仅启用无 TUN 模式：不装虚拟网卡、不需要管理员，朋友通过本机端口转发连到房主的服务端。完整 TUN 模式需要管理员权限，暂不开放。"/>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="1. EasyTier 程序"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8" Text="{Binding BinaryStatus}"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
+                                       Text="留空则使用启动器自动下载的官方 2.6.4；也可填写手动完整解压官方 ZIP 后的目录（含 DLL 与驱动文件）。"/>
+                            <DockPanel Margin="0,4,0,0">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="安装 / 检测 EasyTier"
+                                        Command="{Binding InstallCommand}" Margin="8,0,0,0"/>
+                                <TextBox Text="{Binding EasyTierDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="EasyTier 程序目录，留空使用自动安装版本"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="2. 房间参数"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="房间名称"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding RoomName, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="房间密钥"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Text="{Binding RoomSecret, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="房主虚拟 IP"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8" Text="{Binding HostVirtualIp, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="服务端端口"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,8" Text="{Binding GamePortText, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="本地入口端口"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,8" Text="{Binding LocalPortText, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource FieldLabel}" Text="共享节点"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" Margin="0,0,0,8" Text="{Binding SharedNode, UpdateSourceTrigger=PropertyChanged}"/>
+                                <CheckBox Grid.Row="6" Grid.Column="1" Margin="0,2,0,8" IsChecked="{Binding UseFullTun}" IsEnabled="False"
+                                          ToolTip="完整 TUN 模式会创建虚拟网卡并以管理员权限启动，当前公开测试版暂不开放"
+                                          Content="完整 TUN 模式（实验性，暂不开放）"/>
+                                <CheckBox Grid.Row="7" Grid.Column="1" Margin="0,2,0,4" IsChecked="{Binding AutoJoin}"
+                                          Content="启动游戏时自动加入联机房间"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="3. 创建 / 加入房间"/>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
+                                       Text="房主：确保本机已启动 Minecraft 服务端（默认 25565），点「创建房间」后复制邀请码发给朋友。朋友：粘贴邀请码后点「加入房间」。"/>
+                            <TextBox Height="54" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8"
+                                     Text="{Binding InviteCode, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="粘贴朋友发来的 ASTRA1. 开头的邀请码"/>
+                            <WrapPanel>
+                                <Button Style="{StaticResource PrimaryButton}" Content="创建房间（我是房主）"
+                                        Command="{Binding CreateRoomCommand}" Margin="0,0,8,8"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="加入房间"
+                                        Command="{Binding JoinRoomCommand}" Margin="0,0,8,8"/>
+                                <Button Style="{StaticResource SecondaryButton}" Content="复制邀请码"
+                                        Command="{Binding CopyInviteCommand}" Margin="0,0,8,8"/>
+                                <Button Style="{StaticResource DangerButton}" Content="断开连接"
+                                        Command="{Binding StopCommand}" Margin="0,0,8,8"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="4. 连接状态"/>
+                            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,0,0,6" Text="{Binding StatusMessage}"/>
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Hint}" Text="{Binding ConnectionSummary}"/>
+                                <TextBlock Style="{StaticResource ListItemTitle}"
+                                           Text="{Binding EntryAddress, StringFormat='游戏连接地址：{0}'}"/>
+                            </DockPanel>
+                            <WrapPanel Margin="0,0,0,8">
+                                <Button Style="{StaticResource SecondaryButton}" Content="刷新节点"
+                                        Command="{Binding RefreshCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource PrimaryButton}" Content="启动游戏并加入"
+                                        Command="{Binding LaunchGameCommand}"/>
+                            </WrapPanel>
+                            <ItemsControl ItemsSource="{Binding Peers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="0,6">
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Hint}" Text="{Binding Cost}"/>
+                                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Hint}" Margin="8,0"
+                                                           Text="{Binding LatencyMs}"/>
+                                                <TextBlock Style="{StaticResource ListItemTitle}" Text="{Binding Ipv4}"/>
+                                                <TextBlock Style="{StaticResource ListItemMeta}" Margin="8,0,0,0" Text="{Binding Hostname}"/>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
+                                       Text="提示：连不上时先确认双方用了相同邀请码、共享节点可达、Windows 防火墙放行 easytier-core；详细输出写在启动器日志目录。"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
     </Window.Resources>
 
     <DockPanel Background="#F1F5F9">
@@ -1237,6 +1357,7 @@
                     <Button Style="{StaticResource NavButton}" Content="账户" Command="{Binding NavigateCommand}" CommandParameter="Accounts"/>
                     <Button Style="{StaticResource NavButton}" Content="服务器" Command="{Binding NavigateCommand}" CommandParameter="Servers"/>
                     <Button Style="{StaticResource NavButton}" Content="百宝箱" Command="{Binding NavigateCommand}" CommandParameter="Toolbox"/>
+                    <Button Style="{StaticResource NavButton}" Content="联机" Command="{Binding NavigateCommand}" CommandParameter="Multiplayer"/>
                     <Button Style="{StaticResource NavButton}" Content="云盘" Command="{Binding NavigateCommand}" CommandParameter="CloudDrive"/>
                     <TextBlock Style="{StaticResource NavSection}" Text="配置"/>
                     <Button Style="{StaticResource NavButton}" Content="设置" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
