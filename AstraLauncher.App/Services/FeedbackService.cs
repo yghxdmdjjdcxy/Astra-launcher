@@ -387,7 +387,7 @@ public sealed class FeedbackService : IFeedbackService
     private static string Version =>
         typeof(FeedbackService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion?.Split('+')[0]
         ?? typeof(FeedbackService).Assembly.GetName().Version?.ToString(3)
-        ?? "1.0.8-beta";
+        ?? "1.0.9";
 
     private static void TryDelete(string path)
     {

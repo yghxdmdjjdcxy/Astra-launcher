@@ -1,4 +1,4 @@
-# AstraLauncher.Multiplayer
+﻿# AstraLauncher.Multiplayer
 
 基于 [EasyTier](https://github.com/EasyTier/EasyTier) 的 Minecraft Java 版联机。
 
@@ -12,7 +12,7 @@
 
 ## 为什么暂不开放完整 TUN
 
-完整 TUN 需要以管理员权限启动 `easytier-core`。当前启动器是普通权限进程，退出时无法可靠终止这个高权限子进程，可能留下孤儿进程。因此在公开测试版中：
+完整 TUN 需要以管理员权限启动 `easytier-core`。当前启动器是普通权限进程，退出时无法可靠终止这个高权限子进程，可能留下孤儿进程。因此在正式版中：
 
 - UI 中的「完整 TUN 模式」被禁用；
 - `EasyTierService.StartAsync` 会拒绝 `EasyTierMode.FullTun`；

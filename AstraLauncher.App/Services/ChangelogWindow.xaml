@@ -14,15 +14,16 @@
 
         <StackPanel>
             <TextBlock Foreground="#EEF2FF" FontSize="26" FontWeight="Bold" Text="Astra Launcher 更新日志"/>
-            <TextBlock x:Name="VersionText" Foreground="#94A3B8" FontSize="12" Margin="0,4,0,0" Text="当前版本：v1.0.8-beta"/>
+            <TextBlock x:Name="VersionText" Foreground="#94A3B8" FontSize="12" Margin="0,4,0,0" Text="当前版本：v1.0.9"/>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,18,0,12">
             <StackPanel>
                 <Border Background="#111827" BorderBrush="#22D3A6" BorderThickness="1,0,0,0" Padding="14,10" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Foreground="#22D3A6" FontSize="17" FontWeight="Bold" Text="v1.0.8-beta · 第二个公开测试版"/>
+                        <TextBlock Foreground="#22D3A6" FontSize="17" FontWeight="Bold" Text="v1.0.9 · 第一个正式版"/>
                         <TextBlock Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" LineHeight="22" Margin="0,6,0,0">
+                            <LineBreak/>• Astra Launcher 首个正式版本：整合云盘、联机、插件、反馈与自动更新
                             <LineBreak/>• Cloudreve 云盘改为启动器内嵌统一验证窗口：注册 / 登录 / 授权全在窗口内完成
                             <LineBreak/>• 加载期间显示「正在连接 Astra Launcher &amp; cloudrive 统一验证服务」
                             <LineBreak/>• 登录成功后自动创建或复用 WebDAV 账号，无需手动填写
@@ -69,7 +70,7 @@
                             • 崩溃自动分析、文件自动补全
                             • Java 8 / 11 / 17 / 21 / 25 / 26 / 27 一键安装
                             • 百宝箱：今日人品、内存优化、清理垃圾、回声洞
-                            • 自动更新与内测提示
+                            • 自动更新与版本公告
                         </TextBlock>
                     </StackPanel>
                 </Border>
