@@ -94,6 +94,7 @@ public sealed class PluginsPageViewModel : PageViewModel
         }
 
         Refresh();
+        _ = LoadMarketAsync();
     }
 
     public ObservableCollection<PluginItem> Plugins { get; } = [];

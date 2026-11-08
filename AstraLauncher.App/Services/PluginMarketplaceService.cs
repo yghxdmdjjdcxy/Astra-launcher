@@ -101,7 +101,9 @@ public sealed class PluginMarketplaceService : IPluginMarketplaceService
             string indexUrl = string.IsNullOrWhiteSpace(settings.PluginIndexUrl)
                 ? LauncherSettings.DefaultPluginIndexUrl
                 : settings.PluginIndexUrl;
-            string json = (await _http.GetStringAsync(indexUrl, cancellationToken).ConfigureAwait(false)).TrimStart('﻿');
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(20));
+            string json = (await _http.GetStringAsync(indexUrl, timeout.Token).ConfigureAwait(false)).TrimStart('﻿');
             PluginIndex? index = JsonSerializer.Deserialize<PluginIndex>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -113,7 +115,9 @@ public sealed class PluginMarketplaceService : IPluginMarketplaceService
         catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException or TaskCanceledException)
         {
             _logger.LogWarning(exception, "Plugin index unavailable; falling back to GitHub topic search.");
-            entries = await SearchGitHubTopicAsync(cancellationToken).ConfigureAwait(false);
+            using var fallbackTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            fallbackTimeout.CancelAfter(TimeSpan.FromSeconds(12));
+            entries = await SearchGitHubTopicAsync(fallbackTimeout.Token).ConfigureAwait(false);
         }
 
         lock (_cacheGate)

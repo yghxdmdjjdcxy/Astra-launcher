@@ -140,7 +140,7 @@ dotnet build .\AstraLauncher.SamplePlugin\AstraLauncher.SamplePlugin.csproj -c R
 「插件」页内置 GitHub 市场：
 
 - 索引文件：`plugins/index.json`（本仓库）
-- 默认拉取地址：`https://raw.githubusercontent.com/yghxdmdjjdcxy/Astra-launcher/main/plugins/index.json`
+- 默认拉取地址：`https://cdn.jsdelivr.net/gh/yghxdmdjjdcxy/Astra-launcher@main/plugins/index.json`
 - 社区可以通过 Pull Request 向索引增加条目
 - 启动器使用多线程 Range 下载插件 ZIP
 - 安装 / 更新后重启启动器生效

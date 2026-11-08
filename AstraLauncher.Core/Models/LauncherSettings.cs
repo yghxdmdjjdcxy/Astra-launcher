@@ -78,7 +78,7 @@ public sealed class LauncherSettings
     public const int DefaultEasyTierLocalPort = 25566;
     public const int EasyTierHostRpcPort = 15889;
     public const int EasyTierGuestRpcPort = 15890;
-    public const string DefaultPluginIndexUrl = "https://raw.githubusercontent.com/yghxdmdjjdcxy/Astra-launcher/main/plugins/index.json";
+    public const string DefaultPluginIndexUrl = "https://cdn.jsdelivr.net/gh/yghxdmdjjdcxy/Astra-launcher@main/plugins/index.json";
 
     /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
     public bool ExternalImportPrompted { get; set; }
