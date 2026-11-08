@@ -27,6 +27,7 @@ using AstraLauncher.Infrastructure.Settings;
 using AstraLauncher.Infrastructure.Versioning;
 using AstraLauncher.Multiplayer;
 using AstraLauncher.Plugin.Abstractions;
+using AstraLauncher.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -62,6 +63,7 @@ public partial class App : Application
             _host = CreateHost(bootstrap.Paths);
             _host.Start();
             ILogger<App> logger = _host.Services.GetRequiredService<ILogger<App>>();
+            InitializePlugins(logger);
             if (!string.IsNullOrWhiteSpace(bootstrap.MigrationWarning))
             {
                 logger.LogWarning("Launcher data migration failed: {Error}. The legacy data directory is still in use.", bootstrap.MigrationWarning);
@@ -178,9 +180,69 @@ public partial class App : Application
         builder.Services.AddSingleton<CloudDrivePageViewModel>();
         builder.Services.AddSingleton<SettingsPageViewModel>();
         builder.Services.AddSingleton<MultiplayerPageViewModel>();
+        builder.Services.AddSingleton<PluginsPageViewModel>();
+        var eventBus = new LauncherEventBus(exception => System.Diagnostics.Debug.WriteLine($"[AstraLauncher] Plugin event handler failed: {exception}"));
+        builder.Services.AddSingleton<ILauncherEvents>(eventBus);
+        var pluginRegistry = new PluginRegistry();
+        builder.Services.AddSingleton(pluginRegistry);
+        PluginLoadResult pluginLoadResult = PluginCatalog.Load(ResolvePluginRoots(paths), builder.Services, eventBus);
+        pluginRegistry.Register(pluginLoadResult);
+        builder.Services.AddSingleton(pluginLoadResult);
+
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         return builder.Build();
+    }
+
+    private static IReadOnlyList<string> ResolvePluginRoots(LauncherPaths paths)
+    {
+        string userPlugins = Path.Combine(paths.ApplicationDataDirectory, "plugins");
+        var roots = new List<string> { userPlugins };
+        string portable = Path.Combine(AppContext.BaseDirectory, "plugins");
+        if (!string.Equals(Path.GetFullPath(portable), Path.GetFullPath(userPlugins), StringComparison.OrdinalIgnoreCase))
+        {
+            roots.Add(portable);
+        }
+
+        return roots;
+    }
+
+    /// <summary>Reports skipped plugins and runs their async initialization after the host has started.</summary>
+    private void InitializePlugins(ILogger<App> logger)
+    {
+        if (_host is null)
+        {
+            return;
+        }
+
+        PluginLoadResult result = _host.Services.GetRequiredService<PluginLoadResult>();
+        foreach (PluginLoadError error in result.Errors)
+        {
+            logger.LogWarning(error.Exception,
+                "Plugin {PluginId} at {Directory} was skipped: {Reason}",
+                error.PluginId, error.Directory, error.Reason);
+        }
+
+        logger.LogInformation("Loaded {PluginCount} plugin(s).", result.Plugins.Count);
+        if (result.Plugins.Count == 0)
+        {
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            foreach (LoadedPlugin plugin in result.Plugins)
+            {
+                try
+                {
+                    await plugin.Instance.InitializeAsync().ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogWarning(exception, "Plugin {PluginId} initialization failed.", plugin.Manifest.Id);
+                }
+            }
+        });
     }
 
     private void ShowBetaNotice(MainWindow owner, ILogger logger)

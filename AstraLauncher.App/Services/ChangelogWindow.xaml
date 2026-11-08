@@ -31,6 +31,7 @@
                             <LineBreak/>• 启动器更新改用多线程分段下载
                             <LineBreak/>• 新增基于 EasyTier 的无 TUN 联机（实验性），房主创建房间、访客粘贴邀请码即可加入
                             <LineBreak/>• 新增内置问题反馈：feedback.md、截图无损压缩、可选日志、离线队列
+                            <LineBreak/>• 新增插件系统：ZIP 安装、启停管理、插件页面与启动 Hook，社区功能无需重发启动器
                             <LineBreak/>• 新增本更新日志窗口
                         </TextBlock>
                     </StackPanel>

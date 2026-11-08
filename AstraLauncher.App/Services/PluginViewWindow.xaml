@@ -1,0 +1,12 @@
+<Window x:Class="AstraLauncher.App.Services.PluginViewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="插件页面"
+        Width="820" Height="620"
+        WindowStartupLocation="CenterOwner"
+        Background="#F1F5F9">
+    <DockPanel Margin="18">
+        <TextBlock x:Name="HeaderText" DockPanel.Dock="Top" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,12"/>
+        <ContentControl x:Name="PageContent"/>
+    </DockPanel>
+</Window>

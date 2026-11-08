@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AstraLauncher.App.Services;
 
-public enum PageKey { Welcome, Instances, Downloads, Mods, Accounts, Servers, Toolbox, CloudDrive, Settings, Multiplayer }
+public enum PageKey { Welcome, Instances, Downloads, Mods, Accounts, Servers, Toolbox, CloudDrive, Settings, Multiplayer, Plugins }
 
 public interface INavigationService
 {
@@ -23,6 +23,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
     private readonly CloudDrivePageViewModel _cloudDrive;
     private readonly SettingsPageViewModel _settings;
     private readonly MultiplayerPageViewModel? _multiplayer;
+    private readonly PluginsPageViewModel? _plugins;
     private readonly ILogger<NavigationService> _logger;
     private PageViewModel _currentPage;
 
@@ -37,7 +38,8 @@ public sealed class NavigationService : ObservableObject, INavigationService
         CloudDrivePageViewModel cloudDrive,
         SettingsPageViewModel settings,
         ILogger<NavigationService> logger,
-        MultiplayerPageViewModel? multiplayer = null)
+        MultiplayerPageViewModel? multiplayer = null,
+        PluginsPageViewModel? plugins = null)
     {
         _welcome = welcome;
         _instances = instances;
@@ -49,6 +51,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
         _cloudDrive = cloudDrive;
         _settings = settings;
         _multiplayer = multiplayer;
+        _plugins = plugins;
         _logger = logger;
         _currentPage = welcome;
     }
@@ -69,6 +72,7 @@ public sealed class NavigationService : ObservableObject, INavigationService
             PageKey.CloudDrive => _cloudDrive,
             PageKey.Settings => _settings,
             PageKey.Multiplayer => _multiplayer ?? throw new InvalidOperationException("联机页面未注册到导航服务。"),
+            PageKey.Plugins => _plugins ?? throw new InvalidOperationException("插件页面未注册到导航服务。"),
             _ => throw new ArgumentOutOfRangeException(nameof(page), page, "Unknown application page.")
         };
         _logger.LogInformation("Navigated to {Page}", page);

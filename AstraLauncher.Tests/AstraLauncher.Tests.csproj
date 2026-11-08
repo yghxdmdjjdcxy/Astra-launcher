@@ -23,6 +23,8 @@
     <ProjectReference Include="..\AstraLauncher.Game\AstraLauncher.Game.csproj" />
     <ProjectReference Include="..\AstraLauncher.Multiplayer\AstraLauncher.Multiplayer.csproj" />
     <ProjectReference Include="..\AstraLauncher.Plugin.Abstractions\AstraLauncher.Plugin.Abstractions.csproj" />
+    <ProjectReference Include="..\AstraLauncher.Plugins\AstraLauncher.Plugins.csproj" />
+    <ProjectReference Include="..\AstraLauncher.SamplePlugin\AstraLauncher.SamplePlugin.csproj" />
   </ItemGroup>
 
   <ItemGroup>

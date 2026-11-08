@@ -21,6 +21,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AstraLauncher.Tests", "Astr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AstraLauncher.Plugin.Abstractions", "AstraLauncher.Plugin.Abstractions\AstraLauncher.Plugin.Abstractions.csproj", "{14DCFCED-0B0E-49AC-B5B0-635B2269AB84}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AstraLauncher.Plugins", "AstraLauncher.Plugins\AstraLauncher.Plugins.csproj", "{3DA2CCD8-16BC-4406-99B9-FA012961CC07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AstraLauncher.SamplePlugin", "AstraLauncher.SamplePlugin\AstraLauncher.SamplePlugin.csproj", "{99F7AA5F-41C0-413C-A390-EAED35D732B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +143,30 @@ Global
 		{14DCFCED-0B0E-49AC-B5B0-635B2269AB84}.Release|x64.Build.0 = Release|Any CPU
 		{14DCFCED-0B0E-49AC-B5B0-635B2269AB84}.Release|x86.ActiveCfg = Release|Any CPU
 		{14DCFCED-0B0E-49AC-B5B0-635B2269AB84}.Release|x86.Build.0 = Release|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Debug|x64.Build.0 = Debug|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Debug|x86.Build.0 = Debug|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Release|x64.ActiveCfg = Release|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Release|x64.Build.0 = Release|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Release|x86.ActiveCfg = Release|Any CPU
+		{3DA2CCD8-16BC-4406-99B9-FA012961CC07}.Release|x86.Build.0 = Release|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Debug|x64.Build.0 = Debug|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Debug|x86.Build.0 = Debug|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Release|x64.ActiveCfg = Release|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Release|x64.Build.0 = Release|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Release|x86.ActiveCfg = Release|Any CPU
+		{99F7AA5F-41C0-413C-A390-EAED35D732B1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
