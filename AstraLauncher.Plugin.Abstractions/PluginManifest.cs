@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace AstraLauncher.Plugin.Abstractions;
 
@@ -49,4 +49,10 @@ public sealed class PluginManifest
     public string? Description { get; set; }
 
     public string? Author { get; set; }
+
+    /// <summary>Optional GitHub repository in <c>owner/name</c> form; used by the market and updater.</summary>
+    public string? Repository { get; set; }
+
+    /// <summary>Optional project homepage / release page.</summary>
+    public string? Homepage { get; set; }
 }

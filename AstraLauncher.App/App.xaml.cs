@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Net;
 using System.Net.Http;
@@ -168,6 +168,8 @@ public partial class App : Application
         builder.Services.AddSingleton<ICloudreveAuthService, CloudreveAuthService>();
         builder.Services.AddSingleton<ICloudreveBrowserLoginService, CloudreveBrowserLoginService>();
         builder.Services.AddSingleton<IFeedbackService, FeedbackService>();
+        builder.Services.AddSingleton<IPluginMarketplaceService, PluginMarketplaceService>();
+        builder.Services.AddHostedService<PluginAutoUpdateWorker>();
         builder.Services.AddHostedService<FeedbackQueueWorker>();
         builder.Services.AddSingleton<IExternalInstanceScanner, ExternalInstanceScanner>();
         builder.Services.AddSingleton<WelcomePageViewModel>();
@@ -181,6 +183,7 @@ public partial class App : Application
         builder.Services.AddSingleton<SettingsPageViewModel>();
         builder.Services.AddSingleton<MultiplayerPageViewModel>();
         builder.Services.AddSingleton<PluginsPageViewModel>();
+        PluginUpdateApplier.ApplyPending(Path.Combine(paths.ApplicationDataDirectory, "plugins"), message => System.Diagnostics.Debug.WriteLine("[PluginUpdate] " + message));
         var eventBus = new LauncherEventBus(exception => System.Diagnostics.Debug.WriteLine($"[AstraLauncher] Plugin event handler failed: {exception}"));
         builder.Services.AddSingleton<ILauncherEvents>(eventBus);
         var pluginRegistry = new PluginRegistry();

@@ -1,4 +1,4 @@
-# Astra Launcher 插件开发与使用
+﻿# Astra Launcher 插件开发与使用
 
 插件系统用于在不发布新启动器版本的情况下扩展功能。
 
@@ -134,3 +134,44 @@ dotnet build .\AstraLauncher.SamplePlugin\AstraLauncher.SamplePlugin.csproj -c R
 - 插件加载发生在启动器启动时，安装 / 启停 / 删除后需要重启。
 - 插件 API 版本不匹配会被拒绝；升级 API 需要新的启动器版本。
 - 当前没有在线插件市场；社区可以通过 Releases、群文件或自己的网站分发 ZIP。
+
+## GitHub 插件市场
+
+「插件」页内置 GitHub 市场：
+
+- 索引文件：`plugins/index.json`（本仓库）
+- 默认拉取地址：`https://raw.githubusercontent.com/yghxdmdjjdcxy/Astra-launcher/main/plugins/index.json`
+- 社区可以通过 Pull Request 向索引增加条目
+- 启动器使用多线程 Range 下载插件 ZIP
+- 安装 / 更新后重启启动器生效
+
+索引条目格式：
+
+```json
+{
+  "id": "com.example.myplugin",
+  "name": "我的插件",
+  "description": "插件说明",
+  "author": "作者",
+  "version": "1.0.0",
+  "downloadUrl": "https://github.com/owner/repo/releases/download/v1.0.0/plugin.zip",
+  "repository": "owner/repo",
+  "homepage": "https://github.com/owner/repo",
+  "sha256": "可选"
+}
+```
+
+插件也可以在自己的 `plugin.json` 中填写 `repository`，市场/更新器会把它作为 GitHub 仓库来源。
+
+## 自动更新
+
+- 「插件」页可以开启「启动时自动检查并下载插件更新」。
+- 更新包会先下载到 `plugins/.updates/`，**下次启动器启动前**由宿主替换插件目录，避免覆盖已被 .NET 加载的 DLL。
+- 更新保留插件原有 `data/` 目录。
+- 也可以在市场里手动安装 / 覆盖更新。
+
+## 安全
+
+- 插件是受信任的原生 .NET 代码，不沙箱化。
+- 市场索引只提供元数据和下载地址；启动器会再做 id/API 版本/路径校验。
+- 建议插件作者提供 `sha256`。

@@ -1,4 +1,4 @@
-namespace AstraLauncher.Core.Models;
+﻿namespace AstraLauncher.Core.Models;
 
 /// <summary>Selects where version metadata and game files are downloaded from.</summary>
 public enum DownloadSourceMode
@@ -78,6 +78,7 @@ public sealed class LauncherSettings
     public const int DefaultEasyTierLocalPort = 25566;
     public const int EasyTierHostRpcPort = 15889;
     public const int EasyTierGuestRpcPort = 15890;
+    public const string DefaultPluginIndexUrl = "https://raw.githubusercontent.com/yghxdmdjjdcxy/Astra-launcher/main/plugins/index.json";
 
     /// <summary>Gets or sets a value indicating whether the launcher has already offered to import foreign instances.</summary>
     public bool ExternalImportPrompted { get; set; }
@@ -125,6 +126,12 @@ public sealed class LauncherSettings
 
     public string EasyTierLastRoomName { get; set; } = DefaultEasyTierRoomName;
 
+    /// <summary>Curated plugin index hosted on GitHub (raw JSON).</summary>
+    public string PluginIndexUrl { get; set; } = DefaultPluginIndexUrl;
+
+    /// <summary>When true, the launcher checks the plugin index and stages updates on startup.</summary>
+    public bool PluginAutoUpdate { get; set; } = true;
+
     /// <summary>Clamps numeric values, restores invalid choices and trims text so persisted settings are always usable.</summary>
     public void Normalize()
     {
@@ -149,6 +156,7 @@ public sealed class LauncherSettings
         EasyTierGamePort = NormalizePort(EasyTierGamePort, DefaultEasyTierGamePort);
         EasyTierLocalPort = NormalizePort(EasyTierLocalPort, DefaultEasyTierLocalPort);
         EasyTierLastRoomName = NormalizeRoomName(EasyTierLastRoomName);
+        PluginIndexUrl = NormalizeHttpUrl(PluginIndexUrl, DefaultPluginIndexUrl);
     }
 
     private static string NormalizeProgressBarStyle(string? style)
@@ -207,6 +215,18 @@ public sealed class LauncherSettings
     }
 
     private static int NormalizePort(int port, int fallback) => port is >= 1 and <= 65535 ? port : fallback;
+
+    private static string NormalizeHttpUrl(string? value, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        return Uri.TryCreate(value.Trim(), UriKind.Absolute, out Uri? parsed) && IsHttp(parsed.Scheme)
+            ? value.Trim()
+            : fallback;
+    }
 
     private static string NormalizeRoomName(string? name)
     {

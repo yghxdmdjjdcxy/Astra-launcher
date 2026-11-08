@@ -2,11 +2,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Net.Http;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
 using AstraLauncher.App.Services;
+using AstraLauncher.Core.Models;
 using AstraLauncher.Core.Services;
 using AstraLauncher.Plugin.Abstractions;
 using AstraLauncher.Plugins;
@@ -19,28 +21,39 @@ namespace AstraLauncher.App.ViewModels;
 public sealed class PluginsPageViewModel : PageViewModel
 {
     private readonly ILauncherPaths _paths;
+    private readonly ISettingsService _settings;
     private readonly PluginLoadResult _loadResult;
     private readonly IDialogService _dialogs;
     private readonly ILogger<PluginsPageViewModel> _logger;
     private readonly IReadOnlyList<IPluginPageContribution> _contributedPages;
+    private readonly IPluginMarketplaceService? _marketplace;
+    private bool _autoUpdatePlugins = true;
+    private string _searchQuery = string.Empty;
+    private string _marketStatus = "正在读取 GitHub 插件索引…";
+    private bool _isMarketBusy;
     private string _statusMessage = "插件在启动器启动时加载；安装或启停后需要重启启动器生效。";
 
     public PluginsPageViewModel(
         ILauncherPaths paths,
+        ISettingsService settings,
         PluginLoadResult loadResult,
         IDialogService dialogs,
         ILogger<PluginsPageViewModel> logger,
-        IEnumerable<IPluginPageContribution>? contributedPages = null) : base("插件")
+        IEnumerable<IPluginPageContribution>? contributedPages = null,
+        IPluginMarketplaceService? marketplace = null) : base("插件")
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(loadResult);
         ArgumentNullException.ThrowIfNull(dialogs);
         ArgumentNullException.ThrowIfNull(logger);
         _paths = paths;
+        _settings = settings;
         _loadResult = loadResult;
         _dialogs = dialogs;
         _logger = logger;
         _contributedPages = contributedPages?.ToArray() ?? [];
+        _marketplace = marketplace;
+        _ = LoadAutoUpdateSettingAsync();
 
         InstallCommand = new AsyncRelayCommand(InstallAsync);
         RefreshCommand = new RelayCommand(_ => Refresh());
@@ -57,6 +70,14 @@ public sealed class PluginsPageViewModel : PageViewModel
             if (parameter is PluginItem item)
             {
                 Delete(item);
+            }
+        });
+        SearchMarketCommand = new AsyncRelayCommand(LoadMarketAsync);
+        InstallMarketCommand = new RelayCommand(parameter =>
+        {
+            if (parameter is PluginMarketEntry entry)
+            {
+                _ = InstallMarketAsync(entry);
             }
         });
         OpenContributedPageCommand = new RelayCommand(parameter =>
@@ -77,6 +98,7 @@ public sealed class PluginsPageViewModel : PageViewModel
 
     public ObservableCollection<PluginItem> Plugins { get; } = [];
     public ObservableCollection<PluginPageItem> ContributedPages { get; } = [];
+    public ObservableCollection<PluginMarketEntry> MarketEntries { get; } = [];
 
     public ICommand InstallCommand { get; }
     public ICommand RefreshCommand { get; }
@@ -84,6 +106,38 @@ public sealed class PluginsPageViewModel : PageViewModel
     public ICommand ToggleCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand OpenContributedPageCommand { get; }
+    public ICommand SearchMarketCommand { get; }
+    public ICommand InstallMarketCommand { get; }
+
+    public string SearchQuery
+    {
+        get => _searchQuery;
+        set => SetProperty(ref _searchQuery, value);
+    }
+
+    public string MarketStatus
+    {
+        get => _marketStatus;
+        private set => SetProperty(ref _marketStatus, value);
+    }
+
+    public bool AutoUpdatePlugins
+    {
+        get => _autoUpdatePlugins;
+        set
+        {
+            if (SetProperty(ref _autoUpdatePlugins, value))
+            {
+                _ = SaveAutoUpdateSettingAsync(value);
+            }
+        }
+    }
+
+    public bool IsMarketBusy
+    {
+        get => _isMarketBusy;
+        private set => SetProperty(ref _isMarketBusy, value);
+    }
 
     public string StatusMessage
     {
@@ -199,11 +253,125 @@ public sealed class PluginsPageViewModel : PageViewModel
             return;
         }
 
+        await InstallZipAsync(dialog.FileName, expectedId: null);
+    }
+
+    private async Task LoadAutoUpdateSettingAsync()
+    {
+        try
+        {
+            LauncherSettings settings = await _settings.GetAsync();
+            _autoUpdatePlugins = settings.PluginAutoUpdate;
+            SetProperty(ref _autoUpdatePlugins, settings.PluginAutoUpdate, nameof(AutoUpdatePlugins));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogDebug(exception, "Cannot read plugin auto-update setting.");
+        }
+    }
+
+    private async Task SaveAutoUpdateSettingAsync(bool value)
+    {
+        try
+        {
+            LauncherSettings settings = await _settings.GetAsync();
+            settings.PluginAutoUpdate = value;
+            await _settings.SaveAsync(settings);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogDebug(exception, "Cannot save plugin auto-update setting.");
+        }
+    }
+
+    private async Task LoadMarketAsync()
+    {
+        if (_marketplace is null)
+        {
+            MarketStatus = "插件市场服务不可用。";
+            return;
+        }
+
+        if (IsMarketBusy)
+        {
+            return;
+        }
+
+        IsMarketBusy = true;
+        MarketStatus = "正在读取 GitHub 插件索引…";
+        try
+        {
+            IReadOnlyList<PluginMarketEntry> catalog = await _marketplace.GetCatalogAsync().ConfigureAwait(true);
+            string query = SearchQuery.Trim();
+            MarketEntries.Clear();
+            foreach (PluginMarketEntry entry in catalog)
+            {
+                if (query.Length == 0 ||
+                    entry.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    entry.Id.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    entry.Description.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    entry.Author.Contains(query, StringComparison.OrdinalIgnoreCase))
+                {
+                    MarketEntries.Add(entry);
+                }
+            }
+
+            MarketStatus = MarketEntries.Count == 0
+                ? "没有找到插件。可以向插件索引仓库提交 Pull Request。"
+                : $"共 {MarketEntries.Count} 个插件（来源：GitHub 插件索引）。";
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException)
+        {
+            _logger.LogWarning(exception, "Plugin market load failed.");
+            MarketStatus = "插件索引加载失败：" + exception.Message;
+        }
+        finally
+        {
+            IsMarketBusy = false;
+        }
+    }
+
+    private async Task InstallMarketAsync(PluginMarketEntry entry)
+    {
+        if (_marketplace is null)
+        {
+            _dialogs.ShowError("插件市场服务不可用。", "安装插件");
+            return;
+        }
+
+        IsMarketBusy = true;
+        try
+        {
+            MarketStatus = $"正在下载 {entry.Name}…";
+            var progress = new Progress<string>(message => MarketStatus = message);
+            string zip = await _marketplace.DownloadAsync(entry, progress).ConfigureAwait(true);
+            try
+            {
+                await InstallZipAsync(zip, entry.Id).ConfigureAwait(true);
+            }
+            finally
+            {
+                TryDeleteFile(zip);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or JsonException or InvalidOperationException or HttpRequestException)
+        {
+            _logger.LogError(exception, "Market plugin installation failed.");
+            _dialogs.ShowError("安装插件失败：" + exception.Message, "插件市场");
+        }
+        finally
+        {
+            IsMarketBusy = false;
+        }
+    }
+
+    private async Task InstallZipAsync(string zipPath, string? expectedId)
+    {
         string temp = Path.Combine(Path.GetTempPath(), "AstraLauncher-PluginInstall", Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(temp);
-            ExtractSafely(dialog.FileName, temp);
+            ExtractSafely(zipPath, temp);
             string? manifestPath = Directory.EnumerateFiles(temp, PluginCatalog.ManifestFileName, SearchOption.AllDirectories)
                 .OrderBy(path => path.Length)
                 .FirstOrDefault();
@@ -222,6 +390,13 @@ public sealed class PluginsPageViewModel : PageViewModel
                 return;
             }
 
+            if (!string.IsNullOrWhiteSpace(expectedId) &&
+                !string.Equals(manifest.Id, expectedId, StringComparison.OrdinalIgnoreCase))
+            {
+                _dialogs.ShowError($"插件包 id（{manifest.Id}）与市场记录（{expectedId}）不一致。", "安装插件");
+                return;
+            }
+
             if (manifest.ApiVersion != PluginApi.Version)
             {
                 _dialogs.ShowError($"插件 API 版本 {manifest.ApiVersion} 与当前启动器 {PluginApi.Version} 不匹配。", "安装插件");
@@ -229,9 +404,11 @@ public sealed class PluginsPageViewModel : PageViewModel
             }
 
             string? entry = manifest.EntryAssembly;
-            if (string.IsNullOrWhiteSpace(entry) || !File.Exists(Path.Combine(pluginDirectory, entry)))
+            string root = Path.GetFullPath(pluginDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            string? entryPath = string.IsNullOrWhiteSpace(entry) ? null : Path.GetFullPath(Path.Combine(pluginDirectory, entry));
+            if (entryPath is null || !entryPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(entryPath))
             {
-                _dialogs.ShowError("插件入口程序集不存在：" + entry, "安装插件");
+                _dialogs.ShowError("插件入口程序集缺失或路径越界：" + entry, "安装插件");
                 return;
             }
 
@@ -262,6 +439,20 @@ public sealed class PluginsPageViewModel : PageViewModel
         }
     }
 
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (IOException)
+        {
+            // Best effort.
+        }
+    }
     private void Toggle(PluginItem item)
     {
         try

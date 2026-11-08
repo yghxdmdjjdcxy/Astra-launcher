@@ -1,9 +1,10 @@
-{
+﻿{
   "id": "astra.sample",
   "name": "Astra 示例插件",
   "version": "1.0.0",
   "description": "演示插件清单格式与 ILaunchHook 注册；复制到插件目录后重启启动器生效。",
   "author": "Astra Launcher",
+  "repository": "yghxdmdjjdcxy/Astra-launcher",
   "entryAssembly": "AstraLauncher.SamplePlugin.dll",
   "apiVersion": 1,
   "enabled": true
