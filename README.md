@@ -1,4 +1,4 @@
-# Astra Launcher
+﻿# Astra Launcher
 
 Windows Minecraft Java Edition launcher (WPF, hand-written MVVM) built in verified stages.
 
