@@ -7,7 +7,7 @@
       "description": "演示插件清单格式、启动 Hook 与插件页面扩展点；安装后不会改变启动行为。",
       "author": "Astra Launcher",
       "version": "1.0.0",
-      "downloadUrl": "https://raw.githubusercontent.com/yghxdmdjjdcxy/Astra-launcher/main/plugins/packages/astra.sample.zip",
+      "downloadUrl": "https://raw.githubusercontent.com/yghxdmdjjdcxy/Astra-launcher/main/plugins/files/astra.sample.zip",
       "repository": "yghxdmdjjdcxy/Astra-launcher",
       "homepage": "https://github.com/yghxdmdjjdcxy/Astra-launcher"
     }
