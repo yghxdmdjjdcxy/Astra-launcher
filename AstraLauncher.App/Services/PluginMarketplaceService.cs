@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -101,7 +101,7 @@ public sealed class PluginMarketplaceService : IPluginMarketplaceService
             string indexUrl = string.IsNullOrWhiteSpace(settings.PluginIndexUrl)
                 ? LauncherSettings.DefaultPluginIndexUrl
                 : settings.PluginIndexUrl;
-            string json = await _http.GetStringAsync(indexUrl, cancellationToken).ConfigureAwait(false);
+            string json = (await _http.GetStringAsync(indexUrl, cancellationToken).ConfigureAwait(false)).TrimStart('﻿');
             PluginIndex? index = JsonSerializer.Deserialize<PluginIndex>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
