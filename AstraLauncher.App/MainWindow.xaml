@@ -257,6 +257,7 @@
                             <Button Style="{StaticResource SecondaryButton}" Content="导入目录" Command="{Binding ImportCommand}" Margin="0,0,8,8"/>
                             <Button Style="{StaticResource SecondaryButton}" Content="扫描其他启动器" Command="{Binding ScanExternalCommand}" Margin="0,0,8,8"/>
                             <Button Style="{StaticResource SecondaryButton}" Content="导入全局存档" Command="{Binding ImportSavesCommand}" Margin="0,0,8,8"/>
+                            <Button Style="{StaticResource SecondaryButton}" Content="导入整合包" Command="{Binding ImportModpackCommand}" Margin="0,0,8,8"/>
                             <Button Style="{StaticResource SecondaryButton}" Content="检测 Java" Command="{Binding DetectJavaCommand}" Margin="0,0,0,8"/>
                         </WrapPanel>
                     </StackPanel>

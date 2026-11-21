@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using AstraLauncher.App.Commands;
@@ -8,8 +8,10 @@ using AstraLauncher.Core.Services;
 using AstraLauncher.Game.Instances;
 using AstraLauncher.Game.Java;
 using AstraLauncher.Game.Launch;
+using AstraLauncher.Game.Modpacks;
 using AstraLauncher.Game.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 namespace AstraLauncher.App.ViewModels;
 
@@ -29,6 +31,7 @@ public sealed class InstancesPageViewModel : PageViewModel
     private readonly ICrashRepairService? _crashRepair;
     private readonly IVersionInstallService? _installService;
     private readonly IExternalInstanceScanner? _externalScanner;
+    private readonly IModpackImportService? _modpackImport;
     private readonly RelayCommand _stopCommand;
     private bool _isVersionManagerOpen;
     private GameInstance? _launchingInstance;
@@ -60,7 +63,8 @@ public sealed class InstancesPageViewModel : PageViewModel
         ICrashDialogService? crashDialog = null,
         ICrashRepairService? crashRepair = null,
         IVersionInstallService? installService = null,
-        IExternalInstanceScanner? externalScanner = null) : base("游戏实例")
+        IExternalInstanceScanner? externalScanner = null,
+        IModpackImportService? modpackImport = null) : base("游戏实例")
     {
         _instances = instances;
         _java = java;
@@ -74,6 +78,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         _crashRepair = crashRepair;
         _installService = installService;
         _externalScanner = externalScanner;
+        _modpackImport = modpackImport;
         _logger.LogInformation(
             "Crash analysis services: analyzer={Analyzer}, dialog={Dialog}, repair={Repair}.",
             crashAnalyzer is not null,
@@ -84,6 +89,7 @@ public sealed class InstancesPageViewModel : PageViewModel
         ImportCommand = new AsyncRelayCommand(ImportAsync);
         ScanExternalCommand = new AsyncRelayCommand(ScanExternalAsync);
         ImportSavesCommand = new AsyncRelayCommand(ImportSavesAsync);
+        ImportModpackCommand = new AsyncRelayCommand(ImportModpackAsync);
         OpenVersionManagerCommand = new RelayCommand(_ => IsVersionManagerOpen = true);
         CloseVersionManagerCommand = new RelayCommand(_ => IsVersionManagerOpen = false);
         SelectInstanceCommand = new RelayCommand(parameter =>
@@ -168,6 +174,7 @@ public sealed class InstancesPageViewModel : PageViewModel
     public ICommand ScanExternalCommand { get; }
 
     public ICommand ImportSavesCommand { get; }
+    public ICommand ImportModpackCommand { get; }
     public ICommand OpenVersionManagerCommand { get; }
     public ICommand CloseVersionManagerCommand { get; }
     public ICommand SelectInstanceCommand { get; }
@@ -448,6 +455,34 @@ public sealed class InstancesPageViewModel : PageViewModel
         await RefreshAsync(_selectedInstanceId);
         StatusMessage = $"已导入 {imported} 个外部版本实例。";
     });
+
+    private async Task ImportModpackAsync()
+    {
+        if (_modpackImport is null)
+        {
+            StatusMessage = "整合包导入服务不可用。";
+            return;
+        }
+
+        var dialog = new OpenFileDialog
+        {
+            Title = "选择 Modrinth 整合包",
+            Filter = "Modrinth 整合包 (*.mrpack)|*.mrpack|所有文件 (*.*)|*.*",
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        await RunAsync("导入整合包", async () =>
+        {
+            var progress = new Progress<ModpackImportProgress>(value => StatusMessage = value.Message);
+            GameInstance created = await _modpackImport.ImportAsync(dialog.FileName, null, progress);
+            await RefreshAsync(created.Id);
+            StatusMessage = $"整合包「{created.Name}」导入完成，可直接启动。";
+        });
+    }
 
     private async Task ImportSavesAsync() => await RunAsync("导入存档", async () =>
     {

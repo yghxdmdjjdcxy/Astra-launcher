@@ -18,6 +18,7 @@ using AstraLauncher.Game.Launch;
 using AstraLauncher.Game.Loaders;
 using AstraLauncher.Game.Metadata;
 using AstraLauncher.Game.Mods;
+using AstraLauncher.Game.Modpacks;
 using AstraLauncher.Game.Diagnostics;
 using AstraLauncher.Infrastructure.FileSystem;
 using AstraLauncher.Infrastructure.Logging;
@@ -144,6 +145,7 @@ public partial class App : Application
         builder.Services.AddSingleton<IEasyTierService, EasyTierService>();
         builder.Services.AddSingleton<ILaunchHook, EasyTierLaunchHook>();
         builder.Services.AddSingleton<IGameInstanceRepository, GameInstanceRepository>();
+        builder.Services.AddSingleton<IModpackImportService, ModpackImportService>();
         builder.Services.AddSingleton<IJavaRuntimeDetector, JavaRuntimeDetector>();
         builder.Services.AddSingleton<ITokenProtector, DpapiTokenProtector>();
         builder.Services.AddSingleton<IAccountStore, AccountStore>();
@@ -261,7 +263,7 @@ public partial class App : Application
             .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion?
             .Split('+')[0]
             ?? typeof(App).Assembly.GetName().Version?.ToString(3)
-            ?? "1.0.9";
+            ?? "1.1.0";
         var notice = new BetaNoticeWindow(version) { Owner = owner };
         notice.ShowDialog();
         if (notice.DontShowAgain)

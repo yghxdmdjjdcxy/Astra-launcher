@@ -18,14 +18,14 @@
                     CornerRadius="999" Padding="10,3">
                 <TextBlock Foreground="#92400E" FontSize="11" FontWeight="SemiBold" Text="正式版 · STABLE"/>
             </Border>
-            <TextBlock Foreground="#EEF2FF" FontSize="26" FontWeight="Bold" Margin="0,14,0,6" Text="欢迎使用 Astra Launcher 1.0.9 正式版"/>
-            <TextBlock x:Name="VersionText" Foreground="#94A3B8" FontSize="12" Text="版本 1.0.9"/>
+            <TextBlock Foreground="#EEF2FF" FontSize="26" FontWeight="Bold" Margin="0,14,0,6" Text="欢迎使用 Astra Launcher 1.1.0 正式版"/>
+            <TextBlock x:Name="VersionText" Foreground="#94A3B8" FontSize="12" Text="版本 1.1.0"/>
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,18,0,10">
             <StackPanel>
                 <TextBlock Foreground="#CBD5E1" FontSize="13" TextWrapping="Wrap" LineHeight="24">
-                    这是 Astra Launcher 的第一个正式版本（v1.0.9）。感谢参与测试和反馈的每一位玩家。本版包含：<LineBreak/>
+                    这是 Astra Launcher 的第一个正式版本（v1.1.0）。感谢参与测试和反馈的每一位玩家。本版包含：<LineBreak/>
                     <LineBreak/>• 重要存档与配置仍建议备份（实例目录下的 saves / config）<LineBreak/>
                     • 遇到问题可通过内置「问题反馈」或 GitHub Issues 提交<LineBreak/>
                     • 启动器会自动检查 GitHub Releases 更新<LineBreak/>
