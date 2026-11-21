@@ -26,6 +26,7 @@
             <StackPanel>
                 <TextBlock Foreground="#CBD5E1" FontSize="13" TextWrapping="Wrap" LineHeight="24">
                     这是 Astra Launcher 的第一个正式版本（v1.1.0）。感谢参与测试和反馈的每一位玩家。本版包含：<LineBreak/>
+                    <LineBreak/>• 新增 Modrinth .mrpack 整合包导入（自动安装版本 / 加载器 / 模组）
                     <LineBreak/>• 重要存档与配置仍建议备份（实例目录下的 saves / config）<LineBreak/>
                     • 遇到问题可通过内置「问题反馈」或 GitHub Issues 提交<LineBreak/>
                     • 启动器会自动检查 GitHub Releases 更新<LineBreak/>
